@@ -1,0 +1,73 @@
+// Color variables
+$primary: #41b883; // Vue green
+$secondary: #34495e; // Vue dark blue
+$accent: #ffdd57;
+$info: #2196f3;
+$warning: #ff9800;
+$error: #f44336;
+$success: #4caf50;
+
+// Background colors
+$bg-light: #f8f8f8;
+$bg-dark: #121212;
+
+// Text colors
+$text-primary: #333333;
+$text-secondary: #666666;
+$text-light: #ffffff;
+$text-muted: #999999;
+
+// Spacing
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// Breakpoints
+$breakpoint-xs: 0;
+$breakpoint-sm: 600px;
+$breakpoint-md: 960px;
+$breakpoint-lg: 1280px;
+$breakpoint-xl: 1920px;
+
+// Border radius
+$border-radius-sm: 4px;
+$border-radius-md: 8px;
+$border-radius-lg: 16px;
+$border-radius-pill: 9999px;
+
+// Box shadow
+$shadow-light: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.24);
+$shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
+$shadow-strong: 0 10px 20px rgba(0, 0, 0, 0.15);
+
+// Font sizes
+$font-size-xs: 0.75rem; // 12px
+$font-size-sm: 0.875rem; // 14px
+$font-size-md: 1rem; // 16px
+$font-size-lg: 1.25rem; // 20px
+$font-size-xl: 1.5rem; // 24px
+$font-size-xxl: 2rem; // 32px
+
+// Font weight
+$font-weight-light: 300;
+$font-weight-regular: 400;
+$font-weight-medium: 500;
+$font-weight-bold: 700;
+
+// Z-index
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+
+// String manager specific variables
+$stringing-pending: #ffcc80;
+$stringing-in-progress: #64b5f6;
+$stringing-completed: #81c784;
+$stringing-cancelled: #e57373;

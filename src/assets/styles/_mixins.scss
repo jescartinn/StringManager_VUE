@@ -1,0 +1,149 @@
+// Flexbox mixins
+@mixin flex($direction: row, $justify: flex-start, $align: stretch, $wrap: nowrap) {
+    display: flex;
+    flex-direction: $direction;
+    justify-content: $justify;
+    align-items: $align;
+    flex-wrap: $wrap;
+}
+
+@mixin flex-center {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+@mixin flex-between {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+// Responsive mixins
+@mixin respond-to($breakpoint) {
+    @if $breakpoint ==xs {
+        @media (max-width: ($breakpoint-sm - 1)) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==sm {
+        @media (min-width: $breakpoint-sm) and (max-width: ($breakpoint-md - 1)) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==md {
+        @media (min-width: $breakpoint-md) and (max-width: ($breakpoint-lg - 1)) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==lg {
+        @media (min-width: $breakpoint-lg) and (max-width: ($breakpoint-xl - 1)) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==xl {
+        @media (min-width: $breakpoint-xl) {
+            @content;
+        }
+    }
+}
+
+@mixin respond-above($breakpoint) {
+    @if $breakpoint ==xs {
+        @media (min-width: $breakpoint-sm) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==sm {
+        @media (min-width: $breakpoint-md) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==md {
+        @media (min-width: $breakpoint-lg) {
+            @content;
+        }
+    }
+
+    @else if $breakpoint ==lg {
+        @media (min-width: $breakpoint-xl) {
+            @content;
+        }
+    }
+}
+
+// Typography mixins
+@mixin heading-1 {
+    font-size: $font-size-xxl;
+    font-weight: $font-weight-bold;
+    line-height: 1.2;
+}
+
+@mixin heading-2 {
+    font-size: $font-size-xl;
+    font-weight: $font-weight-bold;
+    line-height: 1.3;
+}
+
+@mixin heading-3 {
+    font-size: $font-size-lg;
+    font-weight: $font-weight-medium;
+    line-height: 1.4;
+}
+
+@mixin body-text {
+    font-size: $font-size-md;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+}
+
+@mixin small-text {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-regular;
+    line-height: 1.5;
+}
+
+// Card and container styles
+@mixin card-shadow {
+    box-shadow: $shadow-medium;
+    border-radius: $border-radius-md;
+    background-color: white;
+}
+
+@mixin section-padding {
+    padding: $spacing-xl;
+
+    @include respond-to(xs) {
+        padding: $spacing-md;
+    }
+}
+
+// Status badges
+@mixin status-badge($color) {
+    display: inline-block;
+    padding: $spacing-xs $spacing-md;
+    border-radius: $border-radius-pill;
+    background-color: $color;
+    color: white;
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    text-align: center;
+}
+
+// Transitions
+@mixin transition($property: all, $duration: 0.3s, $timing: ease) {
+    transition: $property $duration $timing;
+}
+
+// Truncate text with ellipsis
+@mixin text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
