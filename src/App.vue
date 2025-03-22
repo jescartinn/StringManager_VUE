@@ -19,7 +19,7 @@ const navigationItems = [
 
 // Mock user data
 const user = {
-  name: 'John Doe',
+  name: 'Admin',
   role: 'Admin',
   avatar: null,
 }
