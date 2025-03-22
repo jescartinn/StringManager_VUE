@@ -20,6 +20,9 @@ export default defineConfig({
       sass: {
         additionalData: ['@import "vuetify/styles"', ''].join('\n'),
       },
+      scss: {
+        additionalData: '@import "@/assets/styles/main.scss";',
+      },
     },
   },
 })
