@@ -1,5 +1,5 @@
 // API service to handle all API requests
-const API_URL = 'https://localhost:7299/api';
+const API_URL = import.meta.env.VITE_API_URL || 'https://localhost:7299/api';
 
 // Helper function to get authorization header
 const getAuthHeader = () => {
