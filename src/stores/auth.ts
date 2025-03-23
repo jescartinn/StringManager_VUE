@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '../services/api'
+import api from '../services/apiService'
 
 // Define the User type
 interface User {
