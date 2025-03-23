@@ -1,13 +1,28 @@
 <script setup lang="ts">
-import { RouterView } from 'vue-router'
-import { ref, computed } from 'vue'
+import { RouterView, useRoute } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useAuthStore } from './stores/auth'
+
+const authStore = useAuthStore()
+const route = useRoute()
+
+// Determine if we should show the app layout or just the router view
+const showAppLayout = computed(() => {
+  // If the route doesn't require auth (like landing page), don't show app layout
+  if (route.meta.requiresAuth === false) {
+    return false
+  }
+
+  // Otherwise, show app layout if authenticated
+  return authStore.isAuthenticated
+})
 
 // Reference to the drawer state
 const drawer = ref(false)
 
 // Navigation items
 const navigationItems = [
-  { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/' },
+  { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/dashboard' },
   { title: 'String Jobs', icon: 'mdi-tennis', route: '/jobs' },
   { title: 'Players', icon: 'mdi-account-group', route: '/players' },
   { title: 'Racquets', icon: 'mdi-tennis-ball', route: '/racquets' },
@@ -17,13 +32,6 @@ const navigationItems = [
   { title: 'Reports', icon: 'mdi-chart-bar', route: '/reports' },
 ]
 
-// Mock user data
-const user = {
-  name: 'Admin',
-  role: 'Admin',
-  avatar: null,
-}
-
 // Toggle the drawer
 const toggleDrawer = () => {
   drawer.value = !drawer.value
@@ -31,8 +39,8 @@ const toggleDrawer = () => {
 
 // Computed property for user initials (for avatar)
 const userInitials = computed(() => {
-  if (!user.name) return '';
-  return user.name.split(' ')
+  if (!authStore.user?.username) return '';
+  return authStore.user.username.split(' ')
     .map(name => name.charAt(0))
     .join('')
     .toUpperCase();
@@ -40,10 +48,18 @@ const userInitials = computed(() => {
 
 // Notification count
 const notificationCount = ref(5)
+
+// Check authentication status on app start
+onMounted(async () => {
+  if (authStore.token) {
+    await authStore.checkAuth()
+  }
+})
 </script>
 
 <template>
-  <v-app class="app">
+  <!-- App Layout for authenticated users -->
+  <v-app v-if="showAppLayout" class="app">
     <!-- App Bar -->
     <v-app-bar color="primary" app flat>
       <v-app-bar-nav-icon @click="toggleDrawer" color="white"></v-app-bar-nav-icon>
@@ -63,13 +79,12 @@ const notificationCount = ref(5)
       <v-menu>
         <template v-slot:activator="{ props }">
           <v-btn v-bind="props" class="app__user-btn" color="primary">
-            <v-avatar color="secondary" size="32" class="app__user-avatar" v-if="!user.avatar">
+            <v-avatar color="secondary" size="32" class="app__user-avatar" v-if="authStore.user">
               {{ userInitials }}
             </v-avatar>
-            <v-avatar size="32" class="app__user-avatar" v-else>
-              <v-img :src="user.avatar"></v-img>
-            </v-avatar>
-            <span class="app__user-name ml-2 d-none d-sm-inline-block">{{ user.name }}</span>
+            <span class="app__user-name ml-2 d-none d-sm-inline-block" v-if="authStore.user">
+              {{ authStore.user.username }}
+            </span>
             <v-icon>mdi-chevron-down</v-icon>
           </v-btn>
         </template>
@@ -87,7 +102,7 @@ const notificationCount = ref(5)
             </v-list-item-title>
           </v-list-item>
           <v-divider></v-divider>
-          <v-list-item>
+          <v-list-item @click="authStore.logout">
             <v-list-item-title>
               <v-icon start>mdi-logout</v-icon>
               Logout
@@ -122,13 +137,13 @@ const notificationCount = ref(5)
       <template v-slot:append>
         <div class="app__drawer-footer">
           <v-divider></v-divider>
-          <div class="app__user-info">
+          <div class="app__user-info" v-if="authStore.user">
             <v-avatar color="secondary" size="40" class="app__user-avatar">
               {{ userInitials }}
             </v-avatar>
             <div class="app__user-details">
-              <div class="app__user-name">{{ user.name }}</div>
-              <div class="app__user-role">{{ user.role }}</div>
+              <div class="app__user-name">{{ authStore.user.username }}</div>
+              <div class="app__user-role">{{ authStore.user.role }}</div>
             </div>
           </div>
         </div>
@@ -140,6 +155,9 @@ const notificationCount = ref(5)
       <RouterView />
     </v-main>
   </v-app>
+
+  <!-- Simple layout for non-authenticated routes (like landing page) -->
+  <RouterView v-else />
 </template>
 
 <style lang="scss" scoped>
