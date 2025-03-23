@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { useDisplay } from 'vuetify'
@@ -14,6 +14,21 @@ const activeSection = ref('login') // 'login' or 'register'
 // Navigation to login/register sections
 const navigateTo = (section: string) => {
     activeSection.value = section
+
+    // Reset validation when switching between login and register
+    if (section === 'login') {
+        loginErrors.value = {
+            username: '',
+            password: ''
+        }
+    } else {
+        registerErrors.value = {
+            username: '',
+            email: '',
+            password: '',
+            confirmPassword: ''
+        }
+    }
 }
 
 // Form data 
@@ -30,15 +45,146 @@ const registerForm = ref({
     confirmPassword: ''
 })
 
+// Validation errors
+const loginErrors = ref({
+    username: '',
+    password: ''
+})
+
+const registerErrors = ref({
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+})
+
+// Form validity
+const isLoginFormValid = computed(() => {
+    return !loginErrors.value.username && !loginErrors.value.password &&
+        loginForm.value.username && loginForm.value.password
+})
+
+const isRegisterFormValid = computed(() => {
+    return !registerErrors.value.username && !registerErrors.value.email &&
+        !registerErrors.value.password && !registerErrors.value.confirmPassword &&
+        registerForm.value.username && registerForm.value.email &&
+        registerForm.value.password && registerForm.value.confirmPassword
+})
+
+// Password strength indicator
+const passwordStrength = computed(() => {
+    const password = registerForm.value.password
+    if (!password) return 0
+
+    let strength = 0
+
+    // Length check
+    if (password.length >= 8) strength++
+
+    // Contains uppercase
+    if (/[A-Z]/.test(password)) strength++
+
+    // Contains lowercase
+    if (/[a-z]/.test(password)) strength++
+
+    // Contains numbers
+    if (/\d/.test(password)) strength++
+
+    // Contains special characters
+    if (/[^A-Za-z0-9]/.test(password)) strength++
+
+    return Math.min(strength, 4) // Normalize to max 4
+})
+
+const passwordStrengthColor = computed(() => {
+    const strength = passwordStrength.value
+    if (strength === 0) return 'error'
+    if (strength === 1) return 'error'
+    if (strength === 2) return 'warning'
+    if (strength === 3) return 'success'
+    return 'success'
+})
+
+const passwordStrengthText = computed(() => {
+    const strength = passwordStrength.value
+    if (strength === 0) return 'Very Weak'
+    if (strength === 1) return 'Weak'
+    if (strength === 2) return 'Medium'
+    if (strength === 3) return 'Strong'
+    return 'Very Strong'
+})
+
 // Password visibility
 const showLoginPassword = ref(false)
 const showRegisterPassword = ref(false)
 const showRegisterConfirmPassword = ref(false)
 
+// Validation functions
+const validateUsername = (username: string) => {
+    if (!username) return 'Username is required'
+    if (username.length < 3) return 'Username must be at least 3 characters'
+    return ''
+}
+
+const validateEmail = (email: string) => {
+    if (!email) return 'Email is required'
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) return 'Please enter a valid email address'
+    return ''
+}
+
+const validatePassword = (password: string) => {
+    if (!password) return 'Password is required'
+    if (password.length < 8) return 'Password must be at least 8 characters'
+    return ''
+}
+
+const validateConfirmPassword = (confirmPassword: string, password: string) => {
+    if (!confirmPassword) return 'Please confirm your password'
+    if (confirmPassword !== password) return 'Passwords do not match'
+    return ''
+}
+
+// Validate login form fields
+const validateLoginUsername = () => {
+    loginErrors.value.username = validateUsername(loginForm.value.username)
+}
+
+const validateLoginPassword = () => {
+    loginErrors.value.password = loginForm.value.password ? '' : 'Password is required'
+}
+
+// Validate register form fields
+const validateRegisterUsername = () => {
+    registerErrors.value.username = validateUsername(registerForm.value.username)
+}
+
+const validateRegisterEmail = () => {
+    registerErrors.value.email = validateEmail(registerForm.value.email)
+}
+
+const validateRegisterPassword = () => {
+    registerErrors.value.password = validatePassword(registerForm.value.password)
+    // Also revalidate confirm password when password changes
+    if (registerForm.value.confirmPassword) {
+        validateRegisterConfirmPassword()
+    }
+}
+
+const validateRegisterConfirmPassword = () => {
+    registerErrors.value.confirmPassword = validateConfirmPassword(
+        registerForm.value.confirmPassword,
+        registerForm.value.password
+    )
+}
+
 // Handle login form submission
 const handleLogin = async () => {
-    if (!loginForm.value.username || !loginForm.value.password) {
-        authStore.error = 'Please enter both username and password'
+    // Validate all fields
+    validateLoginUsername()
+    validateLoginPassword()
+
+    if (!isLoginFormValid.value) {
         return
     }
 
@@ -47,15 +193,13 @@ const handleLogin = async () => {
 
 // Handle register form submission
 const handleRegister = async () => {
-    // Basic validation
-    if (!registerForm.value.username || !registerForm.value.email ||
-        !registerForm.value.password || !registerForm.value.confirmPassword) {
-        authStore.error = 'Please fill in all fields'
-        return
-    }
+    // Validate all fields
+    validateRegisterUsername()
+    validateRegisterEmail()
+    validateRegisterPassword()
+    validateRegisterConfirmPassword()
 
-    if (registerForm.value.password !== registerForm.value.confirmPassword) {
-        authStore.error = "Passwords don't match"
+    if (!isRegisterFormValid.value) {
         return
     }
 
@@ -146,37 +290,45 @@ const handleRegister = async () => {
                                 <h2 class="landing__form-title">Welcome Back</h2>
 
                                 <v-alert v-if="authStore.error" type="error" density="compact" variant="tonal"
-                                    class="mb-4">
+                                    class="mb-6">
                                     {{ authStore.error }}
                                 </v-alert>
 
                                 <v-form @submit.prevent="handleLogin">
-                                    <v-text-field v-model="loginForm.username" label="Username"
-                                        prepend-inner-icon="mdi-account" variant="outlined" required
-                                        autocomplete="username">
-                                    </v-text-field>
+                                    <div class="form-field-wrapper">
+                                        <v-text-field v-model="loginForm.username" label="Username"
+                                            prepend-inner-icon="mdi-account" variant="outlined" required
+                                            autocomplete="username" :error-messages="loginErrors.username"
+                                            @blur="validateLoginUsername" @input="validateLoginUsername">
+                                        </v-text-field>
+                                    </div>
 
-                                    <v-text-field v-model="loginForm.password" label="Password"
-                                        prepend-inner-icon="mdi-lock" :type="showLoginPassword ? 'text' : 'password'"
-                                        variant="outlined" required autocomplete="current-password"
-                                        :append-inner-icon="showLoginPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                                        @click:append-inner="showLoginPassword = !showLoginPassword">
-                                    </v-text-field>
+                                    <div class="form-field-wrapper">
+                                        <v-text-field v-model="loginForm.password" label="Password"
+                                            prepend-inner-icon="mdi-lock"
+                                            :type="showLoginPassword ? 'text' : 'password'" variant="outlined" required
+                                            autocomplete="current-password"
+                                            :append-inner-icon="showLoginPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                                            @click:append-inner="showLoginPassword = !showLoginPassword"
+                                            :error-messages="loginErrors.password" @blur="validateLoginPassword"
+                                            @input="validateLoginPassword">
+                                        </v-text-field>
+                                    </div>
 
-                                    <div class="d-flex justify-space-between align-center mb-6 flex-wrap">
+                                    <div class="d-flex justify-space-between align-center mb-8 flex-wrap">
                                         <v-checkbox v-model="loginForm.remember" label="Remember me" hide-details
                                             density="compact"></v-checkbox>
                                         <a href="#" class="text-body-2 text-decoration-none mt-2">Forgot password?</a>
                                     </div>
 
                                     <v-btn color="primary" block size="large" type="submit" :loading="authStore.loading"
-                                        class="landing__submit-btn">
+                                        :disabled="!isLoginFormValid" class="landing__submit-btn">
                                         Login
                                     </v-btn>
                                 </v-form>
 
                                 <!-- Mobile only: link to register -->
-                                <div class="landing__mobile-switch-section text-center mt-6">
+                                <div class="landing__mobile-switch-section text-center mt-8">
                                     <p>Don't have an account?</p>
                                     <v-btn variant="text" color="primary" @click="navigateTo('register')">
                                         Create Account
@@ -189,44 +341,80 @@ const handleRegister = async () => {
                                 <h2 class="landing__form-title">Create Account</h2>
 
                                 <v-alert v-if="authStore.error" type="error" density="compact" variant="tonal"
-                                    class="mb-4">
+                                    class="mb-6">
                                     {{ authStore.error }}
                                 </v-alert>
 
                                 <v-form @submit.prevent="handleRegister">
-                                    <v-text-field v-model="registerForm.username" label="Username"
-                                        prepend-inner-icon="mdi-account" variant="outlined" required
-                                        autocomplete="username">
-                                    </v-text-field>
+                                    <div class="form-field-wrapper">
+                                        <v-text-field v-model="registerForm.username" label="Username"
+                                            prepend-inner-icon="mdi-account" variant="outlined" required
+                                            autocomplete="username" :error-messages="registerErrors.username"
+                                            @blur="validateRegisterUsername" @input="validateRegisterUsername"
+                                            hint="Username must be at least 3 characters" persistent-hint>
+                                        </v-text-field>
+                                    </div>
 
-                                    <v-text-field v-model="registerForm.email" label="Email"
-                                        prepend-inner-icon="mdi-email" variant="outlined" required type="email"
-                                        autocomplete="email">
-                                    </v-text-field>
+                                    <div class="form-field-wrapper">
+                                        <v-text-field v-model="registerForm.email" label="Email"
+                                            prepend-inner-icon="mdi-email" variant="outlined" required type="email"
+                                            autocomplete="email" :error-messages="registerErrors.email"
+                                            @blur="validateRegisterEmail" @input="validateRegisterEmail">
+                                        </v-text-field>
+                                    </div>
 
-                                    <v-text-field v-model="registerForm.password" label="Password"
-                                        prepend-inner-icon="mdi-lock" :type="showRegisterPassword ? 'text' : 'password'"
-                                        variant="outlined" required autocomplete="new-password"
-                                        :append-inner-icon="showRegisterPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                                        @click:append-inner="showRegisterPassword = !showRegisterPassword">
-                                    </v-text-field>
+                                    <div class="form-field-wrapper">
+                                        <v-text-field v-model="registerForm.password" label="Password"
+                                            prepend-inner-icon="mdi-lock"
+                                            :type="showRegisterPassword ? 'text' : 'password'" variant="outlined"
+                                            required autocomplete="new-password"
+                                            :append-inner-icon="showRegisterPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                                            @click:append-inner="showRegisterPassword = !showRegisterPassword"
+                                            :error-messages="registerErrors.password" @blur="validateRegisterPassword"
+                                            @input="validateRegisterPassword"
+                                            hint="Password must be at least 8 characters" persistent-hint>
+                                        </v-text-field>
+                                    </div>
 
-                                    <v-text-field v-model="registerForm.confirmPassword" label="Confirm Password"
-                                        prepend-inner-icon="mdi-lock-check"
-                                        :type="showRegisterConfirmPassword ? 'text' : 'password'" variant="outlined"
-                                        required autocomplete="new-password"
-                                        :append-inner-icon="showRegisterConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
-                                        @click:append-inner="showRegisterConfirmPassword = !showRegisterConfirmPassword">
-                                    </v-text-field>
+                                    <!-- Password strength indicator -->
+                                    <div v-if="registerForm.password" class="mb-6">
+                                        <div class="d-flex align-center">
+                                            <v-progress-linear :color="passwordStrengthColor"
+                                                :model-value="(passwordStrength / 4) * 100" height="10"
+                                                rounded></v-progress-linear>
+                                            <span class="ms-2 text-body-2" :class="`text-${passwordStrengthColor}`">
+                                                {{ passwordStrengthText }}
+                                            </span>
+                                        </div>
+                                        <div class="text-caption mt-1">
+                                            <span v-if="passwordStrength < 3">
+                                                For a stronger password, include uppercase letters, numbers, and special
+                                                characters.
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-field-wrapper">
+                                        <v-text-field v-model="registerForm.confirmPassword" label="Confirm Password"
+                                            prepend-inner-icon="mdi-lock-check"
+                                            :type="showRegisterConfirmPassword ? 'text' : 'password'" variant="outlined"
+                                            required autocomplete="new-password"
+                                            :append-inner-icon="showRegisterConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                                            @click:append-inner="showRegisterConfirmPassword = !showRegisterConfirmPassword"
+                                            :error-messages="registerErrors.confirmPassword"
+                                            @blur="validateRegisterConfirmPassword"
+                                            @input="validateRegisterConfirmPassword">
+                                        </v-text-field>
+                                    </div>
 
                                     <v-btn color="primary" block size="large" type="submit" :loading="authStore.loading"
-                                        class="landing__submit-btn mt-2">
+                                        :disabled="!isRegisterFormValid" class="landing__submit-btn mt-4">
                                         Register
                                     </v-btn>
                                 </v-form>
 
                                 <!-- Mobile only: link to login -->
-                                <div class="landing__mobile-switch-section text-center mt-6">
+                                <div class="landing__mobile-switch-section text-center mt-8">
                                     <p>Already have an account?</p>
                                     <v-btn variant="text" color="primary" @click="navigateTo('login')">
                                         Login
@@ -522,5 +710,10 @@ const handleRegister = async () => {
             align-items: center; // Align icon with text better on small screens
         }
     }
+}
+
+// Add extra spacing between form fields
+.form-field-wrapper {
+    margin-bottom: 24px; // Increased spacing between form fields
 }
 </style>
