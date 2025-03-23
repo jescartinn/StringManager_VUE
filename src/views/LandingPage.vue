@@ -30,6 +30,11 @@ const registerForm = ref({
     confirmPassword: ''
 })
 
+// Password visibility
+const showLoginPassword = ref(false)
+const showRegisterPassword = ref(false)
+const showRegisterConfirmPassword = ref(false)
+
 // Handle login form submission
 const handleLogin = async () => {
     if (!loginForm.value.username || !loginForm.value.password) {
@@ -148,11 +153,15 @@ const handleRegister = async () => {
                                 <v-form @submit.prevent="handleLogin">
                                     <v-text-field v-model="loginForm.username" label="Username"
                                         prepend-inner-icon="mdi-account" variant="outlined" required
-                                        autocomplete="username"></v-text-field>
+                                        autocomplete="username">
+                                    </v-text-field>
 
                                     <v-text-field v-model="loginForm.password" label="Password"
-                                        prepend-inner-icon="mdi-lock" type="password" variant="outlined" required
-                                        autocomplete="current-password"></v-text-field>
+                                        prepend-inner-icon="mdi-lock" :type="showLoginPassword ? 'text' : 'password'"
+                                        variant="outlined" required autocomplete="current-password"
+                                        :append-inner-icon="showLoginPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                                        @click:append-inner="showLoginPassword = !showLoginPassword">
+                                    </v-text-field>
 
                                     <div class="d-flex justify-space-between align-center mb-6 flex-wrap">
                                         <v-checkbox v-model="loginForm.remember" label="Remember me" hide-details
@@ -187,19 +196,28 @@ const handleRegister = async () => {
                                 <v-form @submit.prevent="handleRegister">
                                     <v-text-field v-model="registerForm.username" label="Username"
                                         prepend-inner-icon="mdi-account" variant="outlined" required
-                                        autocomplete="username"></v-text-field>
+                                        autocomplete="username">
+                                    </v-text-field>
 
                                     <v-text-field v-model="registerForm.email" label="Email"
                                         prepend-inner-icon="mdi-email" variant="outlined" required type="email"
-                                        autocomplete="email"></v-text-field>
+                                        autocomplete="email">
+                                    </v-text-field>
 
                                     <v-text-field v-model="registerForm.password" label="Password"
-                                        prepend-inner-icon="mdi-lock" type="password" variant="outlined" required
-                                        autocomplete="new-password"></v-text-field>
+                                        prepend-inner-icon="mdi-lock" :type="showRegisterPassword ? 'text' : 'password'"
+                                        variant="outlined" required autocomplete="new-password"
+                                        :append-inner-icon="showRegisterPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                                        @click:append-inner="showRegisterPassword = !showRegisterPassword">
+                                    </v-text-field>
 
                                     <v-text-field v-model="registerForm.confirmPassword" label="Confirm Password"
-                                        prepend-inner-icon="mdi-lock-check" type="password" variant="outlined" required
-                                        autocomplete="new-password"></v-text-field>
+                                        prepend-inner-icon="mdi-lock-check"
+                                        :type="showRegisterConfirmPassword ? 'text' : 'password'" variant="outlined"
+                                        required autocomplete="new-password"
+                                        :append-inner-icon="showRegisterConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
+                                        @click:append-inner="showRegisterConfirmPassword = !showRegisterConfirmPassword">
+                                    </v-text-field>
 
                                     <v-btn color="primary" block size="large" type="submit" :loading="authStore.loading"
                                         class="landing__submit-btn mt-2">
