@@ -413,6 +413,7 @@ const completionPercentage = computed(() => {
       @include heading-3;
       border-bottom: 1px solid rgba(0, 0, 0, 0.06);
       padding-bottom: $spacing-md;
+      padding-top: $spacing-md;
     }
   }
 
@@ -429,6 +430,7 @@ const completionPercentage = computed(() => {
       @include heading-3;
       color: $primary;
       margin-bottom: $spacing-xs;
+      margin-top: $spacing-xs;
     }
 
     &-days {

@@ -181,7 +181,6 @@ const notificationCount = ref(5)
     }
 
     &-item {
-      margin: $spacing-xs 0;
       padding: $spacing-md $spacing-lg;
       border-radius: 0;
       @include transition;
