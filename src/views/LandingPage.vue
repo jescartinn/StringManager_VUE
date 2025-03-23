@@ -2,9 +2,11 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
+import { useDisplay } from 'vuetify'
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { mdAndDown } = useDisplay()
 
 // Reference to control the display of different sections
 const activeSection = ref('login') // 'login' or 'register'
@@ -64,11 +66,20 @@ const handleRegister = async () => {
 <template>
     <div class="landing">
         <v-container fluid class="landing__container pa-0">
+            <!-- Mobile Header - Only visible on small screens -->
+            <div class="landing__mobile-header">
+                <div class="landing__logo landing__logo--mobile">
+                    <v-icon size="36" color="primary" icon="mdi-tennis"></v-icon>
+                    <h1 class="landing__logo-text">StringManager</h1>
+                </div>
+            </div>
+
             <v-row no-gutters>
                 <!-- Left side - Promotional content -->
                 <v-col cols="12" md="7" class="landing__promo">
                     <div class="landing__promo-content">
-                        <div class="landing__logo">
+                        <!-- Logo - Hidden on mobile since we show it in the header -->
+                        <div class="landing__logo landing__logo--desktop">
                             <v-icon size="48" color="white" icon="mdi-tennis"></v-icon>
                             <h1 class="landing__logo-text">StringManager</h1>
                         </div>
@@ -136,23 +147,32 @@ const handleRegister = async () => {
 
                                 <v-form @submit.prevent="handleLogin">
                                     <v-text-field v-model="loginForm.username" label="Username"
-                                        prepend-inner-icon="mdi-account" variant="outlined" required></v-text-field>
+                                        prepend-inner-icon="mdi-account" variant="outlined" required
+                                        autocomplete="username"></v-text-field>
 
                                     <v-text-field v-model="loginForm.password" label="Password"
-                                        prepend-inner-icon="mdi-lock" type="password" variant="outlined"
-                                        required></v-text-field>
+                                        prepend-inner-icon="mdi-lock" type="password" variant="outlined" required
+                                        autocomplete="current-password"></v-text-field>
 
-                                    <div class="d-flex justify-space-between align-center mb-6">
+                                    <div class="d-flex justify-space-between align-center mb-6 flex-wrap">
                                         <v-checkbox v-model="loginForm.remember" label="Remember me" hide-details
                                             density="compact"></v-checkbox>
-                                        <a href="#" class="text-body-2 text-decoration-none">Forgot password?</a>
+                                        <a href="#" class="text-body-2 text-decoration-none mt-2">Forgot password?</a>
                                     </div>
 
-                                    <v-btn color="primary" block size="large" type="submit"
-                                        :loading="authStore.loading">
+                                    <v-btn color="primary" block size="large" type="submit" :loading="authStore.loading"
+                                        class="landing__submit-btn">
                                         Login
                                     </v-btn>
                                 </v-form>
+
+                                <!-- Mobile only: link to register -->
+                                <div class="landing__mobile-switch-section text-center mt-6">
+                                    <p>Don't have an account?</p>
+                                    <v-btn variant="text" color="primary" @click="navigateTo('register')">
+                                        Create Account
+                                    </v-btn>
+                                </div>
                             </div>
 
                             <!-- Register form -->
@@ -166,25 +186,34 @@ const handleRegister = async () => {
 
                                 <v-form @submit.prevent="handleRegister">
                                     <v-text-field v-model="registerForm.username" label="Username"
-                                        prepend-inner-icon="mdi-account" variant="outlined" required></v-text-field>
+                                        prepend-inner-icon="mdi-account" variant="outlined" required
+                                        autocomplete="username"></v-text-field>
 
                                     <v-text-field v-model="registerForm.email" label="Email"
-                                        prepend-inner-icon="mdi-email" variant="outlined" required
-                                        type="email"></v-text-field>
+                                        prepend-inner-icon="mdi-email" variant="outlined" required type="email"
+                                        autocomplete="email"></v-text-field>
 
                                     <v-text-field v-model="registerForm.password" label="Password"
-                                        prepend-inner-icon="mdi-lock" type="password" variant="outlined"
-                                        required></v-text-field>
+                                        prepend-inner-icon="mdi-lock" type="password" variant="outlined" required
+                                        autocomplete="new-password"></v-text-field>
 
                                     <v-text-field v-model="registerForm.confirmPassword" label="Confirm Password"
-                                        prepend-inner-icon="mdi-lock-check" type="password" variant="outlined"
-                                        required></v-text-field>
+                                        prepend-inner-icon="mdi-lock-check" type="password" variant="outlined" required
+                                        autocomplete="new-password"></v-text-field>
 
                                     <v-btn color="primary" block size="large" type="submit" :loading="authStore.loading"
-                                        class="mt-2">
+                                        class="landing__submit-btn mt-2">
                                         Register
                                     </v-btn>
                                 </v-form>
+
+                                <!-- Mobile only: link to login -->
+                                <div class="landing__mobile-switch-section text-center mt-6">
+                                    <p>Already have an account?</p>
+                                    <v-btn variant="text" color="primary" @click="navigateTo('login')">
+                                        Login
+                                    </v-btn>
+                                </div>
                             </div>
                         </v-card-text>
                     </v-card>
@@ -201,6 +230,21 @@ const handleRegister = async () => {
 
     &__container {
         min-height: 100vh;
+    }
+
+    // Mobile header
+    &__mobile-header {
+        display: none;
+        padding: $spacing-md;
+        background-color: white;
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+
+        @media (max-width: $breakpoint-md) {
+            display: block;
+        }
     }
 
     // Promotional side
@@ -231,8 +275,8 @@ const handleRegister = async () => {
             max-width: 600px;
             margin: 0 auto;
 
-            @include respond-to(xs) {
-                padding: $spacing-lg;
+            @media (max-width: $breakpoint-md) {
+                padding: $spacing-lg $spacing-md;
             }
         }
     }
@@ -242,10 +286,30 @@ const handleRegister = async () => {
         gap: $spacing-md;
         margin-bottom: $spacing-xl;
 
+        &--mobile {
+            margin-bottom: 0;
+            justify-content: center;
+
+            .landing__logo-text {
+                color: $primary;
+                font-size: 1.75rem;
+            }
+        }
+
+        &--desktop {
+            @media (max-width: $breakpoint-md) {
+                display: none;
+            }
+        }
+
         &-text {
             font-size: 2.5rem;
             font-weight: 700;
             margin: 0;
+
+            @media (max-width: $breakpoint-md) {
+                font-size: 2rem;
+            }
         }
     }
 
@@ -257,18 +321,30 @@ const handleRegister = async () => {
             font-weight: 600;
             margin-bottom: $spacing-md;
             line-height: 1.2;
+
+            @media (max-width: $breakpoint-md) {
+                font-size: 1.75rem;
+            }
         }
 
         p {
             font-size: 1.25rem;
             opacity: 0.9;
             max-width: 500px;
+
+            @media (max-width: $breakpoint-md) {
+                font-size: 1.1rem;
+            }
         }
     }
 
     &__features {
         @include flex(column, flex-start, flex-start);
         gap: $spacing-xl;
+
+        @media (max-width: $breakpoint-md) {
+            gap: $spacing-lg;
+        }
     }
 
     &__feature {
@@ -279,29 +355,53 @@ const handleRegister = async () => {
             font-size: 1.25rem;
             font-weight: 600;
             margin: 0 0 $spacing-xs 0;
+
+            @media (max-width: $breakpoint-md) {
+                font-size: 1.15rem;
+            }
         }
 
         p {
             margin: 0;
             opacity: 0.9;
+
+            @media (max-width: $breakpoint-md) {
+                font-size: 0.95rem;
+            }
         }
     }
 
     // Auth side
     &__auth {
         @include flex(column, center, center);
-        padding: $spacing-lg;
+        padding: $spacing-lg !important;
+
+        @media (max-width: $breakpoint-md) {
+            padding: $spacing-lg !important;
+        }
 
         &-card {
             width: 100%;
             max-width: 480px;
             border-radius: $border-radius-lg;
             overflow: hidden;
+            box-shadow: $shadow-light !important;
+
+            @media (max-width: $breakpoint-md) {
+                max-width: 100%;
+                margin-top: 1rem;
+                border-radius: $border-radius-md;
+            }
         }
 
         &-tabs {
             @include flex(row, stretch, center);
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+
+            @media (max-width: $breakpoint-md) {
+                // Hide tabs on mobile as we'll have toggle buttons in the form
+                display: none;
+            }
         }
 
         &-tab {
@@ -335,6 +435,10 @@ const handleRegister = async () => {
 
         &-content {
             padding: $spacing-lg;
+
+            @media (max-width: $breakpoint-md) {
+                padding: $spacing-md;
+            }
         }
     }
 
@@ -344,6 +448,32 @@ const handleRegister = async () => {
             margin-bottom: $spacing-xl;
             color: $text-primary;
             font-weight: 600;
+
+            @media (max-width: $breakpoint-md) {
+                margin-bottom: $spacing-lg;
+                font-size: 1.5rem;
+            }
+        }
+    }
+
+    &__submit-btn {
+        margin-top: $spacing-md;
+        min-height: 48px; // Ensure button is easy to tap on mobile
+    }
+
+    &__mobile-switch-section {
+        display: none;
+
+        @media (max-width: $breakpoint-md) {
+            display: block;
+            margin-top: $spacing-xl;
+            padding-top: $spacing-md;
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+
+            p {
+                margin-bottom: $spacing-xs;
+                color: $text-secondary;
+            }
         }
     }
 
@@ -351,11 +481,27 @@ const handleRegister = async () => {
     @media (max-width: $breakpoint-md) {
         &__promo {
             min-height: auto;
-            padding: $spacing-xl 0;
+            padding: $spacing-lg 0;
+
+            // Make promo section collapsible on smaller screens for better UX
+            max-height: 600px;
+            overflow-y: auto;
         }
 
         &__auth {
-            padding: $spacing-xl $spacing-md;
+            padding: $spacing-md;
+        }
+    }
+
+    // For very small screens
+    @media (max-width: $breakpoint-sm) {
+        &__promo {
+            // Optional: On very small screens, make the promo section even more compact
+            padding: $spacing-md 0;
+        }
+
+        &__feature {
+            align-items: center; // Align icon with text better on small screens
         }
     }
 }
