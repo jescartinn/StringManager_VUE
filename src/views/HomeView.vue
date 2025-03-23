@@ -246,7 +246,7 @@ const completionPercentage = computed(() => {
                 Today's Completion Rate
               </v-card-title>
 
-              <v-card-text>
+              <v-card-text class="pt-4">
                 <div class="home__progress-container">
                   <v-progress-circular :rotate="360" :size="100" :width="15" :model-value="completionPercentage"
                     color="primary" class="home__progress-circle">
@@ -281,7 +281,7 @@ const completionPercentage = computed(() => {
                 Current Tournament
               </v-card-title>
 
-              <v-card-text>
+              <v-card-text class="pt-4">
                 <h3 class="home__tournament-name">{{ currentTournament.name }}</h3>
                 <p class="home__tournament-days">
                   <v-icon start color="warning" icon="mdi-calendar-clock"></v-icon>
@@ -300,7 +300,7 @@ const completionPercentage = computed(() => {
                 Top Stringers
               </v-card-title>
 
-              <v-card-text>
+              <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(stringer, index) in topStringers" :key="stringer.id"
                     :title="stringer.stringerName" :subtitle="`${stringer.completedJobs} jobs completed`">
@@ -321,7 +321,7 @@ const completionPercentage = computed(() => {
                 Top Players
               </v-card-title>
 
-              <v-card-text>
+              <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(player, index) in topPlayers" :key="player.id" :title="player.playerName"
                     :subtitle="`${player.totalJobs} total jobs`">
@@ -342,7 +342,7 @@ const completionPercentage = computed(() => {
                 Top Strings
               </v-card-title>
 
-              <v-card-text>
+              <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(string, index) in topStrings" :key="string.id" :title="string.stringName"
                     :subtitle="`${string.totalUses} total uses`">
@@ -413,6 +413,7 @@ const completionPercentage = computed(() => {
       @include heading-3;
       border-bottom: 1px solid rgba(0, 0, 0, 0.06);
       padding-bottom: $spacing-md;
+      padding-top: $spacing-md;
     }
   }
 
@@ -429,6 +430,7 @@ const completionPercentage = computed(() => {
       @include heading-3;
       color: $primary;
       margin-bottom: $spacing-xs;
+      margin-top: $spacing-xs;
     }
 
     &-days {

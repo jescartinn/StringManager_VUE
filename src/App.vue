@@ -73,7 +73,7 @@ const notificationCount = ref(5)
             <v-icon>mdi-chevron-down</v-icon>
           </v-btn>
         </template>
-        <v-list>
+        <v-list class="pa-0">
           <v-list-item to="/profile">
             <v-list-item-title>
               <v-icon start>mdi-account</v-icon>
@@ -181,7 +181,6 @@ const notificationCount = ref(5)
     }
 
     &-item {
-      margin: $spacing-xs 0;
       padding: $spacing-md $spacing-lg;
       border-radius: 0;
       @include transition;
