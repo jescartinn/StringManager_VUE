@@ -10,7 +10,7 @@ interface User {
   email: string
   role: string
   createdAt: string
-  lastLoginAt?: string
+  lastLoginAt?: string | null
 }
 
 interface UpdateUserDTO {

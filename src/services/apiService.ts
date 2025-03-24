@@ -546,7 +546,7 @@ const users = {
   getById: (id: number): Promise<User> => 
     request<User>(`/users/${id}`),
     
-  update: (id: number, userData: User): Promise<void> =>
+  update: (id: number, userData: Partial<User>): Promise<void> =>
     request<void>(`/users/${id}`, {
       method: 'PUT',
       body: userData
