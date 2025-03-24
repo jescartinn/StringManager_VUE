@@ -504,7 +504,7 @@ const handleSort = (column: string) => {
                                 <template v-slot:activator="{ props }">
                                     <v-btn icon="mdi-dots-vertical" v-bind="props" variant="text" size="small"></v-btn>
                                 </template>
-                                <v-list>
+                                <v-list class="pa-0">
                                     <v-list-item @click="viewJob(item.id)">
                                         <v-list-item-title>
                                             <v-icon start>mdi-eye</v-icon>
