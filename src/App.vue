@@ -23,7 +23,7 @@ const drawer = ref(false)
 // Navigation items
 const navigationItems = [
   { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/dashboard' },
-  { title: 'String Jobs', icon: 'mdi-tennis', route: '/jobs' },
+  { title: 'String Jobs', icon: 'mdi-tennis', route: '/stringjobs' },
   { title: 'Players', icon: 'mdi-account-group', route: '/players' },
   { title: 'Racquets', icon: 'mdi-tennis-ball', route: '/racquets' },
   { title: 'Strings', icon: 'mdi-grid', route: '/strings' },
