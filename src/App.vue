@@ -352,10 +352,6 @@ const viewNotifications = () => {
   }
 
   &__nav {
-    &-list {
-      padding-top: $spacing-md;
-    }
-
     &-item {
       padding: $spacing-md $spacing-lg;
       border-radius: 0;
