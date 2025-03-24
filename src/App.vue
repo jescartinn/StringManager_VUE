@@ -1,10 +1,23 @@
 <script setup lang="ts">
-import { RouterView, useRoute } from 'vue-router'
+import { RouterView, useRoute, useRouter } from 'vue-router'
 import { ref, computed, onMounted, watch } from 'vue'
-import { useAuthStore } from './stores/auth'
+import { 
+  useAuthStore, 
+  useDashboardStore, 
+  usePlayerStore, 
+  useStringerStore, 
+  useTournamentStore, 
+  useStringJobStore 
+} from './stores'
 
 const authStore = useAuthStore()
+const dashboardStore = useDashboardStore()
+const playerStore = usePlayerStore()
+const stringerStore = useStringerStore()
+const tournamentStore = useTournamentStore()
+const stringJobStore = useStringJobStore()
 const route = useRoute()
+const router = useRouter()
 
 // Determine if we should show the app layout or just the router view
 const showAppLayout = computed(() => {
@@ -37,24 +50,99 @@ const toggleDrawer = () => {
   drawer.value = !drawer.value
 }
 
-// Computed property for user initials (for avatar)
+// Computed properties for user display
 const userInitials = computed(() => {
   if (!authStore.user?.username) return '';
   return authStore.user.username.split(' ')
     .map(name => name.charAt(0))
     .join('')
     .toUpperCase();
-});
+})
 
-// Notification count
-const notificationCount = ref(5)
+const userName = computed(() => {
+  return authStore.user?.username || ''
+})
 
-// Check authentication status on app start
+const userRole = computed(() => {
+  return authStore.user?.role || ''
+})
+
+// Notification counts from various stores
+const pendingJobsCount = computed(() => stringJobStore.pendingJobs.length)
+const highPriorityJobsCount = computed(() => stringJobStore.highPriorityJobs.length)
+
+// Total notifications count
+const notificationCount = computed(() => {
+  let count = 0
+  if (highPriorityJobsCount.value > 0) {
+    count += highPriorityJobsCount.value
+  }
+  return count > 0 ? count : null
+})
+
+// Current tournament info
+const currentTournament = computed(() => tournamentStore.activeTournament)
+
+// Prefetch common data on application start
+const prefetchData = async () => {
+  // Only run if user is authenticated
+  if (!authStore.isAuthenticated) return
+
+  try {
+    // Start loading data in parallel
+    const fetchPromises = [
+      // Fetch current tournament data
+      tournamentStore.fetchCurrentTournament(),
+      // Fetch basic dashboard stats
+      dashboardStore.fetchDashboardStats(),
+      // Fetch pending jobs
+      stringJobStore.fetchJobsByStatus('Pending'),
+      // Prefetch players and stringers for form select options
+      playerStore.fetchPlayers(),
+      stringerStore.fetchAllStringers()
+    ]
+
+    await Promise.all(fetchPromises)
+  } catch (error) {
+    console.error('Error prefetching application data:', error)
+  }
+}
+
+// Check authentication status and prefetch data on app start
 onMounted(async () => {
   if (authStore.token) {
     await authStore.checkAuth()
+    await prefetchData()
   }
 })
+
+// Watch for route changes to update currently viewed job/player/etc
+watch(() => route.path, () => {
+  // Auto-close drawer on mobile when navigating
+  if (window.innerWidth < 960) {
+    drawer.value = false
+  }
+})
+
+// Handle logout
+const handleLogout = async () => {
+  await authStore.logout()
+  // Reset all stores when logging out
+  playerStore.reset()
+  stringJobStore.clearCurrentJob()
+  tournamentStore.reset()
+  stringerStore.reset()
+  dashboardStore.reset()
+}
+
+// Navigate to notifications view with appropriate filter
+const viewNotifications = () => {
+  if (highPriorityJobsCount.value > 0) {
+    router.push({ path: '/jobs', query: { priority: 'high' } })
+  } else {
+    router.push('/jobs')
+  }
+}
 </script>
 
 <template>
@@ -65,11 +153,25 @@ onMounted(async () => {
       <v-app-bar-nav-icon @click="toggleDrawer" color="white"></v-app-bar-nav-icon>
       <v-toolbar-title class="app__title">
         <span class="font-weight-bold">StringManager</span>
+        <!-- Display current tournament if available -->
+        <span v-if="currentTournament" class="ml-2 text-caption d-none d-md-inline-block">
+          <v-chip color="secondary" size="small" class="ml-2">
+            {{ currentTournament.name }}
+          </v-chip>
+        </span>
       </v-toolbar-title>
       <v-spacer></v-spacer>
 
-      <!-- Notifications -->
-      <v-btn icon color="white" class="app__nav-btn">
+      <!-- Pending Jobs Counter -->
+      <v-btn icon color="white" class="app__nav-btn" :to="{ path: '/jobs', query: { status: 'pending' } }"
+        :disabled="pendingJobsCount === 0">
+        <v-badge :content="pendingJobsCount || null" color="warning">
+          <v-icon>mdi-clock-outline</v-icon>
+        </v-badge>
+      </v-btn>
+
+      <!-- Notifications / High Priority Jobs -->
+      <v-btn icon color="white" class="app__nav-btn" @click="viewNotifications" :disabled="notificationCount === null">
         <v-badge :content="notificationCount" color="error">
           <v-icon>mdi-bell-outline</v-icon>
         </v-badge>
@@ -83,7 +185,7 @@ onMounted(async () => {
               {{ userInitials }}
             </v-avatar>
             <span class="app__user-name ml-2 d-none d-sm-inline-block" v-if="authStore.user">
-              {{ authStore.user.username }}
+              {{ userName }}
             </span>
             <v-icon>mdi-chevron-down</v-icon>
           </v-btn>
@@ -102,7 +204,7 @@ onMounted(async () => {
             </v-list-item-title>
           </v-list-item>
           <v-divider></v-divider>
-          <v-list-item @click="authStore.logout">
+          <v-list-item @click="handleLogout">
             <v-list-item-title>
               <v-icon start>mdi-logout</v-icon>
               Logout
@@ -123,6 +225,15 @@ onMounted(async () => {
 
       <v-divider></v-divider>
 
+      <!-- Current Tournament Banner (if exists) -->
+      <v-alert v-if="currentTournament" color="secondary" variant="tonal" border="start" class="mt-2 mx-2" density="compact">
+        <div class="text-subtitle-2">{{ currentTournament.name }}</div>
+        <div class="text-caption">
+          <v-icon size="small" start>mdi-calendar-clock</v-icon>
+          {{ tournamentStore.getRemainingDays(currentTournament.id) }} days remaining
+        </div>
+      </v-alert>
+
       <!-- Navigation List -->
       <v-list class="app__nav-list">
         <v-list-item v-for="item in navigationItems" :key="item.title" :to="item.route"
@@ -131,6 +242,10 @@ onMounted(async () => {
             <v-icon>{{ item.icon }}</v-icon>
           </template>
           <v-list-item-title>{{ item.title }}</v-list-item-title>
+          <!-- Badge for pending jobs -->
+          <template v-if="item.title === 'String Jobs' && pendingJobsCount > 0" v-slot:append>
+            <v-badge color="warning" :content="pendingJobsCount"></v-badge>
+          </template>
         </v-list-item>
       </v-list>
 
@@ -142,8 +257,8 @@ onMounted(async () => {
               {{ userInitials }}
             </v-avatar>
             <div class="app__user-details">
-              <div class="app__user-name">{{ authStore.user.username }}</div>
-              <div class="app__user-role">{{ authStore.user.role }}</div>
+              <div class="app__user-name">{{ userName }}</div>
+              <div class="app__user-role">{{ userRole }}</div>
             </div>
           </div>
         </div>
@@ -154,6 +269,11 @@ onMounted(async () => {
     <v-main class="app__main">
       <RouterView />
     </v-main>
+
+    <!-- Global Loading Overlay -->
+    <v-overlay v-if="authStore.loading" class="align-center justify-center">
+      <v-progress-circular indeterminate size="64" color="primary"></v-progress-circular>
+    </v-overlay>
   </v-app>
 
   <!-- Simple layout for non-authenticated routes (like landing page) -->

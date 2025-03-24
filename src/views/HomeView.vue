@@ -1,72 +1,95 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import api from '../services/apiService'
+import { useDashboardStore, useStringJobStore, useTournamentStore } from '../stores'
+import type { DashboardStats } from '../services/apiService'
 
-// Data for dashboard
-const pendingJobs = ref(0)
-const inProgressJobs = ref(0)
-const completedJobsToday = ref(0)
-const highPriorityJobs = ref(0)
-
-const currentTournament = ref(null)
-const topStringers = ref([])
-const topPlayers = ref([])
-const topStrings = ref([])
-const recentJobs = ref([])
-
-const isLoading = ref(true)
-const error = ref(null)
+const dashboardStore = useDashboardStore()
+const stringJobStore = useStringJobStore()
+const tournamentStore = useTournamentStore()
 const router = useRouter()
+
+// Tracking component loading state (different from store loading)
+const isInitialLoad = ref(true)
+
+// Recent jobs transformed from string jobs
+const recentJobs = ref<Array<{
+  id: number
+  playerName: string
+  racquet: string
+  mainString: string
+  tension: string
+  status: string
+  createdAt: string
+}>>([])
+
+// Computed properties for dashboard stats
+const pendingJobs = computed(() => dashboardStore.dashboardStats?.pendingJobs || 0)
+const inProgressJobs = computed(() => dashboardStore.dashboardStats?.inProgressJobs || 0)
+const completedJobsToday = computed(() => dashboardStore.dashboardStats?.completedJobsToday || 0)
+const highPriorityJobs = computed(() => dashboardStore.dashboardStats?.highPriorityJobs || 0)
+
+const currentTournament = computed(() => dashboardStore.dashboardStats?.currentTournament || null)
+const topStringers = computed(() => dashboardStore.dashboardStats?.topStringers || [])
+const topPlayers = computed(() => dashboardStore.dashboardStats?.topPlayers || [])
+const topStrings = computed(() => dashboardStore.dashboardStats?.topStrings || [])
+
+// Computed state
+const isLoading = computed(() => dashboardStore.loading || stringJobStore.loading || isInitialLoad.value)
+const error = computed(() => dashboardStore.error)
 
 // Fetch all dashboard data
 const fetchDashboardData = async () => {
-  isLoading.value = true
-  error.value = null
-  
   try {
-    // Get dashboard stats
-    const dashboardStats = await api.dashboard.getStats()
+    // Fetch dashboard stats from store
+    await dashboardStore.fetchDashboardStats(true)
     
-    // Update dashboard data with real values
-    pendingJobs.value = dashboardStats.pendingJobs
-    inProgressJobs.value = dashboardStats.inProgressJobs
-    completedJobsToday.value = dashboardStats.completedJobsToday
-    highPriorityJobs.value = dashboardStats.highPriorityJobs
-    currentTournament.value = dashboardStats.currentTournament
-    topStringers.value = dashboardStats.topStringers
-    topPlayers.value = dashboardStats.topPlayers
-    topStrings.value = dashboardStats.topStrings
+    // Fetch jobs data for recent jobs
+    await stringJobStore.fetchAllJobs()
     
-    // Get recent jobs (5 most recent)
-    const allJobs = await api.stringJobs.getAll()
-    // Sort jobs by createdAt date (newest first) and take the first 5
-    recentJobs.value = allJobs
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 5)
-      .map(job => ({
-        id: job.id,
-        playerName: job.player ? `${job.player.name} ${job.player.lastName}` : 'Unknown',
-        racquet: job.racquet ? `${job.racquet.brand} ${job.racquet.model}` : 'Unknown',
-        mainString: job.mainString ? `${job.mainString.brand} ${job.mainString.model}` : 'N/A',
-        tension: job.isTensionInKg ? `${job.mainTension}kg` : `${job.mainTension}lb`,
-        status: job.status,
-        createdAt: job.createdAt
-      }))
+    // Process recent jobs data
+    processRecentJobs()
   } catch (e) {
-    console.error('Error fetching dashboard data:', e)
-    error.value = 'Failed to load dashboard data. Please try again.'
+    console.error('Error in dashboard data fetching:', e)
   } finally {
-    isLoading.value = false
+    // Set initial load to false after first fetch
+    isInitialLoad.value = false
   }
 }
 
+// Process string jobs into the format needed for recent jobs display
+const processRecentJobs = () => {
+  // Get 5 most recent jobs
+  const jobsToProcess = [...stringJobStore.stringJobs]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 5)
+  
+  // Transform into the format needed for display
+  recentJobs.value = jobsToProcess.map(job => ({
+    id: job.id,
+    playerName: job.player ? `${job.player.name} ${job.player.lastName}` : 'Unknown',
+    racquet: job.racquet ? `${job.racquet.brand} ${job.racquet.model}` : 'Unknown',
+    mainString: job.mainString ? `${job.mainString.brand} ${job.mainString.model}` : 'N/A',
+    tension: job.isTensionInKg ? `${job.mainTension}kg` : `${job.mainTension}lb`,
+    status: job.status,
+    createdAt: job.createdAt
+  }))
+}
+
+// Watch for changes in stringJobs and update recentJobs
+watch(() => stringJobStore.stringJobs, () => {
+  if (!isLoading.value) {
+    processRecentJobs()
+  }
+})
+
+// Fetch data on component mount
 onMounted(() => {
   fetchDashboardData()
 })
 
-// Función para obtener el color de estado
-const getStatusColor = (status: string) => {
+// Function to get status color
+const getStatusColor = (status: string): string => {
   switch (status) {
     case 'Pending': return 'warning'
     case 'InProgress': return 'info'
@@ -76,29 +99,36 @@ const getStatusColor = (status: string) => {
   }
 }
 
-// Función para formatear fecha
-const formatDate = (dateString: string) => {
+// Format date function
+const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   return date.toLocaleString()
 }
 
-// Cálculo del porcentaje de completitud total de los trabajos
-const completionPercentage = computed(() => {
+// Completion percentage calculation
+const completionPercentage = computed((): number => {
   const total = pendingJobs.value + inProgressJobs.value + completedJobsToday.value
   if (total === 0) return 0
   return Math.round((completedJobsToday.value / total) * 100)
 })
 
-const handleRetry = () => {
+// Handler for retry button
+const handleRetry = (): void => {
   fetchDashboardData()
 }
 
-const navigateToJobs = () => {
+// Navigation functions
+const navigateToJobs = (): void => {
   router.push('/jobs')
 }
 
-const navigateToTournament = (id: number) => {
+const navigateToTournament = (id: number): void => {
   router.push(`/tournaments/${id}`)
+}
+
+// Create new job handler
+const createNewJob = (): void => {
+  router.push('/jobs/new')
 }
 </script>
 
@@ -148,7 +178,7 @@ const navigateToTournament = (id: number) => {
         <!-- Stats cards -->
         <v-row class="home__stats">
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'pending' }}">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -162,7 +192,7 @@ const navigateToTournament = (id: number) => {
           </v-col>
 
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'inprogress' }}">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -176,7 +206,7 @@ const navigateToTournament = (id: number) => {
           </v-col>
 
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'completed', period: 'today' }}">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -190,7 +220,7 @@ const navigateToTournament = (id: number) => {
           </v-col>
 
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { priority: 'high' }}">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -212,7 +242,7 @@ const navigateToTournament = (id: number) => {
                 <v-icon icon="mdi-tennis" size="64" color="grey-lighten-1" class="mb-4"></v-icon>
                 <h3 class="text-h5 mb-2">No data available</h3>
                 <p class="text-body-1 mb-6 text-grey">There are no stringing jobs in the system yet.</p>
-                <v-btn color="primary" prepend-icon="mdi-plus">Create First Job</v-btn>
+                <v-btn color="primary" prepend-icon="mdi-plus" @click="createNewJob">Create First Job</v-btn>
               </v-card-text>
             </v-card>
           </v-col>
@@ -240,7 +270,7 @@ const navigateToTournament = (id: number) => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="job in recentJobs" :key="job.id" class="home__table-row">
+                    <tr v-for="job in recentJobs" :key="job.id" class="home__table-row" @click="router.push(`/jobs/${job.id}`)">
                       <td>{{ job.playerName }}</td>
                       <td>{{ job.racquet }}</td>
                       <td>{{ job.mainString }}</td>
@@ -343,7 +373,8 @@ const navigateToTournament = (id: number) => {
               <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(stringer, index) in topStringers" :key="stringer.stringerId"
-                    :title="stringer.stringerName" :subtitle="`${stringer.completedJobs} jobs completed`">
+                    :title="stringer.stringerName" :subtitle="`${stringer.completedJobs} jobs completed`"
+                    :to="`/stringers/${stringer.stringerId}`">
                     <template v-slot:prepend>
                       <v-avatar color="primary" class="white--text">
                         {{ index + 1 }}
@@ -364,7 +395,7 @@ const navigateToTournament = (id: number) => {
               <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(player, index) in topPlayers" :key="player.playerId" :title="player.playerName"
-                    :subtitle="`${player.totalJobs} total jobs`">
+                    :subtitle="`${player.totalJobs} total jobs`" :to="`/players/${player.playerId}`">
                     <template v-slot:prepend>
                       <v-avatar color="secondary" class="white--text">
                         {{ index + 1 }}
@@ -385,7 +416,7 @@ const navigateToTournament = (id: number) => {
               <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(string, index) in topStrings" :key="string.stringId" :title="string.stringName"
-                    :subtitle="`${string.totalUses} total uses`">
+                    :subtitle="`${string.totalUses} total uses`" :to="`/strings/${string.stringId}`">
                     <template v-slot:prepend>
                       <v-avatar color="accent" class="white--text">
                         {{ index + 1 }}
@@ -421,6 +452,7 @@ const navigateToTournament = (id: number) => {
     &-card {
       height: 100%;
       @include transition;
+      cursor: pointer;
 
       &:hover {
         transform: translateY(-4px);
@@ -459,6 +491,9 @@ const navigateToTournament = (id: number) => {
 
   &__table {
     &-row {
+      cursor: pointer;
+      @include transition;
+
       &:hover {
         background-color: rgba($primary, 0.05);
       }
@@ -519,6 +554,16 @@ const navigateToTournament = (id: number) => {
 
   &__ranking-list {
     padding: 0;
+    
+    :deep(.v-list-item) {
+      min-height: 56px;
+      padding: 4px 16px;
+      cursor: pointer;
+      
+      &:hover {
+        background-color: rgba($primary, 0.05);
+      }
+    }
   }
 }
 
