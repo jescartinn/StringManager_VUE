@@ -1,84 +1,68 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import api from '../services/apiService'
 
-// Datos simulados para la demostración
-const pendingJobs = ref(12)
-const inProgressJobs = ref(5)
-const completedJobsToday = ref(8)
-const highPriorityJobs = ref(3)
+// Data for dashboard
+const pendingJobs = ref(0)
+const inProgressJobs = ref(0)
+const completedJobsToday = ref(0)
+const highPriorityJobs = ref(0)
 
-const currentTournament = ref({
-  id: 1,
-  name: 'Australian Open 2025',
-  remainingDays: 4
-})
-
-const topStringers = ref([
-  { id: 1, stringerName: 'Juan Pérez', completedJobs: 24 },
-  { id: 2, stringerName: 'María González', completedJobs: 18 },
-  { id: 3, stringerName: 'Carlos Rodríguez', completedJobs: 15 }
-])
-
-const topPlayers = ref([
-  { id: 1, playerName: 'Rafael Nadal', totalJobs: 14 },
-  { id: 2, playerName: 'Novak Djokovic', totalJobs: 12 },
-  { id: 3, playerName: 'Carlos Alcaraz', totalJobs: 10 }
-])
-
-const topStrings = ref([
-  { id: 1, stringName: 'Babolat RPM Blast', totalUses: 22 },
-  { id: 2, stringName: 'Luxilon ALU Power', totalUses: 18 },
-  { id: 3, stringName: 'Tecnifibre Pro Red Code', totalUses: 15 }
-])
-
-const recentJobs = ref([
-  {
-    id: 1,
-    playerName: 'Rafael Nadal',
-    racquet: 'Babolat Pure Aero',
-    mainString: 'RPM Blast',
-    tension: '25kg',
-    status: 'Completed',
-    createdAt: '2025-03-22T14:30:00'
-  },
-  {
-    id: 2,
-    playerName: 'Novak Djokovic',
-    racquet: 'Head Speed Pro',
-    mainString: 'ALU Power',
-    tension: '24kg',
-    status: 'InProgress',
-    createdAt: '2025-03-23T09:15:00'
-  },
-  {
-    id: 3,
-    playerName: 'Carlos Alcaraz',
-    racquet: 'Babolat Pure Aero',
-    mainString: 'Solinco Hyper-G',
-    tension: '25kg',
-    status: 'Pending',
-    createdAt: '2025-03-23T10:45:00'
-  },
-  {
-    id: 4,
-    playerName: 'Iga Swiatek',
-    racquet: 'Tecnifibre Tempo',
-    mainString: 'Pro Red Code',
-    tension: '24kg',
-    status: 'Pending',
-    createdAt: '2025-03-23T11:20:00'
-  }
-])
+const currentTournament = ref(null)
+const topStringers = ref([])
+const topPlayers = ref([])
+const topStrings = ref([])
+const recentJobs = ref([])
 
 const isLoading = ref(true)
+const error = ref(null)
 const router = useRouter()
 
-onMounted(() => {
-  // Simular carga de datos
-  setTimeout(() => {
+// Fetch all dashboard data
+const fetchDashboardData = async () => {
+  isLoading.value = true
+  error.value = null
+  
+  try {
+    // Get dashboard stats
+    const dashboardStats = await api.dashboard.getStats()
+    
+    // Update dashboard data with real values
+    pendingJobs.value = dashboardStats.pendingJobs
+    inProgressJobs.value = dashboardStats.inProgressJobs
+    completedJobsToday.value = dashboardStats.completedJobsToday
+    highPriorityJobs.value = dashboardStats.highPriorityJobs
+    currentTournament.value = dashboardStats.currentTournament
+    topStringers.value = dashboardStats.topStringers
+    topPlayers.value = dashboardStats.topPlayers
+    topStrings.value = dashboardStats.topStrings
+    
+    // Get recent jobs (5 most recent)
+    const allJobs = await api.stringJobs.getAll()
+    // Sort jobs by createdAt date (newest first) and take the first 5
+    recentJobs.value = allJobs
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .slice(0, 5)
+      .map(job => ({
+        id: job.id,
+        playerName: job.player ? `${job.player.name} ${job.player.lastName}` : 'Unknown',
+        racquet: job.racquet ? `${job.racquet.brand} ${job.racquet.model}` : 'Unknown',
+        mainString: job.mainString ? `${job.mainString.brand} ${job.mainString.model}` : 'N/A',
+        tension: job.isTensionInKg ? `${job.mainTension}kg` : `${job.mainTension}lb`,
+        status: job.status,
+        createdAt: job.createdAt
+      }))
+  } catch (e) {
+    console.error('Error fetching dashboard data:', e)
+    error.value = 'Failed to load dashboard data. Please try again.'
+  } finally {
     isLoading.value = false
-  }, 1000)
+  }
+}
+
+onMounted(() => {
+  fetchDashboardData()
 })
 
 // Función para obtener el color de estado
@@ -101,8 +85,21 @@ const formatDate = (dateString: string) => {
 // Cálculo del porcentaje de completitud total de los trabajos
 const completionPercentage = computed(() => {
   const total = pendingJobs.value + inProgressJobs.value + completedJobsToday.value
+  if (total === 0) return 0
   return Math.round((completedJobsToday.value / total) * 100)
 })
+
+const handleRetry = () => {
+  fetchDashboardData()
+}
+
+const navigateToJobs = () => {
+  router.push('/jobs')
+}
+
+const navigateToTournament = (id: number) => {
+  router.push(`/tournaments/${id}`)
+}
 </script>
 
 <template>
@@ -111,6 +108,20 @@ const completionPercentage = computed(() => {
       <v-row>
         <v-col cols="12">
           <h1 class="home__title">Dashboard</h1>
+        </v-col>
+      </v-row>
+
+      <!-- Error state -->
+      <v-row v-if="error && !isLoading">
+        <v-col cols="12">
+          <v-alert type="error" variant="tonal">
+            {{ error }}
+            <template v-slot:append>
+              <v-btn color="error" variant="text" @click="handleRetry">
+                Retry
+              </v-btn>
+            </template>
+          </v-alert>
         </v-col>
       </v-row>
 
@@ -194,10 +205,23 @@ const completionPercentage = computed(() => {
         </v-row>
 
         <!-- Main dashboard content -->
-        <v-row>
+        <v-row v-if="!recentJobs.length && !topStringers.length">
+          <v-col cols="12">
+            <v-card class="home__card">
+              <v-card-text class="text-center py-8">
+                <v-icon icon="mdi-tennis" size="64" color="grey-lighten-1" class="mb-4"></v-icon>
+                <h3 class="text-h5 mb-2">No data available</h3>
+                <p class="text-body-1 mb-6 text-grey">There are no stringing jobs in the system yet.</p>
+                <v-btn color="primary" prepend-icon="mdi-plus">Create First Job</v-btn>
+              </v-card-text>
+            </v-card>
+          </v-col>
+        </v-row>
+
+        <v-row v-else>
           <!-- Left column: Recent jobs and completion % -->
           <v-col cols="12" md="8">
-            <v-card class="home__card">
+            <v-card class="home__card" v-if="recentJobs.length">
               <v-card-title class="home__card-title">
                 <v-icon start icon="mdi-tennis" color="primary"></v-icon>
                 Recent Stringing Jobs
@@ -232,7 +256,7 @@ const completionPercentage = computed(() => {
                 </v-table>
 
                 <div class="d-flex justify-end mt-4">
-                  <v-btn color="primary" prepend-icon="mdi-eye">
+                  <v-btn color="primary" prepend-icon="mdi-eye" @click="navigateToJobs">
                     View All Jobs
                   </v-btn>
                 </div>
@@ -274,27 +298,43 @@ const completionPercentage = computed(() => {
 
           <!-- Right column: Tournament and top lists -->
           <v-col cols="12" md="4">
-            <!-- Current Tournament Card -->
-            <v-card class="home__card" v-if="currentTournament">
+            <!-- Current Tournament Card - Always shown -->
+            <v-card class="home__card">
               <v-card-title class="home__card-title">
                 <v-icon start icon="mdi-trophy" color="primary"></v-icon>
                 Current Tournament
               </v-card-title>
 
               <v-card-text class="pt-4">
-                <h3 class="home__tournament-name">{{ currentTournament.name }}</h3>
-                <p class="home__tournament-days">
-                  <v-icon start color="warning" icon="mdi-calendar-clock"></v-icon>
-                  {{ currentTournament.remainingDays }} days remaining
-                </p>
-                <v-btn block color="primary" class="mt-4" prepend-icon="mdi-tennis">
-                  Tournament Details
-                </v-btn>
+                <!-- Content when there is an active tournament -->
+                <template v-if="currentTournament">
+                  <h3 class="home__tournament-name">{{ currentTournament.name }}</h3>
+                  <p class="home__tournament-days">
+                    <v-icon start color="warning" icon="mdi-calendar-clock"></v-icon>
+                    {{ currentTournament.remainingDays }} days remaining
+                  </p>
+                  <v-btn block color="primary" class="mt-4" prepend-icon="mdi-tennis" 
+                    @click="navigateToTournament(currentTournament.id)">
+                    Tournament Details
+                  </v-btn>
+                </template>
+                
+                <!-- Content when there is no active tournament -->
+                <template v-else>
+                  <div class="home__tournament-empty">
+                    <v-icon icon="mdi-calendar-remove" size="56" color="grey-lighten-1" class="mb-3"></v-icon>
+                    <h3 class="text-h6 text-grey-darken-1">No Active Tournament</h3>
+                    <p class="text-body-2 text-grey mb-4">There is no tournament currently running.</p>
+                    <v-btn block color="primary" prepend-icon="mdi-calendar" to="/tournaments">
+                      View All Tournaments
+                    </v-btn>
+                  </div>
+                </template>
               </v-card-text>
             </v-card>
 
             <!-- Top Stringers Card -->
-            <v-card class="home__card mt-4">
+            <v-card class="home__card mt-4" v-if="topStringers.length">
               <v-card-title class="home__card-title">
                 <v-icon start icon="mdi-account-group" color="primary"></v-icon>
                 Top Stringers
@@ -302,7 +342,7 @@ const completionPercentage = computed(() => {
 
               <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
-                  <v-list-item v-for="(stringer, index) in topStringers" :key="stringer.id"
+                  <v-list-item v-for="(stringer, index) in topStringers" :key="stringer.stringerId"
                     :title="stringer.stringerName" :subtitle="`${stringer.completedJobs} jobs completed`">
                     <template v-slot:prepend>
                       <v-avatar color="primary" class="white--text">
@@ -315,7 +355,7 @@ const completionPercentage = computed(() => {
             </v-card>
 
             <!-- Top Players Card -->
-            <v-card class="home__card mt-4">
+            <v-card class="home__card mt-4" v-if="topPlayers.length">
               <v-card-title class="home__card-title">
                 <v-icon start icon="mdi-tennis" color="primary"></v-icon>
                 Top Players
@@ -323,7 +363,7 @@ const completionPercentage = computed(() => {
 
               <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
-                  <v-list-item v-for="(player, index) in topPlayers" :key="player.id" :title="player.playerName"
+                  <v-list-item v-for="(player, index) in topPlayers" :key="player.playerId" :title="player.playerName"
                     :subtitle="`${player.totalJobs} total jobs`">
                     <template v-slot:prepend>
                       <v-avatar color="secondary" class="white--text">
@@ -336,7 +376,7 @@ const completionPercentage = computed(() => {
             </v-card>
 
             <!-- Top Strings Card -->
-            <v-card class="home__card mt-4">
+            <v-card class="home__card mt-4" v-if="topStrings.length">
               <v-card-title class="home__card-title">
                 <v-icon start icon="mdi-basketball" color="primary"></v-icon>
                 Top Strings
@@ -344,7 +384,7 @@ const completionPercentage = computed(() => {
 
               <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
-                  <v-list-item v-for="(string, index) in topStrings" :key="string.id" :title="string.stringName"
+                  <v-list-item v-for="(string, index) in topStrings" :key="string.stringId" :title="string.stringName"
                     :subtitle="`${string.totalUses} total uses`">
                     <template v-slot:prepend>
                       <v-avatar color="accent" class="white--text">
@@ -437,6 +477,12 @@ const completionPercentage = computed(() => {
       @include flex(row, flex-start, center);
       @include body-text;
       color: $warning;
+    }
+    
+    &-empty {
+      @include flex(column, center, center);
+      padding: $spacing-lg 0;
+      text-align: center;
     }
   }
 
