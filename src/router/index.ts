@@ -1,6 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import LandingPage from '../views/LandingPage.vue'
+import StringJobsView from '../views/StringJobsView.vue'
+import StringJobForm from '../components/StringJobForm.vue'
+import StringJobDetails from '../components/StringJobDetails.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -15,6 +18,31 @@ const router = createRouter({
       path: '/dashboard',
       name: 'dashboard',
       component: HomeView,
+      meta: { requiresAuth: true }
+    },
+    // String Jobs routes
+    {
+      path: '/jobs',
+      name: 'jobs',
+      component: StringJobsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/jobs/new',
+      name: 'new-job',
+      component: StringJobForm,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/jobs/:id',
+      name: 'job-details',
+      component: StringJobDetails,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/jobs/edit/:id',
+      name: 'edit-job',
+      component: StringJobForm,
       meta: { requiresAuth: true }
     },
 
