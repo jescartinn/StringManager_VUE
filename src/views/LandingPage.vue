@@ -1,18 +1,19 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores'
 import { useDisplay } from 'vuetify'
+import type { RegisterDTO } from '../services/apiService'
 
 const router = useRouter()
 const authStore = useAuthStore()
 const { mdAndDown } = useDisplay()
 
 // Reference to control the display of different sections
-const activeSection = ref('login') // 'login' or 'register'
+const activeSection = ref<'login' | 'register'>('login')
 
 // Navigation to login/register sections
-const navigateTo = (section: string) => {
+const navigateTo = (section: 'login' | 'register') => {
     activeSection.value = section
 
     // Reset validation when switching between login and register
@@ -31,27 +32,52 @@ const navigateTo = (section: string) => {
     }
 }
 
-// Form data 
-const loginForm = ref({
+// Form data with proper typing
+interface LoginForm {
+    username: string
+    password: string
+    remember: boolean
+}
+
+const loginForm = ref<LoginForm>({
     username: '',
     password: '',
     remember: false
 })
 
-const registerForm = ref({
+interface RegisterForm {
+    username: string
+    email: string
+    password: string
+    confirmPassword: string
+}
+
+const registerForm = ref<RegisterForm>({
     username: '',
     email: '',
     password: '',
     confirmPassword: ''
 })
 
-// Validation errors
-const loginErrors = ref({
+// Validation errors with proper typing
+interface LoginErrors {
+    username: string
+    password: string
+}
+
+const loginErrors = ref<LoginErrors>({
     username: '',
     password: ''
 })
 
-const registerErrors = ref({
+interface RegisterErrors {
+    username: string
+    email: string
+    password: string
+    confirmPassword: string
+}
+
+const registerErrors = ref<RegisterErrors>({
     username: '',
     email: '',
     password: '',
@@ -120,50 +146,50 @@ const showRegisterPassword = ref(false)
 const showRegisterConfirmPassword = ref(false)
 
 // Validation functions
-const validateUsername = (username: string) => {
+const validateUsername = (username: string): string => {
     if (!username) return 'Username is required'
     if (username.length < 3) return 'Username must be at least 3 characters'
     return ''
 }
 
-const validateEmail = (email: string) => {
+const validateEmail = (email: string): string => {
     if (!email) return 'Email is required'
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(email)) return 'Please enter a valid email address'
     return ''
 }
 
-const validatePassword = (password: string) => {
+const validatePassword = (password: string): string => {
     if (!password) return 'Password is required'
     if (password.length < 8) return 'Password must be at least 8 characters'
     return ''
 }
 
-const validateConfirmPassword = (confirmPassword: string, password: string) => {
+const validateConfirmPassword = (confirmPassword: string, password: string): string => {
     if (!confirmPassword) return 'Please confirm your password'
     if (confirmPassword !== password) return 'Passwords do not match'
     return ''
 }
 
 // Validate login form fields
-const validateLoginUsername = () => {
+const validateLoginUsername = (): void => {
     loginErrors.value.username = validateUsername(loginForm.value.username)
 }
 
-const validateLoginPassword = () => {
+const validateLoginPassword = (): void => {
     loginErrors.value.password = loginForm.value.password ? '' : 'Password is required'
 }
 
 // Validate register form fields
-const validateRegisterUsername = () => {
+const validateRegisterUsername = (): void => {
     registerErrors.value.username = validateUsername(registerForm.value.username)
 }
 
-const validateRegisterEmail = () => {
+const validateRegisterEmail = (): void => {
     registerErrors.value.email = validateEmail(registerForm.value.email)
 }
 
-const validateRegisterPassword = () => {
+const validateRegisterPassword = (): void => {
     registerErrors.value.password = validatePassword(registerForm.value.password)
     // Also revalidate confirm password when password changes
     if (registerForm.value.confirmPassword) {
@@ -171,7 +197,7 @@ const validateRegisterPassword = () => {
     }
 }
 
-const validateRegisterConfirmPassword = () => {
+const validateRegisterConfirmPassword = (): void => {
     registerErrors.value.confirmPassword = validateConfirmPassword(
         registerForm.value.confirmPassword,
         registerForm.value.password
@@ -179,7 +205,7 @@ const validateRegisterConfirmPassword = () => {
 }
 
 // Handle login form submission
-const handleLogin = async () => {
+const handleLogin = async (): Promise<void> => {
     // Validate all fields
     validateLoginUsername()
     validateLoginPassword()
@@ -188,11 +214,18 @@ const handleLogin = async () => {
         return
     }
 
-    await authStore.login(loginForm.value.username, loginForm.value.password)
+    try {
+        const success = await authStore.login(loginForm.value.username, loginForm.value.password)
+        if (success) {
+            // The router navigation is handled in the store
+        }
+    } catch (error) {
+        console.error('Login error:', error)
+    }
 }
 
 // Handle register form submission
-const handleRegister = async () => {
+const handleRegister = async (): Promise<void> => {
     // Validate all fields
     validateRegisterUsername()
     validateRegisterEmail()
@@ -203,13 +236,30 @@ const handleRegister = async () => {
         return
     }
 
-    await authStore.register({
+    // Create a valid RegisterDTO object
+    const registerData: RegisterDTO = {
         username: registerForm.value.username,
         email: registerForm.value.email,
         password: registerForm.value.password,
         confirmPassword: registerForm.value.confirmPassword
-    })
+    }
+
+    try {
+        const success = await authStore.register(registerData)
+        if (success) {
+            // The router navigation is handled in the store
+        }
+    } catch (error) {
+        console.error('Registration error:', error)
+    }
 }
+
+// Check if user is already logged in
+onMounted(() => {
+    if (authStore.isAuthenticated) {
+        router.push('/dashboard')
+    }
+})
 </script>
 
 <template>
