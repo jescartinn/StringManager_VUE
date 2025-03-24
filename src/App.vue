@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView, useRoute, useRouter } from 'vue-router'
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { 
   useAuthStore, 
   useDashboardStore, 
@@ -19,8 +19,14 @@ const stringJobStore = useStringJobStore()
 const route = useRoute()
 const router = useRouter()
 
+// App-level loading state
+const appIsReady = ref(!authStore.initializing)
+
 // Determine if we should show the app layout or just the router view
 const showAppLayout = computed(() => {
+  // If the app is still initializing, don't render the layout yet
+  if (!appIsReady.value) return false
+  
   // If the route doesn't require auth (like landing page), don't show app layout
   if (route.meta.requiresAuth === false) {
     return false
@@ -83,6 +89,23 @@ const notificationCount = computed(() => {
 // Current tournament info
 const currentTournament = computed(() => tournamentStore.activeTournament)
 
+// Watch for auth state changes and update app ready state
+watch(() => authStore.initializing, (initializing) => {
+  if (!initializing) {
+    // Auth initialization completed
+    appIsReady.value = true
+  }
+})
+
+// Watch for login/logout
+watch(() => authStore.isAuthenticated, (isAuthenticated, wasAuthenticated) => {
+  // If user just logged in
+  if (isAuthenticated && !wasAuthenticated) {
+    // Let's ensure UI is updated before prefetching data
+    nextTick(() => prefetchData())
+  }
+})
+
 // Prefetch common data on application start
 const prefetchData = async () => {
   // Only run if user is authenticated
@@ -108,10 +131,25 @@ const prefetchData = async () => {
   }
 }
 
-// Check authentication status and prefetch data on app start
+// Wait for app to be ready, auth to be checked and then prefetch data
 onMounted(async () => {
-  if (authStore.token) {
-    await authStore.checkAuth()
+  // First wait for auth initialization to complete
+  if (authStore.initializing) {
+    await new Promise<void>(resolve => {
+      const unwatch = watch(() => authStore.initializing, (initializing) => {
+        if (!initializing) {
+          unwatch() // Stop watching once done
+          resolve() // Resolve promise
+        }
+      }, { immediate: true })
+    })
+  }
+  
+  // Now the app is ready
+  appIsReady.value = true
+  
+  // If user is authenticated, prefetch data
+  if (authStore.isAuthenticated) {
     await prefetchData()
   }
 })
