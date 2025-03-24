@@ -354,10 +354,10 @@ const handleSort = (column: string) => {
             <!-- Filters and Search -->
             <v-card class="mb-6">
                 <v-card-text>
-                    <v-row>
+                    <v-row class="align-center">
                         <v-col cols="12" md="9">
                             <v-text-field v-model="search" label="Search" prepend-inner-icon="mdi-magnify"
-                                density="comfortable" hide-details variant="outlined" class="mb-3"></v-text-field>
+                                density="comfortable" hide-details variant="outlined"></v-text-field>
                         </v-col>
                         <v-col cols="6" md="1">
                             <v-btn color="secondary" variant="text" block @click="showFilters = !showFilters">
@@ -383,8 +383,8 @@ const handleSort = (column: string) => {
                                         { title: 'In Progress', value: 'InProgress' },
                                         { title: 'Completed', value: 'Completed' },
                                         { title: 'Cancelled', value: 'Cancelled' }
-                                    ]" item-title="title" item-value="value" variant="outlined" density="comfortable" clearable
-                                        hide-details @update:model-value="loadData"></v-select>
+                                    ]" item-title="title" item-value="value" variant="outlined" density="comfortable"
+                                        clearable hide-details @update:model-value="loadData"></v-select>
                                 </v-col>
 
                                 <v-col cols="12" sm="6" md="3">
@@ -413,8 +413,8 @@ const handleSort = (column: string) => {
                                         { title: 'High', value: 1 },
                                         { title: 'Medium', value: 2 },
                                         { title: 'Low', value: 3 }
-                                    ]" item-title="title" item-value="value" variant="outlined" density="comfortable" clearable
-                                        hide-details></v-select>
+                                    ]" item-title="title" item-value="value" variant="outlined" density="comfortable"
+                                        clearable hide-details></v-select>
                                 </v-col>
                             </v-row>
                         </div>
