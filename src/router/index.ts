@@ -4,6 +4,8 @@ import LandingPage from '../views/LandingPage.vue'
 import StringJobsView from '../views/StringJobsView.vue'
 import StringJobForm from '../components/StringJobForm.vue'
 import StringJobDetails from '../components/StringJobDetails.vue'
+import PlayersView from '../views/PlayersView.vue'  // Import PlayersView
+import PlayerDetails from '../components/PlayerDetails.vue'  // Import PlayerDetails
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -45,7 +47,19 @@ const router = createRouter({
       component: StringJobForm,
       meta: { requiresAuth: true }
     },
-
+    // Players routes
+    {
+      path: '/players',
+      name: 'players',
+      component: PlayersView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/players/:id',
+      name: 'player-details',
+      component: PlayerDetails,
+      meta: { requiresAuth: true }
+    },
     // Catch-all route to redirect to landing page
     {
       path: '/:pathMatch(.*)*',
