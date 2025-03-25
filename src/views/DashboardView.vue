@@ -43,10 +43,10 @@ const fetchDashboardData = async () => {
   try {
     // Fetch dashboard stats from store
     await dashboardStore.fetchDashboardStats(true)
-    
+
     // Fetch jobs data for recent jobs
     await stringJobStore.fetchAllJobs()
-    
+
     // Process recent jobs data
     processRecentJobs()
   } catch (e) {
@@ -63,7 +63,7 @@ const processRecentJobs = () => {
   const jobsToProcess = [...stringJobStore.stringJobs]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
-  
+
   // Transform into the format needed for display
   recentJobs.value = jobsToProcess.map(job => ({
     id: job.id,
@@ -178,7 +178,7 @@ const createNewJob = (): void => {
         <!-- Stats cards -->
         <v-row class="home__stats">
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'pending' }}">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'pending' } }">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -192,7 +192,7 @@ const createNewJob = (): void => {
           </v-col>
 
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'inprogress' }}">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'inprogress' } }">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -206,7 +206,7 @@ const createNewJob = (): void => {
           </v-col>
 
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'completed', period: 'today' }}">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'completed', period: 'today' } }">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -220,7 +220,7 @@ const createNewJob = (): void => {
           </v-col>
 
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { priority: 'high' }}">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { priority: 'high' } }">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -270,7 +270,8 @@ const createNewJob = (): void => {
                     </tr>
                   </thead>
                   <tbody>
-                    <tr v-for="job in recentJobs" :key="job.id" class="home__table-row" @click="router.push(`/jobs/${job.id}`)">
+                    <tr v-for="job in recentJobs" :key="job.id" class="home__table-row"
+                      @click="router.push(`/jobs/${job.id}`)">
                       <td>{{ job.playerName }}</td>
                       <td>{{ job.racquet }}</td>
                       <td>{{ job.mainString }}</td>
@@ -341,14 +342,14 @@ const createNewJob = (): void => {
                   <h3 class="home__tournament-name">{{ currentTournament.name }}</h3>
                   <p class="home__tournament-days">
                     <v-icon start color="warning" icon="mdi-calendar-clock"></v-icon>
-                    {{ currentTournament.remainingDays }} days remaining
+                    {{ tournamentStore.getRemainingDays(currentTournament.id) }} days remaining
                   </p>
-                  <v-btn block color="primary" class="mt-4" prepend-icon="mdi-tennis" 
+                  <v-btn block color="primary" class="mt-4" prepend-icon="mdi-tennis"
                     @click="navigateToTournament(currentTournament.id)">
                     Tournament Details
                   </v-btn>
                 </template>
-                
+
                 <!-- Content when there is no active tournament -->
                 <template v-else>
                   <div class="home__tournament-empty">
@@ -513,7 +514,7 @@ const createNewJob = (): void => {
       @include body-text;
       color: $warning;
     }
-    
+
     &-empty {
       @include flex(column, center, center);
       padding: $spacing-lg 0;
@@ -554,12 +555,12 @@ const createNewJob = (): void => {
 
   &__ranking-list {
     padding: 0;
-    
+
     :deep(.v-list-item) {
       min-height: 56px;
       padding: 4px 16px;
       cursor: pointer;
-      
+
       &:hover {
         background-color: rgba($primary, 0.05);
       }
