@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { RouterView, useRoute, useRouter } from 'vue-router'
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { 
-  useAuthStore, 
-  useDashboardStore, 
-  usePlayerStore, 
-  useStringerStore, 
-  useTournamentStore, 
-  useStringJobStore 
+import {
+  useAuthStore,
+  useDashboardStore,
+  usePlayerStore,
+  useStringerStore,
+  useTournamentStore,
+  useStringJobStore
 } from './stores'
 
 const authStore = useAuthStore()
@@ -19,14 +19,9 @@ const stringJobStore = useStringJobStore()
 const route = useRoute()
 const router = useRouter()
 
-// App-level loading state
-const appIsReady = ref(!authStore.initializing)
-
 // Determine if we should show the app layout or just the router view
 const showAppLayout = computed(() => {
-  // If the app is still initializing, don't render the layout yet
-  if (!appIsReady.value) return false
-  
+
   // If the route doesn't require auth (like landing page), don't show app layout
   if (route.meta.requiresAuth === false) {
     return false
@@ -89,14 +84,6 @@ const notificationCount = computed(() => {
 // Current tournament info
 const currentTournament = computed(() => tournamentStore.activeTournament)
 
-// Watch for auth state changes and update app ready state
-watch(() => authStore.initializing, (initializing) => {
-  if (!initializing) {
-    // Auth initialization completed
-    appIsReady.value = true
-  }
-})
-
 // Watch for login/logout
 watch(() => authStore.isAuthenticated, (isAuthenticated, wasAuthenticated) => {
   // If user just logged in
@@ -133,21 +120,6 @@ const prefetchData = async () => {
 
 // Wait for app to be ready, auth to be checked and then prefetch data
 onMounted(async () => {
-  // First wait for auth initialization to complete
-  if (authStore.initializing) {
-    await new Promise<void>(resolve => {
-      const unwatch = watch(() => authStore.initializing, (initializing) => {
-        if (!initializing) {
-          unwatch() // Stop watching once done
-          resolve() // Resolve promise
-        }
-      }, { immediate: true })
-    })
-  }
-  
-  // Now the app is ready
-  appIsReady.value = true
-  
   // If user is authenticated, prefetch data
   if (authStore.isAuthenticated) {
     await prefetchData()
@@ -203,14 +175,14 @@ const viewNotifications = () => {
       <!-- Pending Jobs Counter -->
       <v-btn icon color="white" class="app__nav-btn" :to="{ path: '/jobs', query: { status: 'pending' } }"
         :disabled="pendingJobsCount === 0">
-        <v-badge :content="pendingJobsCount || null" color="warning">
+        <v-badge :content="pendingJobsCount || undefined" color="warning">
           <v-icon>mdi-clock-outline</v-icon>
         </v-badge>
       </v-btn>
 
       <!-- Notifications / High Priority Jobs -->
       <v-btn icon color="white" class="app__nav-btn" @click="viewNotifications" :disabled="notificationCount === null">
-        <v-badge :content="notificationCount" color="error">
+        <v-badge :content="notificationCount || undefined" color="error">
           <v-icon>mdi-bell-outline</v-icon>
         </v-badge>
       </v-btn>
@@ -264,7 +236,8 @@ const viewNotifications = () => {
       <v-divider></v-divider>
 
       <!-- Current Tournament Banner (if exists) -->
-      <v-alert v-if="currentTournament" color="secondary" variant="tonal" border="start" class="mt-2 mx-2" density="compact">
+      <v-alert v-if="currentTournament" color="secondary" variant="tonal" border="start" class="mt-2 mx-2"
+        density="compact">
         <div class="text-subtitle-2">{{ currentTournament.name }}</div>
         <div class="text-caption">
           <v-icon size="small" start>mdi-calendar-clock</v-icon>
