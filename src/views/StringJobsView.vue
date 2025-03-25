@@ -27,6 +27,24 @@ const showFilters = ref(false)
 
 // Initialize based on query params
 onMounted(async () => {
+    loadFiltersFromQuery()
+
+    // Load initial data
+    await loadData()
+
+    // Load reference data for filters
+    await Promise.all([
+        playerStore.fetchPlayers(),
+        stringerStore.fetchAllStringers(),
+        tournamentStore.fetchAllTournaments()
+    ])
+
+    // End loading state
+    loading.value = false
+})
+
+// Load filters from URL query parameters
+const loadFiltersFromQuery = () => {
     // Extract query parameters
     const queryStatus = route.query.status as string
     const queryPlayer = route.query.player ? parseInt(route.query.player as string) : null
@@ -50,20 +68,13 @@ onMounted(async () => {
     } else {
         priorityFilter.value = null
     }
+}
 
-    // Load initial data
-    await loadData()
-
-    // Load reference data for filters
-    await Promise.all([
-        playerStore.fetchPlayers(),
-        stringerStore.fetchAllStringers(),
-        tournamentStore.fetchAllTournaments()
-    ])
-
-    // End loading state
-    loading.value = false
-})
+// Watch for route query changes to reload data when URL changes externally
+watch(() => route.query, (newQuery) => {
+    loadFiltersFromQuery()
+    loadData()
+}, { deep: true })
 
 // Watch for filter changes to update URL
 watch([statusFilter, playerFilter, stringerFilter, tournamentFilter, priorityFilter], () => {
@@ -89,6 +100,9 @@ const updateQueryParams = () => {
 
     // Replace URL without reloading the page
     router.replace({ query })
+
+    // Load data based on new filters
+    loadData()
 }
 
 // Function to load data based on filters
@@ -128,7 +142,7 @@ const clearFilters = () => {
 // Reset filters and reload data
 const resetAndReload = async () => {
     clearFilters()
-    await loadData()
+    router.replace({ query: {} }) // Clear URL query params
 }
 
 // Filter jobs based on search text
@@ -384,27 +398,25 @@ const handleSort = (column: string) => {
                                         { title: 'Completed', value: 'Completed' },
                                         { title: 'Cancelled', value: 'Cancelled' }
                                     ]" item-title="title" item-value="value" variant="outlined" density="comfortable"
-                                        clearable hide-details @update:model-value="loadData"></v-select>
+                                        clearable hide-details></v-select>
                                 </v-col>
 
                                 <v-col cols="12" sm="6" md="3">
                                     <v-select v-model="playerFilter" label="Player" :items="playerStore.playerOptions"
                                         item-title="text" item-value="value" variant="outlined" density="comfortable"
-                                        clearable hide-details @update:model-value="loadData"></v-select>
+                                        clearable hide-details></v-select>
                                 </v-col>
 
                                 <v-col cols="12" sm="6" md="3">
                                     <v-select v-model="stringerFilter" label="Stringer"
                                         :items="stringerStore.stringerOptions" item-title="text" item-value="value"
-                                        variant="outlined" density="comfortable" clearable hide-details
-                                        @update:model-value="loadData"></v-select>
+                                        variant="outlined" density="comfortable" clearable hide-details></v-select>
                                 </v-col>
 
                                 <v-col cols="12" sm="6" md="3">
                                     <v-select v-model="tournamentFilter" label="Tournament"
                                         :items="tournamentStore.tournamentOptions" item-title="text" item-value="value"
-                                        variant="outlined" density="comfortable" clearable hide-details
-                                        @update:model-value="loadData"></v-select>
+                                        variant="outlined" density="comfortable" clearable hide-details></v-select>
                                 </v-col>
 
                                 <v-col cols="12" sm="6" md="3">
