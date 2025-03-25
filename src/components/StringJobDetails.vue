@@ -175,25 +175,34 @@ const cancelJob = async () => {
                 </v-col>
                 <v-col cols="12" sm="4" class="d-flex justify-end align-center">
                     <!-- Action buttons based on job status and user permissions -->
-                    <div v-if="job && canEditJob" class="d-flex gap-2">
-                        <v-btn v-if="job.status === 'Pending'" color="info" @click="startJob" prepend-icon="mdi-play">
-                            Start Job
-                        </v-btn>
+                    <v-menu v-if="job && canEditJob">
+                        <template v-slot:activator="{ props }">
+                            <v-btn color="primary" v-bind="props" class="mr-2">
+                                Actions
+                                <v-icon end>mdi-chevron-down</v-icon>
+                            </v-btn>
+                        </template>
 
-                        <v-btn v-if="job.status === 'InProgress'" color="success" @click="openCompleteDialog"
-                            prepend-icon="mdi-check">
-                            Complete
-                        </v-btn>
+                        <v-list class="pa-0">
+                            <v-list-item v-if="job.status === 'Pending'" @click="startJob" prepend-icon="mdi-play"
+                                title="Start Job" color="info"></v-list-item>
 
-                        <v-btn v-if="job.status === 'Pending' || job.status === 'InProgress'" color="error"
-                            variant="outlined" @click="openCancelDialog" prepend-icon="mdi-cancel">
-                            Cancel
-                        </v-btn>
+                            <v-list-item v-if="job.status === 'InProgress'" @click="openCompleteDialog"
+                                prepend-icon="mdi-check" title="Complete Job" color="success"></v-list-item>
 
-                        <v-btn color="secondary" @click="editJob" prepend-icon="mdi-pencil">
-                            Edit
-                        </v-btn>
-                    </div>
+                            <v-list-item v-if="job.status === 'Pending' || job.status === 'InProgress'"
+                                @click="openCancelDialog" prepend-icon="mdi-cancel" title="Cancel Job"
+                                color="error"></v-list-item>
+
+                            <v-divider></v-divider>
+
+                            <v-list-item @click="editJob" prepend-icon="mdi-pencil" title="Edit Job"></v-list-item>
+                        </v-list>
+                    </v-menu>
+
+                    <v-btn color="primary" prepend-icon="mdi-format-list-bulleted" @click="returnToList">
+                        All Jobs
+                    </v-btn>
                 </v-col>
             </v-row>
 
@@ -223,25 +232,57 @@ const cancelJob = async () => {
             <div v-else class="string-job-details__content">
                 <!-- Status Banner -->
                 <v-card class="mb-6">
-                    <v-card-text class="d-flex justify-space-between align-center py-4">
-                        <div class="d-flex align-center">
-                            <v-chip :color="getStatusColor(job.status)" size="large" class="mr-4" text-color="white">
-                                {{ job.status }}
-                            </v-chip>
+                    <v-card-title class="string-job-details__section-title">
+                        <v-icon start>mdi-information-outline</v-icon>
+                        Job Status Information
+                    </v-card-title>
 
-                            <div>
-                                <p class="text-subtitle-1 mb-0">Created: <strong>{{ formatDate(job.createdAt)
-                                        }}</strong></p>
-                                <p v-if="job.completedAt" class="text-subtitle-1 mb-0">
-                                    Completed: <strong>{{ formatDate(job.completedAt) }}</strong>
-                                </p>
-                            </div>
-                        </div>
+                    <v-card-text class="pt-4 pb-4">
+                        <v-row>
+                            <v-col cols="12" sm="6" md="3">
+                                <div
+                                    class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
+                                    <v-chip :color="getStatusColor(job.status)" size="large" class="mb-2"
+                                        text-color="white">
+                                        {{ job.status }}
+                                    </v-chip>
+                                    <span class="text-caption">Current Status</span>
+                                </div>
+                            </v-col>
 
-                        <v-chip v-if="job.priority" :color="getPriorityInfo(job.priority).color" size="large"
-                            text-color="white">
-                            {{ getPriorityInfo(job.priority).text }} Priority
-                        </v-chip>
+                            <v-col cols="12" sm="6" md="3">
+                                <div
+                                    class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
+                                    <v-chip v-if="job.priority" :color="getPriorityInfo(job.priority).color"
+                                        size="large" class="mb-2" text-color="white">
+                                        {{ getPriorityInfo(job.priority).text }}
+                                    </v-chip>
+                                    <v-chip v-else color="grey" size="large" class="mb-2">
+                                        None
+                                    </v-chip>
+                                    <span class="text-caption">Priority Level</span>
+                                </div>
+                            </v-col>
+
+                            <v-col cols="12" sm="6" md="3">
+                                <div
+                                    class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
+                                    <div class="text-h6 font-weight-bold mb-2">{{
+                                        formatDate(job.createdAt).split(',')[0] }}</div>
+                                    <span class="text-caption">Created Date</span>
+                                </div>
+                            </v-col>
+
+                            <v-col cols="12" sm="6" md="3">
+                                <div
+                                    class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
+                                    <div class="text-h6 font-weight-bold mb-2">
+                                        {{ job.completedAt ? formatDate(job.completedAt).split(',')[0] : 'Pending' }}
+                                    </div>
+                                    <span class="text-caption">Completed Date</span>
+                                </div>
+                            </v-col>
+                        </v-row>
                     </v-card-text>
                 </v-card>
 
@@ -413,7 +454,7 @@ const cancelJob = async () => {
                                         </template>
                                         <v-list-item-title class="text-h6">
                                             Tension: {{ formatTension(job.mainTension, job.crossTension,
-                                            job.isTensionInKg) }}
+                                                job.isTensionInKg) }}
                                         </v-list-item-title>
                                         <v-list-item-subtitle>
                                             {{ job.crossTension && job.crossTension !== job.mainTension
@@ -504,6 +545,8 @@ const cancelJob = async () => {
     }
 
     &__content {
+        margin-top: $spacing-lg;
+
         .v-card {
             @include card-shadow;
             overflow: hidden;
