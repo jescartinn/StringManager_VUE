@@ -347,7 +347,7 @@ const handleSort = (column: string) => {
     <div class="string-jobs">
         <v-container class="string-jobs__container">
             <!-- Page Header -->
-            <v-row>
+            <v-row class="mb-3">
                 <v-col cols="12" sm="8">
                     <h1 class="string-jobs__title">String Jobs</h1>
                 </v-col>
@@ -359,7 +359,7 @@ const handleSort = (column: string) => {
             </v-row>
 
             <!-- Error Alert -->
-            <v-row v-if="stringJobStore.error">
+            <v-row class="mb-2" v-if="stringJobStore.error">
                 <v-col cols="12">
                     <v-alert type="error" variant="tonal" closable>
                         {{ stringJobStore.error }}
@@ -368,7 +368,7 @@ const handleSort = (column: string) => {
             </v-row>
 
             <!-- Filters and Search -->
-            <v-card class="mb-6">
+            <v-card class="mb-12">
                 <v-card-text>
                     <v-row class="align-center">
                         <v-col cols="12" md="9">
