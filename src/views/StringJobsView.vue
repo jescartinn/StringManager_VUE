@@ -178,33 +178,35 @@ const filteredJobs = computed(() => {
 
     // Sort the filtered jobs
     filtered.sort((a, b) => {
-        let aValue, bValue
+        let aValue: any, bValue: any;
 
         if (sortBy.value === 'createdAt' || sortBy.value === 'completedAt') {
-            aValue = a[sortBy.value] ? new Date(a[sortBy.value]).getTime() : 0
-            bValue = b[sortBy.value] ? new Date(b[sortBy.value]).getTime() : 0
+            // Handle date fields safely
+            aValue = a[sortBy.value as keyof typeof a] ? new Date(a[sortBy.value as keyof typeof a] as string).getTime() : 0;
+            bValue = b[sortBy.value as keyof typeof b] ? new Date(b[sortBy.value as keyof typeof b] as string).getTime() : 0;
         } else if (sortBy.value === 'player') {
-            aValue = a.player ? `${a.player.lastName} ${a.player.name}` : ''
-            bValue = b.player ? `${b.player.lastName} ${b.player.name}` : ''
+            aValue = a.player ? `${a.player.lastName} ${a.player.name}` : '';
+            bValue = b.player ? `${b.player.lastName} ${b.player.name}` : '';
         } else if (sortBy.value === 'racquet') {
-            aValue = a.racquet ? `${a.racquet.brand} ${a.racquet.model}` : ''
-            bValue = b.racquet ? `${b.racquet.brand} ${b.racquet.model}` : ''
+            aValue = a.racquet ? `${a.racquet.brand} ${a.racquet.model}` : '';
+            bValue = b.racquet ? `${b.racquet.brand} ${b.racquet.model}` : '';
         } else if (sortBy.value === 'stringer') {
-            aValue = a.stringer ? `${a.stringer.lastName} ${a.stringer.name}` : ''
-            bValue = b.stringer ? `${b.stringer.lastName} ${b.stringer.name}` : ''
+            aValue = a.stringer ? `${a.stringer.lastName} ${a.stringer.name}` : '';
+            bValue = b.stringer ? `${b.stringer.lastName} ${b.stringer.name}` : '';
         } else {
-            aValue = a[sortBy.value]
-            bValue = b[sortBy.value]
+            // For other properties, access them safely
+            aValue = a[sortBy.value as keyof typeof a];
+            bValue = b[sortBy.value as keyof typeof b];
         }
 
-        if (aValue === null || aValue === undefined) return sortDesc.value ? 1 : -1
-        if (bValue === null || bValue === undefined) return sortDesc.value ? -1 : 1
+        if (aValue === null || aValue === undefined) return sortDesc.value ? 1 : -1;
+        if (bValue === null || bValue === undefined) return sortDesc.value ? -1 : 1;
 
         if (typeof aValue === 'string' && typeof bValue === 'string') {
-            return sortDesc.value ? bValue.localeCompare(aValue) : aValue.localeCompare(bValue)
+            return sortDesc.value ? bValue.localeCompare(aValue) : aValue.localeCompare(bValue);
         }
 
-        return sortDesc.value ? bValue - aValue : aValue - bValue
+        return sortDesc.value ? (bValue as number) - (aValue as number) : (aValue as number) - (bValue as number);
     })
 
     return filtered
@@ -446,13 +448,16 @@ const handleSort = (column: string) => {
             <v-card v-else class="mb-6">
                 <v-data-table-virtual :headers="headers" :items="paginatedJobs" :items-per-page="itemsPerPage"
                     :page="page" :loading="loading" class="string-jobs__table" hover
-                    @update:options="$event => page = $event.page" @click:row="(event, { item }) => viewJob(item.id)">
+                    @update:options="(options: any) => page = options.page"
+                    @click:row="(event, { item }) => viewJob(item.id)">
+
                     <!-- Custom Header -->
-                    <template v-slot:header="{ column }">
+                    <template v-slot:header.column="{ column }">
                         <div class="d-flex align-center">
                             {{ column.title }}
-                            <v-btn v-if="column.key !== 'actions' && column.sortable" icon="mdi-arrow-up-down"
-                                size="small" variant="text" @click.stop="handleSort(column.key)"></v-btn>
+                            <v-btn v-if="column.key && column.key !== 'actions' && column.sortable"
+                                icon="mdi-arrow-up-down" size="small" variant="text"
+                                @click.stop="handleSort(column.key)"></v-btn>
                         </div>
                     </template>
 
