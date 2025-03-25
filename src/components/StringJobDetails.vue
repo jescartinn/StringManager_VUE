@@ -28,11 +28,14 @@ const job = computed(() => stringJobStore.currentJob)
 const canEditJob = computed(() => {
     if (!job.value) return false
 
-    // Admins can edit any job
+    // No one can edit completed jobs
+    if (job.value.status === 'Completed') return false
+
+    // Admins can edit any job that's not completed
     if (authStore.isAdmin) return true
 
     // Stringers can edit jobs that are not completed or cancelled
-    if (authStore.isStringer && (job.value.status !== 'Completed' && job.value.status !== 'Cancelled')) {
+    if (authStore.isStringer && job.value.status !== 'Cancelled') {
         return true
     }
 
@@ -319,7 +322,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-tennis-ball</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.racquet.brand }} {{ job.racquet.model
-                                            }}</v-list-item-title>
+                                        }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.racquet.serialNumber">
                                             Serial: {{ job.racquet.serialNumber }}
                                         </v-list-item-subtitle>
@@ -368,7 +371,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-account-wrench</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.stringer.name }} {{ job.stringer.lastName
-                                            }}</v-list-item-title>
+                                        }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.stringer.email">
                                             Email: {{ job.stringer.email }}
                                         </v-list-item-subtitle>
