@@ -352,7 +352,7 @@ const handleSort = (column: string) => {
                     <h1 class="string-jobs__title">String Jobs</h1>
                 </v-col>
                 <v-col cols="12" sm="4" class="d-flex justify-end align-center">
-                    <v-btn color="primary" prepend-icon="mdi-plus" @click="createNewJob">
+                    <v-btn class="mb-3" color="primary" prepend-icon="mdi-plus" @click="createNewJob">
                         New Job
                     </v-btn>
                 </v-col>
