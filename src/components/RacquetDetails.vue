@@ -356,7 +356,7 @@ const viewStringJob = (jobId: number) => {
 
         <!-- Racquet's String Jobs -->
         <v-card>
-          <v-card-title class="racquet-details__section-title d-flex justify-space-between align-center">
+          <v-card-title class="racquet-details__section-title d-flex flex-wrap justify-space-between align-center">
             <div>
               <v-icon start>mdi-tennis</v-icon>
               String Job History
@@ -540,6 +540,7 @@ const viewStringJob = (jobId: number) => {
     padding: $spacing-md $spacing-lg;
     background-color: rgba($primary, 0.05);
     border-bottom: 1px solid rgba($primary, 0.1);
+    gap: 1rem;
   }
 
   &__info-section {
