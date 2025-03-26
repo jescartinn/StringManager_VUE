@@ -384,7 +384,7 @@ const viewStringJob = (jobId: number) => {
 
         <!-- Player's Racquets -->
         <v-card class="mb-6">
-          <v-card-title class="player-details__section-title d-flex justify-space-between align-center">
+          <v-card-title class="player-details__section-title d-flex flex-wrap justify-space-between align-center">
             <div>
               <v-icon start>mdi-tennis-ball</v-icon>
               Player's Racquets
@@ -430,7 +430,7 @@ const viewStringJob = (jobId: number) => {
 
         <!-- Player's String Jobs -->
         <v-card>
-          <v-card-title class="player-details__section-title d-flex justify-space-between align-center">
+          <v-card-title class="player-details__section-title d-flex flex-wrap justify-space-between align-center">
             <div>
               <v-icon start>mdi-tennis</v-icon>
               Recent String Jobs
@@ -588,6 +588,7 @@ const viewStringJob = (jobId: number) => {
     padding: $spacing-md $spacing-lg;
     background-color: rgba($primary, 0.05);
     border-bottom: 1px solid rgba($primary, 0.1);
+    gap: 1rem;
   }
 
   &__table {
