@@ -271,7 +271,7 @@ const cancelJob = async () => {
                                 <div
                                     class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
                                     <div class="text-h6 font-weight-bold mb-2">{{
-                                        formatDate(job.createdAt).split(',')[0] }}</div>
+                                        formatDate(job.createdAt) }}</div>
                                     <span class="text-caption">Created Date</span>
                                 </div>
                             </v-col>
@@ -280,7 +280,7 @@ const cancelJob = async () => {
                                 <div
                                     class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
                                     <div class="text-h6 font-weight-bold mb-2">
-                                        {{ job.completedAt ? formatDate(job.completedAt).split(',')[0] : 'Pending' }}
+                                        {{ job.completedAt ? formatDate(job.completedAt) : 'Pending' }}
                                     </div>
                                     <span class="text-caption">Completed Date</span>
                                 </div>
