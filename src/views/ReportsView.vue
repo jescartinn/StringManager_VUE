@@ -455,7 +455,14 @@ const initCharts = () => {
     if (tensionChartRef.value && tensionData.value.labels.length > 0) {
       tensionChart = new Chart(tensionChartRef.value, {
         type: 'bar',
-        data: tensionData.value,
+        data: {
+            labels: tensionData.value.labels,
+            datasets: [{
+                label: 'Number of Jobs',
+                data: tensionData.value.datasets[0].data,
+                backgroundColor: tensionData.value.datasets[0].backgroundColor
+            }]
+        },
         options: {
           responsive: true,
           maintainAspectRatio: false,
