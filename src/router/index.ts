@@ -13,6 +13,7 @@ import StringersView from '@/views/StringersView.vue'
 import StringerDetails from '@/components/StringerDetails.vue'
 import TournamentsView from '@/views/TournamentsView.vue'
 import TournamentDetails from '@/components/TournamentDetails.vue'
+import ReportsView from '@/views/ReportsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -105,6 +106,12 @@ const router = createRouter({
       path: '/tournaments/:id',
       name: 'tournament-details',
       component: TournamentDetails,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/reports',
+      name: 'reports',
+      component: ReportsView,
       meta: { requiresAuth: true }
     },
     
