@@ -6,8 +6,8 @@ import StringJobForm from '../components/StringJobForm.vue'
 import StringJobDetails from '../components/StringJobDetails.vue'
 import PlayersView from '../views/PlayersView.vue'
 import PlayerDetails from '../components/PlayerDetails.vue'
-import RacquetsView from '../views/RacquetsView.vue'  // Add RacquetsView
-import RacquetDetails from '../components/RacquetDetails.vue'  // Add RacquetDetails
+import RacquetsView from '../views/RacquetsView.vue'
+import RacquetDetails from '../components/RacquetDetails.vue'
 import StringsView from '@/views/StringsView.vue'
 
 const router = createRouter({
