@@ -210,7 +210,7 @@ const cancelJob = async () => {
             </v-row>
 
             <!-- Error Alert -->
-            <v-row v-if="stringJobStore.error">
+            <v-row class="mb-3" v-if="stringJobStore.error">
                 <v-col cols="12">
                     <v-alert type="error" variant="tonal" closable>
                         {{ stringJobStore.error }}

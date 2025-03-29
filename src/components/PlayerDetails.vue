@@ -319,7 +319,7 @@ const viewStringJob = (jobId: number) => {
       </v-row>
 
       <!-- Error Alert -->
-      <v-row v-if="playerStore.error">
+      <v-row class="mb-3" v-if="playerStore.error">
         <v-col cols="12">
           <v-alert type="error" variant="tonal" closable>
             {{ playerStore.error }}
