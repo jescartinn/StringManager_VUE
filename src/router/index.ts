@@ -8,6 +8,7 @@ import PlayersView from '../views/PlayersView.vue'
 import PlayerDetails from '../components/PlayerDetails.vue'
 import RacquetsView from '../views/RacquetsView.vue'  // Add RacquetsView
 import RacquetDetails from '../components/RacquetDetails.vue'  // Add RacquetDetails
+import StringsView from '@/views/StringsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -73,6 +74,12 @@ const router = createRouter({
       path: '/racquets/:id',
       name: 'racquet-details',
       component: RacquetDetails,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/strings',
+      name: 'strings',
+      component: StringsView,
       meta: { requiresAuth: true }
     },
     // Catch-all route to redirect to landing page
