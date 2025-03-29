@@ -178,7 +178,7 @@ const createNewJob = (): void => {
         <!-- Stats cards -->
         <v-row class="home__stats">
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'pending' } }">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'Pending' } }">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -192,7 +192,7 @@ const createNewJob = (): void => {
           </v-col>
 
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'inprogress' } }">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'InProgress' } }">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>
@@ -206,7 +206,7 @@ const createNewJob = (): void => {
           </v-col>
 
           <v-col cols="12" sm="6" md="3">
-            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'completed', period: 'today' } }">
+            <v-card class="home__stats-card" :to="{ path: '/jobs', query: { status: 'Completed', period: 'today' } }">
               <v-card-text>
                 <div class="home__stats-card__content">
                   <div>

@@ -173,7 +173,7 @@ const viewNotifications = () => {
       <v-spacer></v-spacer>
 
       <!-- Pending Jobs Counter -->
-      <v-btn icon color="white" class="app__nav-btn" :to="{ path: '/jobs', query: { status: 'pending' } }"
+      <v-btn icon color="white" class="app__nav-btn" :to="{ path: '/jobs', query: { status: 'Pending' } }"
         :disabled="pendingJobsCount === 0">
         <v-badge :content="pendingJobsCount || undefined" color="warning">
           <v-icon>mdi-clock-outline</v-icon>
