@@ -125,7 +125,7 @@ const resetAndReload = async () => {
   
   router.replace({ query: {} }) // Clear URL query params
   
-  await racquetStore.fetchAllRacquets(true) // Force refresh
+  await racquetStore.fetchAllRacquets() // Force refresh
 }
 
 // Computed property to filter and sort racquets
@@ -489,7 +489,7 @@ const headers = [
         <v-data-table-virtual :headers="headers" :items="paginatedRacquets" :items-per-page="itemsPerPage"
           :page="page" :loading="loading" class="racquets-view__table" hover
           @update:options="(options: any) => page = options.page"
-          @click:row="(event, { item }) => viewRacquetDetails(item.id)">
+          @click:row="(event: any, { item }: any) => viewRacquetDetails(item.id)">
 
           <!-- Custom Header -->
           <template v-slot:header.column="{ column }">
