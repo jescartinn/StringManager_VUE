@@ -382,7 +382,7 @@ const changePassword = async () => {
               Application Settings
             </v-card-title>
 
-            <v-card-text>
+            <v-card-text class="pa-3">
               <!-- Settings can be added here in the future -->
               <p class="text-center py-4 text-grey">Additional settings will be available in future updates.</p>
             </v-card-text>
