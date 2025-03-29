@@ -25,7 +25,6 @@ const router = createRouter({
       component: HomeView,
       meta: { requiresAuth: true }
     },
-    // String Jobs routes
     {
       path: '/jobs',
       name: 'jobs',
@@ -50,7 +49,6 @@ const router = createRouter({
       component: StringJobForm,
       meta: { requiresAuth: true }
     },
-    // Players routes
     {
       path: '/players',
       name: 'players',
@@ -63,7 +61,6 @@ const router = createRouter({
       component: PlayerDetails,
       meta: { requiresAuth: true }
     },
-    // Racquets routes
     {
       path: '/racquets',
       name: 'racquets',
@@ -82,6 +79,7 @@ const router = createRouter({
       component: StringsView,
       meta: { requiresAuth: true }
     },
+    
     // Catch-all route to redirect to landing page
     {
       path: '/:pathMatch(.*)*',
