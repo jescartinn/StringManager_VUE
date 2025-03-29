@@ -9,6 +9,8 @@ import PlayerDetails from '../components/PlayerDetails.vue'
 import RacquetsView from '../views/RacquetsView.vue'
 import RacquetDetails from '../components/RacquetDetails.vue'
 import StringsView from '@/views/StringsView.vue'
+import StringersView from '@/views/StringersView.vue'
+import StringerDetails from '@/components/StringerDetails.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -77,6 +79,18 @@ const router = createRouter({
       path: '/strings',
       name: 'strings',
       component: StringsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/stringers',
+      name: 'stringers',
+      component: StringersView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/stringers/:id',
+      name: 'stringer-details',
+      component: StringerDetails,
       meta: { requiresAuth: true }
     },
     
