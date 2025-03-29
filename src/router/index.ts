@@ -6,8 +6,9 @@ import StringJobForm from '../components/StringJobForm.vue'
 import StringJobDetails from '../components/StringJobDetails.vue'
 import PlayersView from '../views/PlayersView.vue'
 import PlayerDetails from '../components/PlayerDetails.vue'
-import RacquetsView from '../views/RacquetsView.vue'  // Add RacquetsView
-import RacquetDetails from '../components/RacquetDetails.vue'  // Add RacquetDetails
+import RacquetsView from '../views/RacquetsView.vue'
+import RacquetDetails from '../components/RacquetDetails.vue'
+import StringsView from '@/views/StringsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -24,7 +25,6 @@ const router = createRouter({
       component: HomeView,
       meta: { requiresAuth: true }
     },
-    // String Jobs routes
     {
       path: '/jobs',
       name: 'jobs',
@@ -49,7 +49,6 @@ const router = createRouter({
       component: StringJobForm,
       meta: { requiresAuth: true }
     },
-    // Players routes
     {
       path: '/players',
       name: 'players',
@@ -62,7 +61,6 @@ const router = createRouter({
       component: PlayerDetails,
       meta: { requiresAuth: true }
     },
-    // Racquets routes
     {
       path: '/racquets',
       name: 'racquets',
@@ -75,6 +73,13 @@ const router = createRouter({
       component: RacquetDetails,
       meta: { requiresAuth: true }
     },
+    {
+      path: '/strings',
+      name: 'strings',
+      component: StringsView,
+      meta: { requiresAuth: true }
+    },
+    
     // Catch-all route to redirect to landing page
     {
       path: '/:pathMatch(.*)*',
