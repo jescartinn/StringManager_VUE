@@ -583,20 +583,22 @@ const headers = [
             </template>
   
             <template v-slot:item.status="{ item }">
-              <div>
-                <v-chip :color="getTournamentStatus(item).color" size="small" text-color="white">
-                  {{ getTournamentStatus(item).text }}
-                </v-chip>
+              <div class="d-flex flex-column">
+                <div class="d-flex align-center">
+                    <v-chip class="mr-2" :color="getTournamentStatus(item).color" size="small" text-color="white">
+                        {{ getTournamentStatus(item).text }}
+                    </v-chip>
                 
-                <div class="text-caption mt-1" v-if="getTournamentStatus(item).text === 'Upcoming'">
-                  In {{ daysUntilStart(item.startDate) }} days
+                    <div class="text-caption mt-1" v-if="getTournamentStatus(item).text === 'Upcoming'">
+                        In {{ daysUntilStart(item.startDate) }} days
+                    </div>
+                
+                    <div class="text-caption mt-1" v-if="getTournamentStatus(item).text === 'Active'">
+                        {{ daysRemaining(item.endDate) }} days remaining
+                    </div>
+                
+                    <v-icon v-if="isCurrentTournament(item)" color="success" size="small" class="ml-1" icon="mdi-star"></v-icon>
                 </div>
-                
-                <div class="text-caption mt-1" v-if="getTournamentStatus(item).text === 'Active'">
-                  {{ daysRemaining(item.endDate) }} days remaining
-                </div>
-                
-                <v-icon v-if="isCurrentTournament(item)" color="success" size="small" class="ml-1" icon="mdi-star"></v-icon>
               </div>
             </template>
   
@@ -642,7 +644,7 @@ const headers = [
             </template>
             
             <!-- Row appearance -->
-            <template v-slot:item.data-table-row="{ props }">
+            <template v-slot:item.data-table-row="{ props }:any">
               <tr v-bind="props" :class="{ 'tournaments-view__current-row': isCurrentTournament(props.item) }"></tr>
             </template>
           </v-data-table-virtual>
