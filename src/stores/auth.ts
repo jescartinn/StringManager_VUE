@@ -160,6 +160,47 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    // New method for updating profile
+    async function updateProfile(profileData: { username: string, email: string }) {
+        loading.value = true
+        error.value = null
+
+        try {
+            // Check if user exists and has an ID
+            if (!user.value || !user.value.id) {
+                throw new Error('User information is missing')
+            }
+
+            // Create a user DTO that includes the current user's data
+            const userDto = {
+                id: user.value.id,
+                username: profileData.username,
+                email: profileData.email,
+                role: user.value.role
+            }
+
+            // Update the user profile using the API
+            await api.users.update(user.value.id, userDto)
+
+            // Update the local user object
+            if (user.value) {
+                user.value.username = profileData.username
+                user.value.email = profileData.email
+
+                // Save updated user to localStorage
+                localStorage.setItem('user', JSON.stringify(user.value))
+            }
+
+            return true
+        } catch (e) {
+            console.error('Update profile error:', e)
+            error.value = e instanceof Error ? e.message : 'Failed to update profile. Please try again.'
+            return false
+        } finally {
+            loading.value = false
+        }
+    }
+
     return {
         // State
         token,
@@ -177,6 +218,7 @@ export const useAuthStore = defineStore('auth', () => {
         register,
         logout,
         checkAuth,
-        changePassword
+        changePassword,
+        updateProfile
     }
 })
