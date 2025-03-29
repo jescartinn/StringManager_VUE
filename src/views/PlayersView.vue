@@ -154,7 +154,7 @@ const totalPages = computed(() => {
 const resetAndReload = async () => {
   search.value = ''
   countryFilter.value = null
-  await playerStore.fetchPlayers(true) // Force refresh
+  await playerStore.fetchPlayers() // Force refresh
 }
 
 // Get country name from code
@@ -404,7 +404,7 @@ const headers = [
         <v-data-table-virtual :headers="headers" :items="paginatedPlayers" :items-per-page="itemsPerPage"
           :page="page" :loading="loading" class="players-view__table" hover
           @update:options="(options: any) => page = options.page"
-          @click:row="(event, { item }) => viewPlayerDetails(item.id)">
+          @click:row="(event: any, { item }: any) => viewPlayerDetails(item.id)">
 
           <!-- Custom Header -->
           <template v-slot:header.column="{ column }">

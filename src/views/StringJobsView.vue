@@ -449,7 +449,7 @@ const handleSort = (column: string) => {
                 <v-data-table-virtual :headers="headers" :items="paginatedJobs" :items-per-page="itemsPerPage"
                     :page="page" :loading="loading" class="string-jobs__table" hover
                     @update:options="(options: any) => page = options.page"
-                    @click:row="(event, { item }) => viewJob(item.id)">
+                    @click:row="(event: any, { item }: any) => viewJob(item.id)">
 
                     <!-- Custom Header -->
                     <template v-slot:header.column="{ column }">
