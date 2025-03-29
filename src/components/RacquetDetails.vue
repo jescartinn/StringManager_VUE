@@ -141,7 +141,7 @@ const openEditRacquetDialog = () => {
     brand: racquet.value.brand,
     model: racquet.value.model,
     serialNumber: racquet.value.serialNumber || '',
-    headSize: racquet.value.headSize,
+    headSize: racquet.value.headSize || null,
     notes: racquet.value.notes || ''
   }
   
@@ -267,7 +267,7 @@ const viewStringJob = (jobId: number) => {
       </v-row>
 
       <!-- Error Alert -->
-      <v-row v-if="racquetStore.error">
+      <v-row class="mb-3" v-if="racquetStore.error">
         <v-col cols="12">
           <v-alert type="error" variant="tonal" closable>
             {{ racquetStore.error }}
