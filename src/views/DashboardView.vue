@@ -417,7 +417,7 @@ const createNewJob = (): void => {
               <v-card-text class="pt-4">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(string, index) in topStrings" :key="string.stringId" :title="string.stringName"
-                    :subtitle="`${string.totalUses} total uses`" :to="`/strings/${string.stringId}`">
+                    :subtitle="`${string.totalUses} total uses`" :to="`/strings`">
                     <template v-slot:prepend>
                       <v-avatar color="accent" class="white--text">
                         {{ index + 1 }}
