@@ -269,7 +269,7 @@ const getAuthHeader = (): Record<string, string> => {
   return token ? { 'Authorization': `Bearer ${token}` } : {};
 };
 
-// Generic HTTP request function with proper typing
+// Generic HTTP request function
 async function request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
   const url = `${API_URL}${endpoint}`;
 
@@ -288,13 +288,16 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
   try {
     const response = await fetch(url, config);
 
-    // Handle 401 Unauthorized globally
-    if (response.status === 401) {
+    if (response.status === 401 && endpoint.includes('/auth/login')) {
+      throw new Error('Credenciales inválidas.');
+    }
+    
+    if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
       // Clear auth data and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/';
-      throw new Error('Your session has expired. Please log in again.');
+      throw new Error('Su sesión ha expirado. Por favor, inicie sesión de nuevo.');
     }
 
     if (!response.ok) {
