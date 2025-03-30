@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePlayerStore, useRacquetStore, useStringJobStore, useAuthStore } from '../stores'
+import { getCountryOptions, getCountryName, getCountryFlag } from '../utils/countryUtils'
 
 // Import stores and router
 const playerStore = usePlayerStore()
@@ -41,53 +42,13 @@ const formErrors = ref({
   countryCode: ''
 })
 
-// List of countries for selection
-const countries = ref([
-  { code: 'ESP', name: 'Spain' },
-  { code: 'USA', name: 'United States' },
-  { code: 'FRA', name: 'France' },
-  { code: 'GBR', name: 'Great Britain' },
-  { code: 'ITA', name: 'Italy' },
-  { code: 'GER', name: 'Germany' },
-  { code: 'SRB', name: 'Serbia' },
-  { code: 'SUI', name: 'Switzerland' },
-  { code: 'AUS', name: 'Australia' },
-  { code: 'ARG', name: 'Argentina' },
-  { code: 'RUS', name: 'Russia' },
-  { code: 'JPN', name: 'Japan' },
-  { code: 'CAN', name: 'Canada' },
-  { code: 'AUT', name: 'Austria' },
-  { code: 'BEL', name: 'Belgium' },
-  { code: 'BRA', name: 'Brazil' },
-  { code: 'CHN', name: 'China' },
-  { code: 'CRO', name: 'Croatia' },
-  { code: 'CZE', name: 'Czech Republic' },
-  { code: 'DEN', name: 'Denmark' },
-  { code: 'NED', name: 'Netherlands' },
-  { code: 'POL', name: 'Poland' },
-  { code: 'GRE', name: 'Greece' },
-  { code: 'BLR', name: 'Belarus' },
-])
-
 // Countries options for the form
-const countryOptions = computed(() => {
-  return countries.value.map(country => ({
-    title: country.name,
-    value: country.code
-  }))
-})
+const countryOptions = computed(() => getCountryOptions())
 
 // Check if user has permissions to manage players
 const canManagePlayers = computed(() => {
   return authStore.isAdmin || authStore.isStringer
 })
-
-// Get country name from code
-const getCountryName = (countryCode: string | null | undefined) => {
-  if (!countryCode) return ''
-  const country = countries.value.find(c => c.code === countryCode)
-  return country ? country.name : countryCode
-}
 
 // Load player data
 onMounted(async () => {
@@ -95,12 +56,12 @@ onMounted(async () => {
     try {
       // Load player data
       await playerStore.fetchPlayerById(playerId.value)
-      
+
       // Load player's racquets
       racquetsLoading.value = true
       await racquetStore.fetchRacquetsByPlayer(playerId.value)
       racquetsLoading.value = false
-      
+
       // Load player's string jobs
       jobsLoading.value = true
       await stringJobStore.fetchJobsByPlayer(playerId.value)
@@ -122,7 +83,7 @@ watch(() => playerId.value, async (newPlayerId) => {
     loading.value = true
     racquetsLoading.value = true
     jobsLoading.value = true
-    
+
     try {
       await playerStore.fetchPlayerById(newPlayerId)
       await racquetStore.fetchRacquetsByPlayer(newPlayerId)
@@ -194,21 +155,21 @@ const returnToPlayersList = () => {
 // Open edit player dialog
 const openEditPlayerDialog = () => {
   if (!player.value) return
-  
+
   playerForm.value = {
     id: player.value.id,
     name: player.value.name,
     lastName: player.value.lastName,
     countryCode: player.value.countryCode || ''
   }
-  
+
   // Reset errors
   formErrors.value = {
     name: '',
     lastName: '',
     countryCode: ''
   }
-  
+
   showEditPlayerDialog.value = true
 }
 
@@ -220,7 +181,7 @@ const openDeleteDialog = () => {
 // Validate player form
 const validatePlayerForm = () => {
   let isValid = true
-  
+
   // Validate name
   if (!playerForm.value.name.trim()) {
     formErrors.value.name = 'Name is required'
@@ -228,7 +189,7 @@ const validatePlayerForm = () => {
   } else {
     formErrors.value.name = ''
   }
-  
+
   // Validate last name
   if (!playerForm.value.lastName.trim()) {
     formErrors.value.lastName = 'Last name is required'
@@ -236,23 +197,23 @@ const validatePlayerForm = () => {
   } else {
     formErrors.value.lastName = ''
   }
-  
+
   // Country code is optional, so no validation needed
-  
+
   return isValid
 }
 
 // Submit player edit
 const submitEditPlayer = async () => {
   if (!validatePlayerForm() || !playerForm.value.id) return
-  
+
   try {
     await playerStore.updatePlayer(playerForm.value.id, {
       name: playerForm.value.name,
       lastName: playerForm.value.lastName,
       countryCode: playerForm.value.countryCode || undefined
     })
-    
+
     showEditPlayerDialog.value = false
   } catch (error) {
     console.error('Error updating player:', error)
@@ -262,7 +223,7 @@ const submitEditPlayer = async () => {
 // Delete player
 const deletePlayer = async () => {
   if (!player.value) return
-  
+
   try {
     const result = await playerStore.deletePlayer(player.value.id)
     if (result) {
@@ -363,7 +324,8 @@ const viewStringJob = (jobId: number) => {
                       {{ player.name }} {{ player.lastName }}
                     </v-list-item-title>
                     <v-list-item-subtitle v-if="player.countryCode">
-                      From: {{ getCountryName(player.countryCode) }} ({{ player.countryCode }})
+                      <span class="mr-1">{{ getCountryFlag(player.countryCode) }}</span>
+                      {{ getCountryName(player.countryCode) }} ({{ player.countryCode }})
                     </v-list-item-subtitle>
                   </v-list-item>
                 </v-list>
@@ -397,7 +359,8 @@ const viewStringJob = (jobId: number) => {
 
           <v-card-text class="pa-0">
             <v-list v-if="!racquetsLoading && sortedRacquets.length > 0">
-              <v-list-item v-for="racquet in sortedRacquets" :key="racquet.id" :title="`${racquet.brand} ${racquet.model}`"
+              <v-list-item v-for="racquet in sortedRacquets" :key="racquet.id"
+                :title="`${racquet.brand} ${racquet.model}`"
                 :subtitle="racquet.serialNumber ? `Serial: ${racquet.serialNumber}` : undefined"
                 @click="viewRacquet(racquet.id)">
                 <template v-slot:prepend>
@@ -455,7 +418,8 @@ const viewStringJob = (jobId: number) => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="job in sortedJobs.slice(0, 5)" :key="job.id" @click="viewStringJob(job.id)" class="player-details__table-row">
+                <tr v-for="job in sortedJobs.slice(0, 5)" :key="job.id" @click="viewStringJob(job.id)"
+                  class="player-details__table-row">
                   <td>{{ job.id }}</td>
                   <td>{{ job.racquet ? `${job.racquet.brand} ${job.racquet.model}` : 'N/A' }}</td>
                   <td>{{ job.mainString ? `${job.mainString.brand} ${job.mainString.model}` : 'N/A' }}</td>
@@ -467,7 +431,8 @@ const viewStringJob = (jobId: number) => {
                   </td>
                   <td>{{ formatDate(job.createdAt) }}</td>
                   <td class="text-right">
-                    <v-btn icon="mdi-eye" size="small" variant="text" color="primary" @click.stop="viewStringJob(job.id)"></v-btn>
+                    <v-btn icon="mdi-eye" size="small" variant="text" color="primary"
+                      @click.stop="viewStringJob(job.id)"></v-btn>
                   </td>
                 </tr>
               </tbody>
@@ -488,7 +453,7 @@ const viewStringJob = (jobId: number) => {
           </v-card-text>
 
           <v-card-actions v-if="sortedJobs.length > 5" class="pa-4 justify-center">
-            <v-btn color="primary" variant="text" prepend-icon="mdi-eye" 
+            <v-btn color="primary" variant="text" prepend-icon="mdi-eye"
               @click="router.push({ path: '/jobs', query: { player: playerId?.toString() } })">
               View All {{ sortedJobs.length }} String Jobs
             </v-btn>
@@ -503,37 +468,14 @@ const viewStringJob = (jobId: number) => {
         <v-card-title class="text-h5 bg-primary text-white">Edit Player</v-card-title>
         <v-card-text class="pt-4">
           <v-form @submit.prevent="submitEditPlayer">
-            <v-text-field
-              v-model="playerForm.name"
-              label="First Name"
-              :error-messages="formErrors.name"
-              required
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-            ></v-text-field>
+            <v-text-field v-model="playerForm.name" label="First Name" :error-messages="formErrors.name" required
+              variant="outlined" density="comfortable" class="mb-3"></v-text-field>
 
-            <v-text-field
-              v-model="playerForm.lastName"
-              label="Last Name"
-              :error-messages="formErrors.lastName"
-              required
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-            ></v-text-field>
+            <v-text-field v-model="playerForm.lastName" label="Last Name" :error-messages="formErrors.lastName" required
+              variant="outlined" density="comfortable" class="mb-3"></v-text-field>
 
-            <v-select
-              v-model="playerForm.countryCode"
-              label="Country"
-              :items="countryOptions"
-              item-title="title"
-              item-value="value"
-              variant="outlined" 
-              density="comfortable"
-              clearable
-              class="mb-3"
-            ></v-select>
+            <v-autocomplete v-model="playerForm.countryCode" label="Country" :items="countryOptions" item-title="title"
+              item-value="value" variant="outlined" density="comfortable" clearable class="mb-3"></v-autocomplete>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -552,7 +494,7 @@ const viewStringJob = (jobId: number) => {
           <p>Are you sure you want to delete this player?</p>
           <p class="font-weight-bold">{{ player?.name }} {{ player?.lastName }}</p>
           <p class="text-caption text-grey">
-            Note: Players with associated string jobs cannot be deleted. 
+            Note: Players with associated string jobs cannot be deleted.
             You must delete the string jobs first.
           </p>
         </v-card-text>
