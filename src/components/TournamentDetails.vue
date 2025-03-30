@@ -141,6 +141,11 @@ const getTournamentStatus = () => {
   const startDate = new Date(tournament.value.startDate)
   const endDate = new Date(tournament.value.endDate)
   
+  // Set times for more accurate calculation
+  startDate.setHours(0, 0, 0, 0)
+  endDate.setHours(23, 59, 59, 999)
+  today.setHours(12, 0, 0, 0)
+  
   if (today < startDate) {
     return { text: 'Upcoming', color: 'info' }
   } else if (today > endDate) {
