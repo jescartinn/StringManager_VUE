@@ -300,6 +300,11 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
       throw new Error('Su sesión ha expirado. Por favor, inicie sesión de nuevo.');
     }
 
+    // Handle 204 No Content responses
+    if (response.status === 204) {
+      return null as unknown as T;
+    }
+
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
