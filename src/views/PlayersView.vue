@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { usePlayerStore, useAuthStore, useRacquetStore } from '../stores'
+import { getCountryOptions, getCountryName, getCountryFlag } from '../utils/countryUtils'
 
 // Import stores and router
 const playerStore = usePlayerStore()
 const authStore = useAuthStore()
 const racquetStore = useRacquetStore()
 const router = useRouter()
-const route = useRoute()
 
 // Reactive state
 const loading = ref(true)
@@ -38,41 +38,8 @@ const formErrors = ref({
   countryCode: ''
 })
 
-// List of countries for filtering/selection
-const countries = ref([
-  { code: 'ESP', name: 'Spain' },
-  { code: 'USA', name: 'United States' },
-  { code: 'FRA', name: 'France' },
-  { code: 'GBR', name: 'Great Britain' },
-  { code: 'ITA', name: 'Italy' },
-  { code: 'GER', name: 'Germany' },
-  { code: 'SRB', name: 'Serbia' },
-  { code: 'SUI', name: 'Switzerland' },
-  { code: 'AUS', name: 'Australia' },
-  { code: 'ARG', name: 'Argentina' },
-  { code: 'RUS', name: 'Russia' },
-  { code: 'JPN', name: 'Japan' },
-  { code: 'CAN', name: 'Canada' },
-  { code: 'AUT', name: 'Austria' },
-  { code: 'BEL', name: 'Belgium' },
-  { code: 'BRA', name: 'Brazil' },
-  { code: 'CHN', name: 'China' },
-  { code: 'CRO', name: 'Croatia' },
-  { code: 'CZE', name: 'Czech Republic' },
-  { code: 'DEN', name: 'Denmark' },
-  { code: 'NED', name: 'Netherlands' },
-  { code: 'POL', name: 'Poland' },
-  { code: 'GRE', name: 'Greece' },
-  { code: 'BLR', name: 'Belarus' },
-])
-
-// Countries options for the filter/form
-const countryOptions = computed(() => {
-  return countries.value.map(country => ({
-    title: country.name,
-    value: country.code
-  }))
-})
+// Countries options for the filter/form - using the utility function
+const countryOptions = computed(() => getCountryOptions())
 
 // Initialize component
 onMounted(async () => {
@@ -157,13 +124,6 @@ const resetAndReload = async () => {
   await playerStore.fetchPlayers() // Force refresh
 }
 
-// Get country name from code
-const getCountryName = (countryCode: string | null | undefined) => {
-  if (!countryCode) return ''
-  const country = countries.value.find(c => c.code === countryCode)
-  return country ? country.name : countryCode
-}
-
 // Handle sort change
 const handleSort = (column: string) => {
   if (sortBy.value === column) {
@@ -183,14 +143,14 @@ const openNewPlayerDialog = () => {
     lastName: '',
     countryCode: ''
   }
-  
+
   // Reset errors
   formErrors.value = {
     name: '',
     lastName: '',
     countryCode: ''
   }
-  
+
   showNewPlayerDialog.value = true
 }
 
@@ -202,14 +162,14 @@ const openEditPlayerDialog = (player: any) => {
     lastName: player.lastName,
     countryCode: player.countryCode || ''
   }
-  
+
   // Reset errors
   formErrors.value = {
     name: '',
     lastName: '',
     countryCode: ''
   }
-  
+
   showEditPlayerDialog.value = true
 }
 
@@ -221,14 +181,14 @@ const openDeleteDialog = (player: any) => {
     lastName: player.lastName,
     countryCode: player.countryCode || ''
   }
-  
+
   showDeleteConfirmation.value = true
 }
 
 // Validate player form
 const validatePlayerForm = () => {
   let isValid = true
-  
+
   // Validate name
   if (!playerForm.value.name.trim()) {
     formErrors.value.name = 'Name is required'
@@ -236,7 +196,7 @@ const validatePlayerForm = () => {
   } else {
     formErrors.value.name = ''
   }
-  
+
   // Validate last name
   if (!playerForm.value.lastName.trim()) {
     formErrors.value.lastName = 'Last name is required'
@@ -244,23 +204,23 @@ const validatePlayerForm = () => {
   } else {
     formErrors.value.lastName = ''
   }
-  
+
   // Country code is optional, so no validation needed
-  
+
   return isValid
 }
 
 // Submit new player
 const submitNewPlayer = async () => {
   if (!validatePlayerForm()) return
-  
+
   try {
     await playerStore.createPlayer({
       name: playerForm.value.name,
       lastName: playerForm.value.lastName,
       countryCode: playerForm.value.countryCode || undefined
     })
-    
+
     showNewPlayerDialog.value = false
   } catch (error) {
     console.error('Error creating player:', error)
@@ -270,14 +230,14 @@ const submitNewPlayer = async () => {
 // Submit player edit
 const submitEditPlayer = async () => {
   if (!validatePlayerForm() || !playerForm.value.id) return
-  
+
   try {
     await playerStore.updatePlayer(playerForm.value.id, {
       name: playerForm.value.name,
       lastName: playerForm.value.lastName,
       countryCode: playerForm.value.countryCode || undefined
     })
-    
+
     showEditPlayerDialog.value = false
   } catch (error) {
     console.error('Error updating player:', error)
@@ -287,7 +247,7 @@ const submitEditPlayer = async () => {
 // Delete player
 const deletePlayer = async () => {
   if (!playerForm.value.id) return
-  
+
   try {
     await playerStore.deletePlayer(playerForm.value.id)
     showDeleteConfirmation.value = false
@@ -340,7 +300,8 @@ const headers = [
           <h1 class="players-view__title">Players</h1>
         </v-col>
         <v-col cols="12" sm="4" class="d-flex justify-end align-center">
-          <v-btn v-if="canManagePlayers" class="mb-3" color="primary" prepend-icon="mdi-plus" @click="openNewPlayerDialog">
+          <v-btn v-if="canManagePlayers" class="mb-3" color="primary" prepend-icon="mdi-plus"
+            @click="openNewPlayerDialog">
             New Player
           </v-btn>
         </v-col>
@@ -381,9 +342,8 @@ const headers = [
               <v-divider class="my-3"></v-divider>
               <v-row>
                 <v-col cols="12" md="4">
-                  <v-select v-model="countryFilter" label="Country" :items="countryOptions"
-                    item-title="title" item-value="value" variant="outlined" density="comfortable"
-                    clearable hide-details></v-select>
+                  <v-autocomplete v-model="countryFilter" label="Country" :items="countryOptions" item-title="title"
+                    item-value="value" variant="outlined" density="comfortable" clearable hide-details></v-autocomplete>
                 </v-col>
               </v-row>
             </div>
@@ -396,29 +356,29 @@ const headers = [
         <v-icon icon="mdi-account-question" size="64" color="grey-lighten-1" class="mb-4"></v-icon>
         <h3 class="text-h5 mb-2">No players found</h3>
         <p class="text-body-1 mb-6 text-grey">Try adjusting your filters or add a new player.</p>
-        <v-btn v-if="canManagePlayers" color="primary" prepend-icon="mdi-plus" @click="openNewPlayerDialog">Add New Player</v-btn>
+        <v-btn v-if="canManagePlayers" color="primary" prepend-icon="mdi-plus" @click="openNewPlayerDialog">Add New
+          Player</v-btn>
       </v-card>
 
       <!-- Player List Table -->
       <v-card v-else class="mb-6">
-        <v-data-table-virtual :headers="headers" :items="paginatedPlayers" :items-per-page="itemsPerPage"
-          :page="page" :loading="loading" class="players-view__table" hover
-          @update:options="(options: any) => page = options.page"
+        <v-data-table-virtual :headers="headers" :items="paginatedPlayers" :items-per-page="itemsPerPage" :page="page"
+          :loading="loading" class="players-view__table" hover @update:options="(options: any) => page = options.page"
           @click:row="(event: any, { item }: any) => viewPlayerDetails(item.id)">
 
           <!-- Custom Header -->
           <template v-slot:header.column="{ column }">
             <div class="d-flex align-center">
               {{ column.title }}
-              <v-btn v-if="column.key && column.key !== 'actions' && column.sortable"
-                icon="mdi-arrow-up-down" size="small" variant="text"
-                @click.stop="handleSort(column.key)"></v-btn>
+              <v-btn v-if="column.key && column.key !== 'actions' && column.sortable" icon="mdi-arrow-up-down"
+                size="small" variant="text" @click.stop="handleSort(column.key)"></v-btn>
             </div>
           </template>
 
           <!-- Custom Columns -->
           <template v-slot:item.countryCode="{ item }">
             <div v-if="item.countryCode">
+              <span class="me-1">{{ getCountryFlag(item.countryCode) }}</span>
               {{ getCountryName(item.countryCode) }}
               <span class="text-caption ms-1">({{ item.countryCode }})</span>
             </div>
@@ -476,11 +436,10 @@ const headers = [
 
         <!-- Pagination Controls -->
         <div class="d-flex justify-center align-center pa-4">
-          <v-pagination v-model="page" :length="totalPages" :total-visible="7"
-            density="comfortable"></v-pagination>
+          <v-pagination v-model="page" :length="totalPages" :total-visible="7" density="comfortable"></v-pagination>
 
-          <v-select v-model="itemsPerPage" :items="[10, 25, 50, 100]" label="Per page" density="compact"
-            class="ms-4" style="max-width: 120px;" hide-details></v-select>
+          <v-select v-model="itemsPerPage" :items="[10, 25, 50, 100]" label="Per page" density="compact" class="ms-4"
+            style="max-width: 120px;" hide-details></v-select>
         </div>
       </v-card>
     </v-container>
@@ -491,37 +450,14 @@ const headers = [
         <v-card-title class="text-h5 bg-primary text-white">Add New Player</v-card-title>
         <v-card-text class="pt-4">
           <v-form @submit.prevent="submitNewPlayer">
-            <v-text-field
-              v-model="playerForm.name"
-              label="First Name"
-              :error-messages="formErrors.name"
-              required
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-            ></v-text-field>
+            <v-text-field v-model="playerForm.name" label="First Name" :error-messages="formErrors.name" required
+              variant="outlined" density="comfortable" class="mb-3"></v-text-field>
 
-            <v-text-field
-              v-model="playerForm.lastName"
-              label="Last Name"
-              :error-messages="formErrors.lastName"
-              required
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-            ></v-text-field>
+            <v-text-field v-model="playerForm.lastName" label="Last Name" :error-messages="formErrors.lastName" required
+              variant="outlined" density="comfortable" class="mb-3"></v-text-field>
 
-            <v-select
-              v-model="playerForm.countryCode"
-              label="Country"
-              :items="countryOptions"
-              item-title="title"
-              item-value="value"
-              variant="outlined" 
-              density="comfortable"
-              clearable
-              class="mb-3"
-            ></v-select>
+            <v-autocomplete v-model="playerForm.countryCode" label="Country" :items="countryOptions" item-title="title"
+              item-value="value" variant="outlined" density="comfortable" clearable class="mb-3"></v-autocomplete>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -538,37 +474,14 @@ const headers = [
         <v-card-title class="text-h5 bg-primary text-white">Edit Player</v-card-title>
         <v-card-text class="pt-4">
           <v-form @submit.prevent="submitEditPlayer">
-            <v-text-field
-              v-model="playerForm.name"
-              label="First Name"
-              :error-messages="formErrors.name"
-              required
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-            ></v-text-field>
+            <v-text-field v-model="playerForm.name" label="First Name" :error-messages="formErrors.name" required
+              variant="outlined" density="comfortable" class="mb-3"></v-text-field>
 
-            <v-text-field
-              v-model="playerForm.lastName"
-              label="Last Name"
-              :error-messages="formErrors.lastName"
-              required
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-            ></v-text-field>
+            <v-text-field v-model="playerForm.lastName" label="Last Name" :error-messages="formErrors.lastName" required
+              variant="outlined" density="comfortable" class="mb-3"></v-text-field>
 
-            <v-select
-              v-model="playerForm.countryCode"
-              label="Country"
-              :items="countryOptions"
-              item-title="title"
-              item-value="value"
-              variant="outlined" 
-              density="comfortable"
-              clearable
-              class="mb-3"
-            ></v-select>
+            <v-autocomplete v-model="playerForm.countryCode" label="Country" :items="countryOptions" item-title="title"
+              item-value="value" variant="outlined" density="comfortable" clearable class="mb-3"></v-autocomplete>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -587,7 +500,7 @@ const headers = [
           <p>Are you sure you want to delete this player?</p>
           <p class="font-weight-bold">{{ playerForm.name }} {{ playerForm.lastName }}</p>
           <p class="text-caption text-grey">
-            Note: Players with associated string jobs cannot be deleted. 
+            Note: Players with associated string jobs cannot be deleted.
             You must delete the string jobs first.
           </p>
         </v-card-text>
