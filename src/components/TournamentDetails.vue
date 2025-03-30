@@ -740,7 +740,7 @@ const isTournamentStarted = computed(() => {
     border-radius: $border-radius-md;
     padding: $spacing-md;
     height: 100%;
-    @include flex(column, space-between, stretch);
+    @include flex(column, space-evenly, stretch);
   }
 
   &__status-header {
