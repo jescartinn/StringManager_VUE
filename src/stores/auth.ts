@@ -48,25 +48,25 @@ export const useAuthStore = defineStore('auth', () => {
     async function login(username: string, password: string) {
         loading.value = true
         error.value = null
-
+    
         try {
             // Make API request to login endpoint
             const data = await api.auth.login(username, password)
-
+    
             // Save auth data
             token.value = data.token
             user.value = data.user
-
+    
             // Save to localStorage
             localStorage.setItem('token', data.token)
             localStorage.setItem('user', JSON.stringify(data.user))
-
+    
             // Navigate to dashboard
             router.push('/dashboard')
             return true
         } catch (e) {
             console.error('Login error:', e)
-            error.value = e instanceof Error ? e.message : 'Invalid credentials. Please try again.'
+            error.value = e instanceof Error ? e.message : 'Credenciales inválidas.'
             return false
         } finally {
             loading.value = false
