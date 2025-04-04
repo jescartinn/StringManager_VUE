@@ -287,6 +287,17 @@ const toggleCrossTension = () => {
     }
 }
 
+// Custom filter function for player autocomplete
+const customPlayerFilter = (item: any, queryText: string) => {
+    if (queryText.trim() === '') return true
+
+    const playerName = item.text.toLowerCase()
+    const query = queryText.toLowerCase()
+
+    // Search in player full name
+    return playerName.includes(query)
+}
+
 // Go back function
 const goBack = () => {
     router.back()
@@ -341,10 +352,11 @@ const goBack = () => {
                             <v-row>
                                 <!-- Player Selection - disabled in edit mode -->
                                 <v-col cols="12" md="6">
-                                    <v-select v-model="formData.playerId" :items="playerStore.playerOptions"
+                                    <v-autocomplete v-model="formData.playerId" :items="playerStore.playerOptions"
                                         item-title="text" item-value="value" label="Player"
                                         :error-messages="errors.playerId" :disabled="mode === 'edit'" variant="outlined"
-                                        :loading="playerStore.loading" required>
+                                        :loading="playerStore.loading" required clearable :filter="customPlayerFilter"
+                                        placeholder="Search player by name" :menu-props="{ maxHeight: 300 }">
                                         <template v-slot:prepend>
                                             <v-icon color="primary">mdi-account</v-icon>
                                         </template>
@@ -353,7 +365,19 @@ const goBack = () => {
                                                 color="primary" title="Add New Player"
                                                 @click.stop="router.push('/players/new')"></v-btn>
                                         </template>
-                                    </v-select>
+                                        <template v-slot:no-data>
+                                            <div class="pa-4 text-center">
+                                                <v-icon icon="mdi-account-search" size="36" color="grey-lighten-1"
+                                                    class="mb-2"></v-icon>
+                                                <p>No players found</p>
+                                                <v-btn class="mt-2" v-if="mode === 'create'" color="primary"
+                                                    size="small" variant="text" prepend-icon="mdi-plus"
+                                                    @click="router.push('/players/new')">
+                                                    Create New Player
+                                                </v-btn>
+                                            </div>
+                                        </template>
+                                    </v-autocomplete>
                                 </v-col>
 
                                 <!-- Racquet Selection - only shown if player selected, disabled in edit mode -->
@@ -452,7 +476,7 @@ const goBack = () => {
                                             @click="toggleCrossTension"
                                             :title="usesCrossTension ? 'Use same tension' : 'Use different cross tension'">
                                             <v-icon>{{ usesCrossTension ? 'mdi-link' : 'mdi-link-variant-off'
-                                            }}</v-icon>
+                                                }}</v-icon>
                                         </v-btn>
                                     </div>
                                 </v-col>
