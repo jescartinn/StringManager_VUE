@@ -80,11 +80,9 @@ onMounted(async () => {
         if (mode.value === 'edit' && jobId.value) {
             // Fetch the job to edit
             await loadJobForEdit(jobId.value)
-        } else {
+        } else if (tournamentStore.activeTournament) {
             // If there's a current tournament, pre-select it
-            if (tournamentStore.activeTournament) {
-                formData.value.tournamentId = tournamentStore.activeTournament.id
-            }
+            formData.value.tournamentId = tournamentStore.activeTournament.id
         }
     } catch (error) {
         console.error('Error initializing form:', error)

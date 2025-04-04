@@ -43,6 +43,17 @@ onMounted(async () => {
     loading.value = false
 })
 
+// Custom filter function for player autocomplete
+const customPlayerFilter = (item: any, queryText: string) => {
+    if (queryText.trim() === '') return true
+
+    const playerName = item.text.toLowerCase()
+    const query = queryText.toLowerCase()
+
+    // Search in player full name
+    return playerName.includes(query)
+}
+
 // Load filters from URL query parameters
 const loadFiltersFromQuery = () => {
     // Extract query parameters
@@ -404,9 +415,19 @@ const handleSort = (column: string) => {
                                 </v-col>
 
                                 <v-col cols="12" sm="6" md="3">
-                                    <v-select v-model="playerFilter" label="Player" :items="playerStore.playerOptions"
-                                        item-title="text" item-value="value" variant="outlined" density="comfortable"
-                                        clearable hide-details></v-select>
+                                    <v-autocomplete v-model="playerFilter" label="Player"
+                                        :items="playerStore.playerOptions" item-title="text" item-value="value"
+                                        variant="outlined" density="comfortable" clearable hide-details
+                                        :filter="customPlayerFilter" placeholder="Search player by name"
+                                        :menu-props="{ maxHeight: 300 }">
+                                        <template v-slot:no-data>
+                                            <div class="pa-4 text-center">
+                                                <v-icon icon="mdi-account-search" size="36" color="grey-lighten-1"
+                                                    class="mb-2"></v-icon>
+                                                <p>No players found</p>
+                                            </div>
+                                        </template>
+                                    </v-autocomplete>
                                 </v-col>
 
                                 <v-col cols="12" sm="6" md="3">
