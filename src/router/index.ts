@@ -1,13 +1,13 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/DashboardView.vue'
-import LandingPage from '../views/LandingPage.vue'
-import StringJobsView from '../views/StringJobsView.vue'
-import StringJobForm from '../components/StringJobForm.vue'
-import StringJobDetails from '../components/StringJobDetails.vue'
-import PlayersView from '../views/PlayersView.vue'
-import PlayerDetails from '../components/PlayerDetails.vue'
-import RacquetsView from '../views/RacquetsView.vue'
-import RacquetDetails from '../components/RacquetDetails.vue'
+import HomeView from '@/views/DashboardView.vue'
+import LandingPage from '@/views/LandingPage.vue'
+import StringJobsView from '@/views/StringJobsView.vue'
+import StringJobForm from '@/components/StringJobForm.vue'
+import StringJobDetails from '@/components/StringJobDetails.vue'
+import PlayersView from '@/views/PlayersView.vue'
+import PlayerDetails from '@/components/PlayerDetails.vue'
+import RacquetsView from '@/views/RacquetsView.vue'
+import RacquetDetails from '@/components/RacquetDetails.vue'
 import StringsView from '@/views/StringsView.vue'
 import StringersView from '@/views/StringersView.vue'
 import StringerDetails from '@/components/StringerDetails.vue'
@@ -121,7 +121,7 @@ const router = createRouter({
       component: ReportsView,
       meta: { requiresAuth: true }
     },
-    
+
     // Catch-all route to redirect to landing page
     {
       path: '/:pathMatch(.*)*',
