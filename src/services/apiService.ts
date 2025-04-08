@@ -291,7 +291,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     if (response.status === 401 && endpoint.includes('/auth/login')) {
       throw new Error('Credenciales inválidas.');
     }
-    
+
     if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
       // Clear auth data and redirect to login
       localStorage.removeItem('token');
@@ -305,7 +305,28 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
       return null as unknown as T;
     }
 
+    // Special handling for 404 Not Found responses for player-related requests
+    if (response.status === 404) {
+      if (endpoint.includes('/player/')) {
+        // For player-specific endpoints, return an empty array instead of throwing an error
+        if (Array.isArray([] as unknown as T)) {
+          return [] as unknown as T;
+        }
+        return null as unknown as T;
+      }
+      throw new Error(`Recurso no encontrado: ${endpoint}`);
+    }
+
     if (!response.ok) {
+      // Try to parse error message from response if possible
+      try {
+        const errorData = await response.json();
+        if (errorData && typeof errorData === 'object' && 'message' in errorData) {
+          throw new Error(errorData.message as string);
+        }
+      } catch (parseError) {
+        // If we can't parse the error, just use the status
+      }
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
 
@@ -348,24 +369,24 @@ const auth = {
 
 // Players API
 const players = {
-  getAll: (): Promise<Player[]> => 
+  getAll: (): Promise<Player[]> =>
     request<Player[]>('/players'),
-    
-  getById: (id: number): Promise<Player> => 
+
+  getById: (id: number): Promise<Player> =>
     request<Player>(`/players/${id}`),
-    
+
   create: (playerData: CreatePlayerDTO): Promise<Player> =>
     request<Player>('/players', {
       method: 'POST',
       body: playerData
     }),
-    
+
   update: (id: number, playerData: UpdatePlayerDTO): Promise<void> =>
     request<void>(`/players/${id}`, {
       method: 'PUT',
       body: playerData
     }),
-    
+
   delete: (id: number): Promise<void> =>
     request<void>(`/players/${id}`, {
       method: 'DELETE'
@@ -374,27 +395,27 @@ const players = {
 
 // Racquets API
 const racquets = {
-  getAll: (): Promise<Racquet[]> => 
+  getAll: (): Promise<Racquet[]> =>
     request<Racquet[]>('/racquets'),
-    
-  getByPlayer: (playerId: number): Promise<Racquet[]> => 
+
+  getByPlayer: (playerId: number): Promise<Racquet[]> =>
     request<Racquet[]>(`/racquets?playerId=${playerId}`),
-    
-  getById: (id: number): Promise<Racquet> => 
+
+  getById: (id: number): Promise<Racquet> =>
     request<Racquet>(`/racquets/${id}`),
-    
+
   create: (racquetData: CreateRacquetDTO): Promise<Racquet> =>
     request<Racquet>('/racquets', {
       method: 'POST',
       body: racquetData
     }),
-    
+
   update: (id: number, racquetData: UpdateRacquetDTO): Promise<void> =>
     request<void>(`/racquets/${id}`, {
       method: 'PUT',
       body: racquetData
     }),
-    
+
   delete: (id: number): Promise<void> =>
     request<void>(`/racquets/${id}`, {
       method: 'DELETE'
@@ -403,24 +424,24 @@ const racquets = {
 
 // StringTypes API
 const stringTypes = {
-  getAll: (): Promise<StringType[]> => 
+  getAll: (): Promise<StringType[]> =>
     request<StringType[]>('/stringtypes'),
-    
-  getById: (id: number): Promise<StringType> => 
+
+  getById: (id: number): Promise<StringType> =>
     request<StringType>(`/stringtypes/${id}`),
-    
+
   create: (stringTypeData: CreateStringTypeDTO): Promise<StringType> =>
     request<StringType>('/stringtypes', {
       method: 'POST',
       body: stringTypeData
     }),
-    
+
   update: (id: number, stringTypeData: UpdateStringTypeDTO): Promise<void> =>
     request<void>(`/stringtypes/${id}`, {
       method: 'PUT',
       body: stringTypeData
     }),
-    
+
   delete: (id: number): Promise<void> =>
     request<void>(`/stringtypes/${id}`, {
       method: 'DELETE'
@@ -429,24 +450,24 @@ const stringTypes = {
 
 // Stringers API
 const stringers = {
-  getAll: (): Promise<Stringer[]> => 
+  getAll: (): Promise<Stringer[]> =>
     request<Stringer[]>('/stringers'),
-    
-  getById: (id: number): Promise<Stringer> => 
+
+  getById: (id: number): Promise<Stringer> =>
     request<Stringer>(`/stringers/${id}`),
-    
+
   create: (stringerData: CreateStringerDTO): Promise<Stringer> =>
     request<Stringer>('/stringers', {
       method: 'POST',
       body: stringerData
     }),
-    
+
   update: (id: number, stringerData: UpdateStringerDTO): Promise<void> =>
     request<void>(`/stringers/${id}`, {
       method: 'PUT',
       body: stringerData
     }),
-    
+
   delete: (id: number): Promise<void> =>
     request<void>(`/stringers/${id}`, {
       method: 'DELETE'
@@ -455,27 +476,27 @@ const stringers = {
 
 // Tournaments API
 const tournaments = {
-  getAll: (): Promise<Tournament[]> => 
+  getAll: (): Promise<Tournament[]> =>
     request<Tournament[]>('/tournaments'),
-    
-  getCurrent: (): Promise<Tournament> => 
+
+  getCurrent: (): Promise<Tournament> =>
     request<Tournament>('/tournaments/current'),
-    
-  getById: (id: number): Promise<Tournament> => 
+
+  getById: (id: number): Promise<Tournament> =>
     request<Tournament>(`/tournaments/${id}`),
-    
+
   create: (tournamentData: CreateTournamentDTO): Promise<Tournament> =>
     request<Tournament>('/tournaments', {
       method: 'POST',
       body: tournamentData
     }),
-    
+
   update: (id: number, tournamentData: UpdateTournamentDTO): Promise<void> =>
     request<void>(`/tournaments/${id}`, {
       method: 'PUT',
       body: tournamentData
     }),
-    
+
   delete: (id: number): Promise<void> =>
     request<void>(`/tournaments/${id}`, {
       method: 'DELETE'
@@ -484,53 +505,53 @@ const tournaments = {
 
 // StringJobs API
 const stringJobs = {
-  getAll: (): Promise<StringJob[]> => 
+  getAll: (): Promise<StringJob[]> =>
     request<StringJob[]>('/stringjobs'),
-    
-  getByStatus: (status: string): Promise<StringJob[]> => 
+
+  getByStatus: (status: string): Promise<StringJob[]> =>
     request<StringJob[]>(`/stringjobs?status=${status}`),
-    
-  getByTournament: (tournamentId: number): Promise<StringJob[]> => 
+
+  getByTournament: (tournamentId: number): Promise<StringJob[]> =>
     request<StringJob[]>(`/stringjobs?tournamentId=${tournamentId}`),
-    
-  getByPlayer: (playerId: number): Promise<StringJob[]> => 
+
+  getByPlayer: (playerId: number): Promise<StringJob[]> =>
     request<StringJob[]>(`/stringjobs/player/${playerId}`),
-    
-  getByStringer: (stringerId: number): Promise<StringJob[]> => 
+
+  getByStringer: (stringerId: number): Promise<StringJob[]> =>
     request<StringJob[]>(`/stringjobs/stringer/${stringerId}`),
-    
-  getById: (id: number): Promise<StringJob> => 
+
+  getById: (id: number): Promise<StringJob> =>
     request<StringJob>(`/stringjobs/${id}`),
-    
+
   create: (jobData: CreateStringJobDTO): Promise<StringJob> =>
     request<StringJob>('/stringjobs', {
       method: 'POST',
       body: jobData
     }),
-    
+
   update: (id: number, jobData: UpdateStringJobDTO): Promise<void> =>
     request<void>(`/stringjobs/${id}`, {
       method: 'PUT',
       body: jobData
     }),
-    
+
   complete: (id: number, completeData: CompleteStringJobDTO): Promise<void> =>
     request<void>(`/stringjobs/${id}/complete`, {
       method: 'PATCH',
       body: completeData
     }),
-    
+
   cancel: (id: number, cancelReason: string): Promise<void> =>
     request<void>(`/stringjobs/${id}/cancel`, {
       method: 'PATCH',
       body: JSON.stringify(cancelReason)
     }),
-    
+
   start: (id: number): Promise<void> =>
     request<void>(`/stringjobs/${id}/start`, {
       method: 'PATCH'
     }),
-    
+
   delete: (id: number): Promise<void> =>
     request<void>(`/stringjobs/${id}`, {
       method: 'DELETE'
@@ -539,27 +560,27 @@ const stringJobs = {
 
 // Dashboard API
 const dashboard = {
-  getStats: (): Promise<DashboardStats> => 
+  getStats: (): Promise<DashboardStats> =>
     request<DashboardStats>('/dashboard/stats'),
-    
+
   getDistribution: (tournamentId?: number): Promise<DistributionStats> =>
     request<DistributionStats>(tournamentId ? `/dashboard/distribution?tournamentId=${tournamentId}` : '/dashboard/distribution')
 };
 
 // Users API (Admin only)
 const users = {
-  getAll: (): Promise<User[]> => 
+  getAll: (): Promise<User[]> =>
     request<User[]>('/users'),
-    
-  getById: (id: number): Promise<User> => 
+
+  getById: (id: number): Promise<User> =>
     request<User>(`/users/${id}`),
-    
+
   update: (id: number, userData: Partial<User>): Promise<void> =>
     request<void>(`/users/${id}`, {
       method: 'PUT',
       body: userData
     }),
-    
+
   delete: (id: number): Promise<void> =>
     request<void>(`/users/${id}`, {
       method: 'DELETE'

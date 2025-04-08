@@ -32,7 +32,7 @@ export const usePlayerStore = defineStore('player', () => {
 
   // Computed
   const playerCount = computed(() => players.value.length)
-  
+
   const playerOptions = computed(() => {
     return players.value.map(player => ({
       value: player.id,
@@ -57,10 +57,10 @@ export const usePlayerStore = defineStore('player', () => {
     if (players.value.length > 0 && initialized.value) {
       return players.value // Return cached data if we've already fetched
     }
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       players.value = await api.players.getAll()
       initialized.value = true
@@ -83,14 +83,21 @@ export const usePlayerStore = defineStore('player', () => {
         return existingPlayer
       }
     }
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       const player = await api.players.getById(id)
+
+      // If player is null or undefined (404 case), return null but don't set an error
+      if (!player) {
+        currentPlayer.value = null
+        return null
+      }
+
       currentPlayer.value = player
-      
+
       // Update the player in our local cache
       const index = players.value.findIndex(p => p.id === id)
       if (index !== -1) {
@@ -98,7 +105,7 @@ export const usePlayerStore = defineStore('player', () => {
       } else {
         players.value.push(player)
       }
-      
+
       return player
     } catch (e) {
       console.error(`Error fetching player ${id}:`, e)
@@ -112,7 +119,7 @@ export const usePlayerStore = defineStore('player', () => {
   async function createPlayer(playerData: CreatePlayerDTO) {
     loading.value = true
     error.value = null
-    
+
     try {
       const newPlayer = await api.players.create(playerData)
       players.value.push(newPlayer)
@@ -129,21 +136,21 @@ export const usePlayerStore = defineStore('player', () => {
   async function updatePlayer(id: number, playerData: UpdatePlayerDTO) {
     loading.value = true
     error.value = null
-    
+
     try {
       await api.players.update(id, playerData)
-      
+
       // Update the player in the local state
       const index = players.value.findIndex(player => player.id === id)
       if (index !== -1) {
         players.value[index] = { ...players.value[index], ...playerData }
       }
-      
+
       // Also update currentPlayer if it's the one being updated
       if (currentPlayer.value && currentPlayer.value.id === id) {
         currentPlayer.value = { ...currentPlayer.value, ...playerData }
       }
-      
+
       return true
     } catch (e) {
       console.error(`Error updating player ${id}:`, e)
@@ -157,18 +164,18 @@ export const usePlayerStore = defineStore('player', () => {
   async function deletePlayer(id: number) {
     loading.value = true
     error.value = null
-    
+
     try {
       await api.players.delete(id)
-      
+
       // Remove the player from the local state
       players.value = players.value.filter(player => player.id !== id)
-      
+
       // Clear currentPlayer if it's the one being deleted
       if (currentPlayer.value && currentPlayer.value.id === id) {
         currentPlayer.value = null
       }
-      
+
       return true
     } catch (e) {
       console.error(`Error deleting player ${id}:`, e)
@@ -200,13 +207,13 @@ export const usePlayerStore = defineStore('player', () => {
     loading,
     error,
     initialized,
-    
+
     // Getters/Computed
     playerCount,
     playerOptions,
     getPlayerById,
     getPlayerFullName,
-    
+
     // Actions
     fetchPlayers,
     fetchPlayerById,

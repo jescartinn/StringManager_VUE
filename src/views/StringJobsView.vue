@@ -124,7 +124,19 @@ const loadData = async () => {
         if (statusFilter.value) {
             await stringJobStore.fetchJobsByStatus(statusFilter.value)
         } else if (playerFilter.value) {
-            await stringJobStore.fetchJobsByPlayer(playerFilter.value)
+            // Check if player exists first
+            const player = await playerStore.fetchPlayerById(playerFilter.value)
+            if (!player) {
+                // Player not found, clear jobs and show error
+                stringJobStore.stringJobs = []
+                stringJobStore.error = `El jugador con ID ${playerFilter.value} no existe.`
+
+                // Optionally reset the playerFilter
+                // playerFilter.value = null
+                // updateQueryParams()
+            } else {
+                await stringJobStore.fetchJobsByPlayer(playerFilter.value)
+            }
         } else if (stringerFilter.value) {
             await stringJobStore.fetchJobsByStringer(stringerFilter.value)
         } else if (tournamentFilter.value) {
