@@ -313,8 +313,9 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
           return [] as unknown as T;
         }
         return null as unknown as T;
+      } else {
+        return null as unknown as T;
       }
-      throw new Error(`Recurso no encontrado: ${endpoint}`);
     }
 
     if (!response.ok) {

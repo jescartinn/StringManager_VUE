@@ -294,7 +294,7 @@ const viewStringJob = (jobId: number) => {
       </div>
 
       <!-- Player Not Found -->
-      <v-card v-else-if="!player" class="text-center pa-8 mb-6">
+      <v-card v-else-if="!player" class="text-center pa-8 mt-6 mb-6">
         <v-icon icon="mdi-alert-circle" size="64" color="warning" class="mb-4"></v-icon>
         <h3 class="text-h5 mb-2">Player Not Found</h3>
         <p class="mb-6">The requested player could not be found or you don't have permission to view it.</p>
