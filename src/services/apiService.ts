@@ -179,6 +179,7 @@ export interface StringJob {
   mainTension: number
   crossTension?: number
   isTensionInKg: boolean
+  logo?: string
   status: string
   notes?: string
   priority?: number
@@ -194,6 +195,7 @@ export interface CreateStringJobDTO {
   mainTension: number
   crossTension?: number
   isTensionInKg: boolean
+  logo?: string
   notes?: string
   priority?: number
 }
@@ -205,6 +207,7 @@ export interface UpdateStringJobDTO {
   mainTension: number
   crossTension?: number
   isTensionInKg: boolean
+  logo?: string
   status: string
   notes?: string
   priority?: number
