@@ -74,7 +74,7 @@ onMounted(async () => {
   try {
     // Load tournaments data
     await tournamentStore.fetchAllTournaments()
-    
+
     try {
       // Get current tournament, even if we already have it in the store
       await tournamentStore.fetchCurrentTournament()
@@ -603,11 +603,11 @@ const headers = [
                   {{ getTournamentStatus(item).text }}
                 </v-chip>
 
-                <div class="text-caption mt-1" v-if="getTournamentStatus(item).text === 'Upcoming'">
+                <div class="text-caption" v-if="getTournamentStatus(item).text === 'Upcoming'">
                   In {{ daysUntilStart(item.startDate) }} days
                 </div>
 
-                <div class="text-caption mt-1" v-if="getTournamentStatus(item).text === 'Active'">
+                <div class="text-caption" v-if="getTournamentStatus(item).text === 'Active'">
                   {{ daysRemaining(item.endDate) }} days remaining
                 </div>
 

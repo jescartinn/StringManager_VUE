@@ -322,7 +322,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-tennis-ball</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.racquet.brand }} {{ job.racquet.model
-                                        }}</v-list-item-title>
+                                            }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.racquet.serialNumber">
                                             Serial: {{ job.racquet.serialNumber }}
                                         </v-list-item-subtitle>
@@ -371,7 +371,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-account-wrench</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.stringer.name }} {{ job.stringer.lastName
-                                        }}</v-list-item-title>
+                                            }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.stringer.email">
                                             Email: {{ job.stringer.email }}
                                         </v-list-item-subtitle>
@@ -463,6 +463,21 @@ const cancelJob = async () => {
                                             {{ job.crossTension && job.crossTension !== job.mainTension
                                                 ? 'Different main/cross tension'
                                                 : 'Same tension for mains and crosses' }}
+                                        </v-list-item-subtitle>
+                                    </v-list-item>
+
+                                    <v-divider class="my-2"></v-divider>
+
+                                    <!-- Logo -->
+                                    <v-list-item v-if="job && job.logo">
+                                        <template v-slot:prepend>
+                                            <v-icon color="primary" size="32">mdi-image-outline</v-icon>
+                                        </template>
+                                        <v-list-item-title>
+                                            Logo: {{ job.logo }}
+                                        </v-list-item-title>
+                                        <v-list-item-subtitle>
+                                            Stencil logo to paint on the strings
                                         </v-list-item-subtitle>
                                     </v-list-item>
                                 </v-list>

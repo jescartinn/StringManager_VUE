@@ -47,6 +47,7 @@ const formData = ref({
     mainTension: 24 as number,
     crossTension: null as number | null,
     isTensionInKg: true as boolean,
+    logo: '' as string,
     status: 'Pending' as string,
     notes: '' as string,
     priority: 2 as number | null // Default to medium priority
@@ -107,6 +108,7 @@ const loadJobForEdit = async (id: number) => {
             formData.value.mainTension = job.mainTension
             formData.value.crossTension = job.crossTension || null
             formData.value.isTensionInKg = job.isTensionInKg
+            formData.value.logo = job.logo || ''
             formData.value.status = job.status
             formData.value.notes = job.notes || ''
             formData.value.priority = job.priority || 2
@@ -192,6 +194,7 @@ const createJob = async () => {
         mainTension: formData.value.mainTension,
         crossTension: formData.value.crossTension || undefined,
         isTensionInKg: formData.value.isTensionInKg,
+        logo: formData.value.logo || undefined,
         notes: formData.value.notes || undefined,
         priority: formData.value.priority || undefined
     }
@@ -210,6 +213,7 @@ const updateJob = async () => {
         mainTension: formData.value.mainTension,
         crossTension: formData.value.crossTension || undefined,
         isTensionInKg: formData.value.isTensionInKg,
+        logo: formData.value.logo || undefined,
         status: formData.value.status,
         notes: formData.value.notes || undefined,
         priority: formData.value.priority || undefined
@@ -421,7 +425,7 @@ const goBack = () => {
                                         <template v-slot:append-inner>
                                             <v-btn icon="mdi-plus" size="small" variant="text" color="primary"
                                                 title="Add New String Type"
-                                                @click.stop="router.push('/strings/new')"></v-btn>
+                                                @click.stop="router.push('/strings')"></v-btn>
                                         </template>
                                     </v-select>
                                 </v-col>
@@ -474,7 +478,7 @@ const goBack = () => {
                                             @click="toggleCrossTension"
                                             :title="usesCrossTension ? 'Use same tension' : 'Use different cross tension'">
                                             <v-icon>{{ usesCrossTension ? 'mdi-link' : 'mdi-link-variant-off'
-                                                }}</v-icon>
+                                            }}</v-icon>
                                         </v-btn>
                                     </div>
                                 </v-col>
@@ -491,6 +495,16 @@ const goBack = () => {
                                             <v-icon color="primary">mdi-flag</v-icon>
                                         </template>
                                     </v-select>
+                                </v-col>
+
+                                <!-- Logo Field (Nuevo) -->
+                                <v-col cols="12" md="12">
+                                    <v-text-field v-model="formData.logo" label="Logo (optional)" variant="outlined"
+                                        clearable>
+                                        <template v-slot:prepend>
+                                            <v-icon color="primary">mdi-image-outline</v-icon>
+                                        </template>
+                                    </v-text-field>
                                 </v-col>
 
                                 <!-- Status (edit mode only) -->
