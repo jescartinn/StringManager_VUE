@@ -24,6 +24,11 @@ const itemsPerPage = ref(10)
 const sortBy = ref<string>('createdAt')
 const sortDesc = ref(true)
 const showFilters = ref(false)
+const showCancelConfirmation = ref(false)
+const showCompleteConfirmation = ref(false)
+const jobToAction = ref<number | null>(null)
+const cancelReason = ref('')
+const completeNotes = ref('')
 
 // Initialize based on query params
 onMounted(async () => {
@@ -307,35 +312,37 @@ const startJob = async (id: number) => {
 }
 
 const confirmCancelJob = (id: number) => {
-    // This would typically open a confirmation dialog
-    // For now we'll just show a window.confirm
-    if (window.confirm('Are you sure you want to cancel this job?')) {
-        cancelJob(id)
-    }
+    jobToAction.value = id
+    cancelReason.value = ''
+    showCancelConfirmation.value = true
 }
 
-const cancelJob = async (id: number) => {
+const cancelJob = async () => {
+    if (!jobToAction.value) return
+
     try {
-        await stringJobStore.cancelJob(id, 'Cancelled by user')
+        await stringJobStore.cancelJob(jobToAction.value, cancelReason.value || 'Cancelled by user')
+        showCancelConfirmation.value = false
     } catch (error) {
         console.error('Error cancelling job:', error)
     }
 }
 
 const confirmCompleteJob = (id: number) => {
-    // This would typically open a confirmation dialog
-    // For now we'll just show a window.confirm
-    if (window.confirm('Mark this job as completed?')) {
-        completeJob(id)
-    }
+    jobToAction.value = id
+    completeNotes.value = ''
+    showCompleteConfirmation.value = true
 }
 
-const completeJob = async (id: number) => {
+const completeJob = async () => {
+    if (!jobToAction.value) return
+
     try {
-        await stringJobStore.completeJob(id, {
+        await stringJobStore.completeJob(jobToAction.value, {
             completedAt: new Date().toISOString(),
-            notes: ''
+            notes: completeNotes.value
         })
+        showCompleteConfirmation.value = false
     } catch (error) {
         console.error('Error completing job:', error)
     }
@@ -605,6 +612,40 @@ const handleSort = (column: string) => {
                 </div>
             </v-card>
         </v-container>
+
+        <!-- Cancel Job Confirmation Dialog -->
+        <v-dialog v-model="showCancelConfirmation" max-width="500px">
+            <v-card>
+                <v-card-title class="text-h5 bg-error text-white">Cancel Job</v-card-title>
+                <v-card-text class="pt-4">
+                    <p>Are you sure you want to cancel this job?</p>
+                    <v-textarea v-model="cancelReason" label="Reason for Cancellation" variant="outlined" rows="3"
+                        placeholder="Please provide a reason for cancellation..." class="mt-4"></v-textarea>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="secondary" variant="text" @click="showCancelConfirmation = false">Go Back</v-btn>
+                    <v-btn color="error" @click="cancelJob" :loading="stringJobStore.loading">Cancel Job</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
+
+        <!-- Complete Job Confirmation Dialog -->
+        <v-dialog v-model="showCompleteConfirmation" max-width="500px">
+            <v-card>
+                <v-card-title class="text-h5 bg-success text-white">Complete Job</v-card-title>
+                <v-card-text class="pt-4">
+                    <p>Are you sure you want to mark this job as completed?</p>
+                    <v-textarea v-model="completeNotes" label="Completion Notes (optional)" variant="outlined" rows="3"
+                        placeholder="Any additional notes about the completed job..." class="mt-4"></v-textarea>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn color="secondary" variant="text" @click="showCompleteConfirmation = false">Cancel</v-btn>
+                    <v-btn color="success" @click="completeJob" :loading="stringJobStore.loading">Complete Job</v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </div>
 </template>
 
