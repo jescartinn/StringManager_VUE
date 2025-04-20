@@ -74,7 +74,7 @@ onMounted(async () => {
     try {
       // Load tournament data
       await tournamentStore.fetchTournamentById(tournamentId.value)
-      
+
       // Load tournament's string jobs
       jobsLoading.value = true
       await stringJobStore.fetchJobsByTournament(tournamentId.value)
@@ -95,7 +95,7 @@ watch(() => tournamentId.value, async (newTournamentId) => {
   if (newTournamentId) {
     loading.value = true
     jobsLoading.value = true
-    
+
     try {
       await tournamentStore.fetchTournamentById(newTournamentId)
       await stringJobStore.fetchJobsByTournament(newTournamentId)
@@ -136,16 +136,16 @@ const getStatusColor = (status: string) => {
 // Get tournament status
 const getTournamentStatus = () => {
   if (!tournament.value) return { text: 'Unknown', color: 'grey' }
-  
+
   const today = new Date()
   const startDate = new Date(tournament.value.startDate)
   const endDate = new Date(tournament.value.endDate)
-  
+
   // Set times for more accurate calculation
   startDate.setHours(0, 0, 0, 0)
   endDate.setHours(23, 59, 59, 999)
   today.setHours(12, 0, 0, 0)
-  
+
   if (today < startDate) {
     return { text: 'Upcoming', color: 'info' }
   } else if (today > endDate) {
@@ -158,16 +158,16 @@ const getTournamentStatus = () => {
 // Calculate days until/remaining
 const getDateInfo = () => {
   if (!tournament.value) return { text: '', days: 0 }
-  
+
   const today = new Date()
   const startDate = new Date(tournament.value.startDate)
   const endDate = new Date(tournament.value.endDate)
-  
+
   // Set times for more accurate calculation
   startDate.setHours(0, 0, 0, 0)
   endDate.setHours(23, 59, 59, 999)
   today.setHours(12, 0, 0, 0)
-  
+
   if (today < startDate) {
     // Tournament hasn't started
     const diffTime = startDate.getTime() - today.getTime()
@@ -198,7 +198,7 @@ const returnToTournamentsList = () => {
 // Open edit tournament dialog
 const openEditTournamentDialog = () => {
   if (!tournament.value) return
-  
+
   tournamentForm.value = {
     id: tournament.value.id,
     name: tournament.value.name,
@@ -207,7 +207,7 @@ const openEditTournamentDialog = () => {
     location: tournament.value.location || '',
     category: tournament.value.category || ''
   }
-  
+
   // Reset errors
   formErrors.value = {
     name: '',
@@ -216,7 +216,7 @@ const openEditTournamentDialog = () => {
     location: '',
     category: ''
   }
-  
+
   showEditTournamentDialog.value = true
 }
 
@@ -228,7 +228,7 @@ const openDeleteDialog = () => {
 // Validate tournament form
 const validateTournamentForm = () => {
   let isValid = true
-  
+
   // Validate name
   if (!tournamentForm.value.name.trim()) {
     formErrors.value.name = 'Tournament name is required'
@@ -236,7 +236,7 @@ const validateTournamentForm = () => {
   } else {
     formErrors.value.name = ''
   }
-  
+
   // Validate startDate
   if (!tournamentForm.value.startDate) {
     formErrors.value.startDate = 'Start date is required'
@@ -244,7 +244,7 @@ const validateTournamentForm = () => {
   } else {
     formErrors.value.startDate = ''
   }
-  
+
   // Validate endDate
   if (!tournamentForm.value.endDate) {
     formErrors.value.endDate = 'End date is required'
@@ -253,7 +253,7 @@ const validateTournamentForm = () => {
     // Check if end date is after start date
     const startDate = new Date(tournamentForm.value.startDate)
     const endDate = new Date(tournamentForm.value.endDate)
-    
+
     if (endDate < startDate) {
       formErrors.value.endDate = 'End date must be after start date'
       isValid = false
@@ -261,7 +261,7 @@ const validateTournamentForm = () => {
       formErrors.value.endDate = ''
     }
   }
-  
+
   // Check for conflicting tournament dates if changing dates
   if (isValid) {
     const hasConflict = tournamentStore.hasDateConflict(
@@ -269,21 +269,21 @@ const validateTournamentForm = () => {
       tournamentForm.value.endDate,
       tournamentForm.value.id || undefined
     )
-    
+
     if (hasConflict) {
       formErrors.value.startDate = 'Tournament dates conflict with another tournament'
       formErrors.value.endDate = 'Tournament dates conflict with another tournament'
       isValid = false
     }
   }
-  
+
   return isValid
 }
 
 // Submit tournament edit
 const submitEditTournament = async () => {
   if (!validateTournamentForm() || !tournamentForm.value.id) return
-  
+
   try {
     await tournamentStore.updateTournament(tournamentForm.value.id, {
       name: tournamentForm.value.name,
@@ -292,9 +292,9 @@ const submitEditTournament = async () => {
       location: tournamentForm.value.location || undefined,
       category: tournamentForm.value.category || undefined
     })
-    
+
     showEditTournamentDialog.value = false
-    
+
     // Re-fetch current tournament in case the edited one is current
     await tournamentStore.fetchCurrentTournament()
   } catch (error) {
@@ -305,14 +305,14 @@ const submitEditTournament = async () => {
 // Delete tournament
 const deleteTournament = async () => {
   if (!tournament.value) return
-  
+
   try {
     await tournamentStore.deleteTournament(tournament.value.id)
     showDeleteConfirmation.value = false
-    
+
     // Navigate back to tournaments list
     router.push('/tournaments')
-    
+
     // Re-fetch current tournament in case the deleted one was current
     await tournamentStore.fetchCurrentTournament()
   } catch (error) {
@@ -334,7 +334,7 @@ const viewStringJob = (jobId: number) => {
 // Get statistics
 const jobStatistics = computed(() => {
   if (stringJobStore.stringJobs.length === 0) return { total: 0, pending: 0, inProgress: 0, completed: 0, cancelled: 0 }
-  
+
   return {
     total: stringJobStore.stringJobs.length,
     pending: stringJobStore.stringJobs.filter(job => job.status === 'Pending').length,
@@ -396,7 +396,7 @@ const isTournamentStarted = computed(() => {
       </div>
 
       <!-- Tournament Not Found -->
-      <v-card v-else-if="!tournament" class="text-center pa-8 mb-6">
+      <v-card v-else-if="!tournament" class="text-center pa-8 mb-6 mt-6">
         <v-icon icon="mdi-alert-circle" size="64" color="warning" class="mb-4"></v-icon>
         <h3 class="text-h5 mb-2">Tournament Not Found</h3>
         <p class="mb-6">The requested tournament could not be found or you don't have permission to view it.</p>
@@ -410,7 +410,7 @@ const isTournamentStarted = computed(() => {
           <v-card-title class="tournament-details__section-title">
             <v-icon start>mdi-trophy</v-icon>
             Tournament Information
-            
+
             <!-- Current Tournament Badge -->
             <v-chip v-if="isCurrentTournament" color="success" size="small" class="ml-2">Current</v-chip>
           </v-card-title>
@@ -424,19 +424,19 @@ const isTournamentStarted = computed(() => {
                     <span class="tournament-details__info-label">Name:</span>
                     <span class="tournament-details__info-value">{{ tournament.name }}</span>
                   </div>
-                  
+
                   <div class="tournament-details__info-item">
                     <span class="tournament-details__info-label">Dates:</span>
                     <span class="tournament-details__info-value">
                       {{ formatDate(tournament.startDate) }} to {{ formatDate(tournament.endDate) }}
                     </span>
                   </div>
-                  
+
                   <div class="tournament-details__info-item" v-if="tournament.location">
                     <span class="tournament-details__info-label">Location:</span>
                     <span class="tournament-details__info-value">{{ tournament.location }}</span>
                   </div>
-                  
+
                   <div class="tournament-details__info-item" v-if="tournament.category">
                     <span class="tournament-details__info-label">Category:</span>
                     <span class="tournament-details__info-value">{{ tournament.category }}</span>
@@ -452,7 +452,7 @@ const isTournamentStarted = computed(() => {
                       {{ getTournamentStatus().text }}
                     </v-chip>
                   </div>
-                  
+
                   <div class="tournament-details__status-info">
                     <div class="tournament-details__status-days">
                       <span class="tournament-details__info-label">{{ getDateInfo().text }}:</span>
@@ -460,13 +460,10 @@ const isTournamentStarted = computed(() => {
                         {{ getDateInfo().days }}
                       </span>
                     </div>
-                    
+
                     <div class="tournament-details__status-progress" v-if="isTournamentStarted && !isTournamentEnded">
                       <span class="tournament-details__info-label">Progress:</span>
-                      <v-progress-linear 
-                        color="primary" 
-                        height="12" 
-                        rounded 
+                      <v-progress-linear color="primary" height="12" rounded
                         :model-value="tournamentStore.getRemainingDays(tournament.id) / 100">
                       </v-progress-linear>
                     </div>
@@ -504,21 +501,21 @@ const isTournamentStarted = computed(() => {
                   <div class="tournament-details__stat-label">Total Jobs</div>
                 </div>
               </v-col>
-              
+
               <v-col cols="6" sm="3">
                 <div class="tournament-details__stat-card tournament-details__stat-card--pending">
                   <div class="tournament-details__stat-value">{{ jobStatistics.pending }}</div>
                   <div class="tournament-details__stat-label">Pending</div>
                 </div>
               </v-col>
-              
+
               <v-col cols="6" sm="3">
                 <div class="tournament-details__stat-card tournament-details__stat-card--in-progress">
                   <div class="tournament-details__stat-value">{{ jobStatistics.inProgress }}</div>
                   <div class="tournament-details__stat-label">In Progress</div>
                 </div>
               </v-col>
-              
+
               <v-col cols="6" sm="3">
                 <div class="tournament-details__stat-card tournament-details__stat-card--completed">
                   <div class="tournament-details__stat-value">{{ jobStatistics.completed }}</div>
@@ -556,7 +553,8 @@ const isTournamentStarted = computed(() => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="job in sortedJobs" :key="job.id" @click="viewStringJob(job.id)" class="tournament-details__table-row">
+                <tr v-for="job in sortedJobs" :key="job.id" @click="viewStringJob(job.id)"
+                  class="tournament-details__table-row">
                   <td>{{ job.id }}</td>
                   <td>{{ job.player ? `${job.player.name} ${job.player.lastName}` : 'N/A' }}</td>
                   <td>{{ job.racquet ? `${job.racquet.brand} ${job.racquet.model}` : 'N/A' }}</td>
@@ -568,7 +566,8 @@ const isTournamentStarted = computed(() => {
                   </td>
                   <td>{{ formatDate(job.createdAt) }}</td>
                   <td class="text-right">
-                    <v-btn icon="mdi-eye" size="small" variant="text" color="primary" @click.stop="viewStringJob(job.id)"></v-btn>
+                    <v-btn icon="mdi-eye" size="small" variant="text" color="primary"
+                      @click.stop="viewStringJob(job.id)"></v-btn>
                   </td>
                 </tr>
               </tbody>
@@ -597,64 +596,27 @@ const isTournamentStarted = computed(() => {
         <v-card-title class="text-h5 bg-primary text-white">Edit Tournament</v-card-title>
         <v-card-text class="pt-4">
           <v-form @submit.prevent="submitEditTournament">
-            <v-text-field
-              v-model="tournamentForm.name"
-              label="Tournament Name"
-              :error-messages="formErrors.name"
-              required
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-            ></v-text-field>
+            <v-text-field v-model="tournamentForm.name" label="Tournament Name" :error-messages="formErrors.name"
+              required variant="outlined" density="comfortable" class="mb-3"></v-text-field>
 
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="tournamentForm.startDate"
-                  label="Start Date"
-                  :error-messages="formErrors.startDate"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  type="date"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="tournamentForm.startDate" label="Start Date"
+                  :error-messages="formErrors.startDate" required variant="outlined" density="comfortable" type="date"
+                  class="mb-3"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="tournamentForm.endDate"
-                  label="End Date"
-                  :error-messages="formErrors.endDate"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  type="date"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="tournamentForm.endDate" label="End Date" :error-messages="formErrors.endDate"
+                  required variant="outlined" density="comfortable" type="date" class="mb-3"></v-text-field>
               </v-col>
             </v-row>
 
-            <v-text-field
-              v-model="tournamentForm.location"
-              label="Location"
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-              hint="Optional"
-              persistent-hint
-            ></v-text-field>
+            <v-text-field v-model="tournamentForm.location" label="Location" variant="outlined" density="comfortable"
+              class="mb-3" hint="Optional" persistent-hint></v-text-field>
 
-            <v-select
-              v-model="tournamentForm.category"
-              label="Category"
-              :items="tournamentCategories"
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-              clearable
-              hint="Optional"
-              persistent-hint
-            ></v-select>
+            <v-select v-model="tournamentForm.category" label="Category" :items="tournamentCategories"
+              variant="outlined" density="comfortable" class="mb-3" clearable hint="Optional"
+              persistent-hint></v-select>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -673,7 +635,7 @@ const isTournamentStarted = computed(() => {
           <p>Are you sure you want to delete this tournament?</p>
           <p class="font-weight-bold">{{ tournament?.name }}</p>
           <p class="text-caption text-grey">
-            Note: Tournaments with associated string jobs cannot be deleted. 
+            Note: Tournaments with associated string jobs cannot be deleted.
             You must delete the string jobs first.
           </p>
         </v-card-text>
@@ -718,7 +680,7 @@ const isTournamentStarted = computed(() => {
 
   &__info-item {
     margin-bottom: $spacing-md;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
