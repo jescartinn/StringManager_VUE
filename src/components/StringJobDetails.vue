@@ -224,7 +224,7 @@ const cancelJob = async () => {
             </div>
 
             <!-- Job Not Found -->
-            <v-card v-else-if="!job" class="text-center pa-8 mb-6">
+            <v-card v-else-if="!job" class="text-center pa-8 mb-6 mt-6">
                 <v-icon icon="mdi-alert-circle" size="64" color="warning" class="mb-4"></v-icon>
                 <h3 class="text-h5 mb-2">Job Not Found</h3>
                 <p class="mb-6">The requested string job could not be found or you don't have permission to view it.</p>
@@ -322,7 +322,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-tennis-ball</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.racquet.brand }} {{ job.racquet.model
-                                            }}</v-list-item-title>
+                                        }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.racquet.serialNumber">
                                             Serial: {{ job.racquet.serialNumber }}
                                         </v-list-item-subtitle>
@@ -371,7 +371,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-account-wrench</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.stringer.name }} {{ job.stringer.lastName
-                                            }}</v-list-item-title>
+                                        }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.stringer.email">
                                             Email: {{ job.stringer.email }}
                                         </v-list-item-subtitle>
