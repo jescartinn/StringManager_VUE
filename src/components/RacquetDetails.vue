@@ -54,7 +54,7 @@ onMounted(async () => {
     try {
       // Load racquet data
       await racquetStore.fetchRacquetById(racquetId.value)
-      
+
       // Load racquet's string jobs
       jobsLoading.value = true
       if (racquet.value?.playerId) {
@@ -77,7 +77,7 @@ watch(() => racquetId.value, async (newRacquetId) => {
   if (newRacquetId) {
     loading.value = true
     jobsLoading.value = true
-    
+
     try {
       await racquetStore.fetchRacquetById(newRacquetId)
       if (racquet.value?.playerId) {
@@ -135,7 +135,7 @@ const returnToRacquetsList = () => {
 // Open edit racquet dialog
 const openEditRacquetDialog = () => {
   if (!racquet.value) return
-  
+
   racquetForm.value = {
     id: racquet.value.id,
     brand: racquet.value.brand,
@@ -144,7 +144,7 @@ const openEditRacquetDialog = () => {
     headSize: racquet.value.headSize || null,
     notes: racquet.value.notes || ''
   }
-  
+
   // Reset errors
   formErrors.value = {
     brand: '',
@@ -152,7 +152,7 @@ const openEditRacquetDialog = () => {
     serialNumber: '',
     headSize: ''
   }
-  
+
   showEditRacquetDialog.value = true
 }
 
@@ -164,7 +164,7 @@ const openDeleteDialog = () => {
 // Validate racquet form
 const validateRacquetForm = () => {
   let isValid = true
-  
+
   // Validate brand
   if (!racquetForm.value.brand.trim()) {
     formErrors.value.brand = 'Brand is required'
@@ -172,7 +172,7 @@ const validateRacquetForm = () => {
   } else {
     formErrors.value.brand = ''
   }
-  
+
   // Validate model
   if (!racquetForm.value.model.trim()) {
     formErrors.value.model = 'Model is required'
@@ -180,23 +180,23 @@ const validateRacquetForm = () => {
   } else {
     formErrors.value.model = ''
   }
-  
+
   // Validate headSize if provided
-  if (racquetForm.value.headSize !== null && 
-      (racquetForm.value.headSize <= 0 || racquetForm.value.headSize > 200)) {
+  if (racquetForm.value.headSize !== null &&
+    (racquetForm.value.headSize <= 0 || racquetForm.value.headSize > 200)) {
     formErrors.value.headSize = 'Head size must be between 1 and 200 sq in'
     isValid = false
   } else {
     formErrors.value.headSize = ''
   }
-  
+
   return isValid
 }
 
 // Submit racquet edit
 const submitEditRacquet = async () => {
   if (!validateRacquetForm() || !racquetForm.value.id) return
-  
+
   try {
     await racquetStore.updateRacquet(racquetForm.value.id, {
       brand: racquetForm.value.brand,
@@ -205,7 +205,7 @@ const submitEditRacquet = async () => {
       headSize: racquetForm.value.headSize || undefined,
       notes: racquetForm.value.notes || undefined
     })
-    
+
     showEditRacquetDialog.value = false
   } catch (error) {
     console.error('Error updating racquet:', error)
@@ -215,7 +215,7 @@ const submitEditRacquet = async () => {
 // Delete racquet
 const deleteRacquet = async () => {
   if (!racquet.value) return
-  
+
   try {
     const result = await racquetStore.deleteRacquet(racquet.value.id)
     if (result) {
@@ -281,7 +281,7 @@ const viewStringJob = (jobId: number) => {
       </div>
 
       <!-- Racquet Not Found -->
-      <v-card v-else-if="!racquet" class="text-center pa-8 mb-6">
+      <v-card v-else-if="!racquet" class="text-center pa-8 mb-6 mt-6">
         <v-icon icon="mdi-alert-circle" size="64" color="warning" class="mb-4"></v-icon>
         <h3 class="text-h5 mb-2">Racquet Not Found</h3>
         <p class="mb-6">The requested racquet could not be found or you don't have permission to view it.</p>
@@ -381,7 +381,8 @@ const viewStringJob = (jobId: number) => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="job in sortedJobs" :key="job.id" @click="viewStringJob(job.id)" class="racquet-details__table-row">
+                <tr v-for="job in sortedJobs" :key="job.id" @click="viewStringJob(job.id)"
+                  class="racquet-details__table-row">
                   <td>{{ job.id }}</td>
                   <td>{{ job.mainString ? `${job.mainString.brand} ${job.mainString.model}` : 'N/A' }}</td>
                   <td>{{ job.mainTension }}{{ job.isTensionInKg ? ' kg' : ' lb' }}</td>
@@ -393,7 +394,8 @@ const viewStringJob = (jobId: number) => {
                   </td>
                   <td>{{ formatDate(job.createdAt) }}</td>
                   <td class="text-right">
-                    <v-btn icon="mdi-eye" size="small" variant="text" color="primary" @click.stop="viewStringJob(job.id)"></v-btn>
+                    <v-btn icon="mdi-eye" size="small" variant="text" color="primary"
+                      @click.stop="viewStringJob(job.id)"></v-btn>
                   </td>
                 </tr>
               </tbody>
@@ -424,67 +426,30 @@ const viewStringJob = (jobId: number) => {
           <v-form @submit.prevent="submitEditRacquet">
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="racquetForm.brand"
-                  label="Brand"
-                  :error-messages="formErrors.brand"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="racquetForm.brand" label="Brand" :error-messages="formErrors.brand" required
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="racquetForm.model"
-                  label="Model"
-                  :error-messages="formErrors.model"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="racquetForm.model" label="Model" :error-messages="formErrors.model" required
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
             </v-row>
 
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="racquetForm.serialNumber"
-                  label="Serial Number"
-                  :error-messages="formErrors.serialNumber"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  hint="Optional"
-                  persistent-hint
-                ></v-text-field>
+                <v-text-field v-model="racquetForm.serialNumber" label="Serial Number"
+                  :error-messages="formErrors.serialNumber" variant="outlined" density="comfortable" class="mb-3"
+                  hint="Optional" persistent-hint></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model.number="racquetForm.headSize"
-                  type="number"
-                  label="Head Size (sq in)"
-                  :error-messages="formErrors.headSize"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  hint="Optional"
-                  persistent-hint
-                ></v-text-field>
+                <v-text-field v-model.number="racquetForm.headSize" type="number" label="Head Size (sq in)"
+                  :error-messages="formErrors.headSize" variant="outlined" density="comfortable" class="mb-3"
+                  hint="Optional" persistent-hint></v-text-field>
               </v-col>
             </v-row>
 
-            <v-textarea
-              v-model="racquetForm.notes"
-              label="Notes"
-              variant="outlined"
-              density="comfortable"
-              rows="3"
-              class="mb-3"
-              hint="Optional"
-              persistent-hint
-            ></v-textarea>
+            <v-textarea v-model="racquetForm.notes" label="Notes" variant="outlined" density="comfortable" rows="3"
+              class="mb-3" hint="Optional" persistent-hint></v-textarea>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -504,7 +469,7 @@ const viewStringJob = (jobId: number) => {
           <p class="font-weight-bold">{{ racquet?.brand }} {{ racquet?.model }}</p>
           <p v-if="racquet?.serialNumber" class="font-weight-medium">Serial: {{ racquet.serialNumber }}</p>
           <p class="text-caption text-grey mt-4">
-            Note: Racquets with associated string jobs cannot be deleted. 
+            Note: Racquets with associated string jobs cannot be deleted.
             You must delete the string jobs first.
           </p>
         </v-card-text>
@@ -549,7 +514,7 @@ const viewStringJob = (jobId: number) => {
 
   &__info-item {
     margin-bottom: $spacing-md;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
