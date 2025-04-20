@@ -100,7 +100,7 @@ onMounted(() => {
 // Validation functions
 const validateProfileForm = () => {
   let isValid = true
-  
+
   // Validate username
   if (!profileForm.value.username.trim()) {
     profileErrors.value.username = 'Username is required'
@@ -111,7 +111,7 @@ const validateProfileForm = () => {
   } else {
     profileErrors.value.username = ''
   }
-  
+
   // Validate email
   if (!profileForm.value.email.trim()) {
     profileErrors.value.email = 'Email is required'
@@ -125,13 +125,13 @@ const validateProfileForm = () => {
       profileErrors.value.email = ''
     }
   }
-  
+
   return isValid
 }
 
 const validatePasswordForm = () => {
   let isValid = true
-  
+
   // Validate current password
   if (!passwordForm.value.currentPassword) {
     passwordErrors.value.currentPassword = 'Current password is required'
@@ -139,7 +139,7 @@ const validatePasswordForm = () => {
   } else {
     passwordErrors.value.currentPassword = ''
   }
-  
+
   // Validate new password
   if (!passwordForm.value.newPassword) {
     passwordErrors.value.newPassword = 'New password is required'
@@ -150,7 +150,7 @@ const validatePasswordForm = () => {
   } else {
     passwordErrors.value.newPassword = ''
   }
-  
+
   // Validate confirm password
   if (!passwordForm.value.confirmPassword) {
     passwordErrors.value.confirmPassword = 'Please confirm your new password'
@@ -161,29 +161,29 @@ const validatePasswordForm = () => {
   } else {
     passwordErrors.value.confirmPassword = ''
   }
-  
+
   return isValid
 }
 
 // Update profile handler
 const updateProfile = async () => {
   if (!validateProfileForm()) return
-  
+
   loading.value = true
   success.value = false
-  
+
   try {
     // Check if the user exists and has an ID
     if (!authStore.user || !authStore.user.id) {
       throw new Error('User information is missing')
     }
-    
+
     // Proceed with the update
     const updated = await authStore.updateProfile({
       username: profileForm.value.username,
       email: profileForm.value.email
     })
-    
+
     if (updated) {
       success.value = true
       successMessage.value = 'Profile updated successfully'
@@ -214,14 +214,14 @@ const openChangePasswordDialog = () => {
     newPassword: '',
     confirmPassword: ''
   }
-  
+
   // Reset errors
   passwordErrors.value = {
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   }
-  
+
   passwordChanged.value = false
   showChangePasswordDialog.value = true
 }
@@ -229,16 +229,16 @@ const openChangePasswordDialog = () => {
 // Change password handler
 const changePassword = async () => {
   if (!validatePasswordForm()) return
-  
+
   loading.value = true
   passwordChanged.value = false
-  
+
   try {
     const success = await authStore.changePassword(
       passwordForm.value.currentPassword,
       passwordForm.value.newPassword
     )
-    
+
     if (success) {
       passwordChanged.value = true
       // Reset form after success
@@ -320,54 +320,34 @@ const changePassword = async () => {
                 </div>
 
                 <!-- Username field -->
-                <v-text-field
-                  v-model="profileForm.username"
-                  label="Username"
-                  prepend-inner-icon="mdi-account"
-                  variant="outlined"
-                  :error-messages="profileErrors.username"
-                  class="mb-4"
-                ></v-text-field>
+                <v-text-field v-model="profileForm.username" label="Username" prepend-inner-icon="mdi-account"
+                  variant="outlined" :error-messages="profileErrors.username" class="mb-4"></v-text-field>
 
                 <!-- Email field -->
-                <v-text-field
-                  v-model="profileForm.email"
-                  label="Email"
-                  prepend-inner-icon="mdi-email"
-                  variant="outlined"
-                  :error-messages="profileErrors.email"
-                  class="mb-4"
-                ></v-text-field>
+                <v-text-field v-model="profileForm.email" label="Email" prepend-inner-icon="mdi-email"
+                  variant="outlined" :error-messages="profileErrors.email" class="mb-4"></v-text-field>
 
                 <!-- Account created info -->
                 <div class="profile-view__info-item mb-4">
                   <span class="profile-view__info-label">Account Created:</span>
-                  <span class="profile-view__info-value">{{ authStore.user?.createdAt ? new Date(authStore.user.createdAt).toLocaleDateString() : 'N/A' }}</span>
+                  <span class="profile-view__info-value">{{ authStore.user?.createdAt ? new
+                    Date(authStore.user.createdAt).toLocaleDateString() : 'N/A' }}</span>
                 </div>
 
                 <!-- Last login info (if available) -->
                 <div v-if="authStore.user?.lastLoginAt" class="profile-view__info-item mb-4">
                   <span class="profile-view__info-label">Last Login:</span>
-                  <span class="profile-view__info-value">{{ new Date(authStore.user.lastLoginAt).toLocaleString() }}</span>
+                  <span class="profile-view__info-value">{{ new Date(authStore.user.lastLoginAt).toLocaleString()
+                    }}</span>
                 </div>
 
                 <!-- Action buttons -->
                 <div class="d-flex justify-space-between mt-6">
-                  <v-btn 
-                    color="secondary" 
-                    variant="text" 
-                    prepend-icon="mdi-lock" 
-                    @click="openChangePasswordDialog"
-                  >
+                  <v-btn color="secondary" variant="text" prepend-icon="mdi-lock" @click="openChangePasswordDialog">
                     Change Password
                   </v-btn>
 
-                  <v-btn 
-                    color="primary" 
-                    type="submit" 
-                    :loading="loading"
-                    :disabled="!formValid"
-                  >
+                  <v-btn color="primary" type="submit" :loading="loading" :disabled="!formValid">
                     Update Profile
                   </v-btn>
                 </div>
@@ -407,39 +387,25 @@ const changePassword = async () => {
 
           <v-form @submit.prevent="changePassword">
             <!-- Current password -->
-            <v-text-field
-              v-model="passwordForm.currentPassword"
-              label="Current Password"
-              prepend-inner-icon="mdi-lock-outline"
-              :type="showCurrentPassword ? 'text' : 'password'"
-              variant="outlined"
+            <v-text-field v-model="passwordForm.currentPassword" label="Current Password"
+              prepend-inner-icon="mdi-lock-outline" :type="showCurrentPassword ? 'text' : 'password'" variant="outlined"
               :error-messages="passwordErrors.currentPassword"
               :append-inner-icon="showCurrentPassword ? 'mdi-eye-off' : 'mdi-eye'"
-              @click:append-inner="showCurrentPassword = !showCurrentPassword"
-              class="mb-4"
-            ></v-text-field>
+              @click:append-inner="showCurrentPassword = !showCurrentPassword" class="mb-4"></v-text-field>
 
             <!-- New password -->
-            <v-text-field
-              v-model="passwordForm.newPassword"
-              label="New Password"
-              prepend-inner-icon="mdi-lock"
-              :type="showNewPassword ? 'text' : 'password'"
-              variant="outlined"
+            <v-text-field v-model="passwordForm.newPassword" label="New Password" prepend-inner-icon="mdi-lock"
+              :type="showNewPassword ? 'text' : 'password'" variant="outlined"
               :error-messages="passwordErrors.newPassword"
               :append-inner-icon="showNewPassword ? 'mdi-eye-off' : 'mdi-eye'"
-              @click:append-inner="showNewPassword = !showNewPassword"
-              hint="Password must be at least 8 characters"
-              persistent-hint
-              class="mb-2"
-            ></v-text-field>
+              @click:append-inner="showNewPassword = !showNewPassword" hint="Password must be at least 8 characters"
+              persistent-hint class="mb-2"></v-text-field>
 
             <!-- Password strength indicator -->
             <div v-if="passwordForm.newPassword" class="mb-4">
               <div class="d-flex align-center">
-                <v-progress-linear :color="passwordStrengthColor"
-                                  :model-value="(passwordStrength / 4) * 100" height="10"
-                                  rounded></v-progress-linear>
+                <v-progress-linear :color="passwordStrengthColor" :model-value="(passwordStrength / 4) * 100"
+                  height="10" rounded></v-progress-linear>
                 <span class="ms-2 text-body-2" :class="`text-${passwordStrengthColor}`">
                   {{ passwordStrengthText }}
                 </span>
@@ -453,17 +419,11 @@ const changePassword = async () => {
             </div>
 
             <!-- Confirm password -->
-            <v-text-field
-              v-model="passwordForm.confirmPassword"
-              label="Confirm Password"
-              prepend-inner-icon="mdi-lock-check"
-              :type="showConfirmPassword ? 'text' : 'password'"
-              variant="outlined"
+            <v-text-field v-model="passwordForm.confirmPassword" label="Confirm Password"
+              prepend-inner-icon="mdi-lock-check" :type="showConfirmPassword ? 'text' : 'password'" variant="outlined"
               :error-messages="passwordErrors.confirmPassword"
               :append-inner-icon="showConfirmPassword ? 'mdi-eye-off' : 'mdi-eye'"
-              @click:append-inner="showConfirmPassword = !showConfirmPassword"
-              class="mb-4"
-            ></v-text-field>
+              @click:append-inner="showConfirmPassword = !showConfirmPassword" class="mb-4"></v-text-field>
           </v-form>
         </v-card-text>
 
@@ -472,7 +432,8 @@ const changePassword = async () => {
           <v-btn color="secondary" variant="text" @click="showChangePasswordDialog = false">
             Close
           </v-btn>
-          <v-btn color="primary" @click="changePassword" :loading="loading" :disabled="!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword">
+          <v-btn color="primary" @click="changePassword" :loading="loading"
+            :disabled="!passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword">
             Change Password
           </v-btn>
         </v-card-actions>
@@ -520,19 +481,6 @@ const changePassword = async () => {
 
   &__info-value {
     font-size: $font-size-md;
-  }
-
-  // Media queries for responsive layout
-  @media (max-width: $breakpoint-md) {
-    &__container {
-      padding: $spacing-md;
-    }
-  }
-
-  @media (max-width: $breakpoint-sm) {
-    &__container {
-      padding: $spacing-sm;
-    }
   }
 }
 </style>
