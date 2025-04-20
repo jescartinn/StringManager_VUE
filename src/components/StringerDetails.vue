@@ -52,7 +52,7 @@ onMounted(async () => {
     try {
       // Load stringer data
       await stringerStore.fetchStringerById(stringerId.value)
-      
+
       // Load stringer's string jobs
       jobsLoading.value = true
       await stringJobStore.fetchJobsByStringer(stringerId.value)
@@ -73,7 +73,7 @@ watch(() => stringerId.value, async (newStringerId) => {
   if (newStringerId) {
     loading.value = true
     jobsLoading.value = true
-    
+
     try {
       await stringerStore.fetchStringerById(newStringerId)
       await stringJobStore.fetchJobsByStringer(newStringerId)
@@ -109,28 +109,28 @@ const jobStatistics = computed(() => {
     completedToday: 0,
     completionRate: 0
   }
-  
+
   const today = new Date().toISOString().split('T')[0]
   const total = stringJobs.value.length
   const completed = stringJobs.value.filter(job => job.status === 'Completed').length
   const pending = stringJobs.value.filter(job => job.status === 'Pending').length
   const inProgress = stringJobs.value.filter(job => job.status === 'InProgress').length
   const cancelled = stringJobs.value.filter(job => job.status === 'Cancelled').length
-  const completedToday = stringJobs.value.filter(job => 
-    job.status === 'Completed' && 
-    job.completedAt && 
+  const completedToday = stringJobs.value.filter(job =>
+    job.status === 'Completed' &&
+    job.completedAt &&
     job.completedAt.startsWith(today)
   ).length
-  
+
   // Calculate completion rate (completed jobs / total non-cancelled jobs)
   const nonCancelled = total - cancelled
   const completionRate = nonCancelled > 0 ? Math.round((completed / nonCancelled) * 100) : 0
-  
+
   return {
     total,
     completed,
     pending,
-    inProgress, 
+    inProgress,
     cancelled,
     completedToday,
     completionRate
@@ -167,7 +167,7 @@ const returnToStringersList = () => {
 // Open edit stringer dialog
 const openEditStringerDialog = () => {
   if (!stringer.value) return
-  
+
   stringerForm.value = {
     id: stringer.value.id,
     name: stringer.value.name,
@@ -175,7 +175,7 @@ const openEditStringerDialog = () => {
     email: stringer.value.email || '',
     phoneNumber: stringer.value.phoneNumber || ''
   }
-  
+
   // Reset errors
   formErrors.value = {
     name: '',
@@ -183,7 +183,7 @@ const openEditStringerDialog = () => {
     email: '',
     phoneNumber: ''
   }
-  
+
   showEditStringerDialog.value = true
 }
 
@@ -195,7 +195,7 @@ const openDeleteDialog = () => {
 // Validate stringer form
 const validateStringerForm = () => {
   let isValid = true
-  
+
   // Validate name
   if (!stringerForm.value.name.trim()) {
     formErrors.value.name = 'Name is required'
@@ -203,7 +203,7 @@ const validateStringerForm = () => {
   } else {
     formErrors.value.name = ''
   }
-  
+
   // Validate last name
   if (!stringerForm.value.lastName.trim()) {
     formErrors.value.lastName = 'Last name is required'
@@ -211,7 +211,7 @@ const validateStringerForm = () => {
   } else {
     formErrors.value.lastName = ''
   }
-  
+
   // Validate email if provided
   if (stringerForm.value.email.trim()) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -224,7 +224,7 @@ const validateStringerForm = () => {
   } else {
     formErrors.value.email = ''
   }
-  
+
   // Validate phone number if provided
   if (stringerForm.value.phoneNumber.trim()) {
     const phoneRegex = /^[+]?[\d\s()-]{7,}$/
@@ -237,14 +237,14 @@ const validateStringerForm = () => {
   } else {
     formErrors.value.phoneNumber = ''
   }
-  
+
   return isValid
 }
 
 // Submit stringer edit
 const submitEditStringer = async () => {
   if (!validateStringerForm() || !stringerForm.value.id) return
-  
+
   try {
     await stringerStore.updateStringer(stringerForm.value.id, {
       name: stringerForm.value.name,
@@ -252,7 +252,7 @@ const submitEditStringer = async () => {
       email: stringerForm.value.email || undefined,
       phoneNumber: stringerForm.value.phoneNumber || undefined
     })
-    
+
     showEditStringerDialog.value = false
   } catch (error) {
     console.error('Error updating stringer:', error)
@@ -262,7 +262,7 @@ const submitEditStringer = async () => {
 // Delete stringer
 const deleteStringer = async () => {
   if (!stringer.value) return
-  
+
   try {
     const result = await stringerStore.deleteStringer(stringer.value.id)
     if (result) {
@@ -322,7 +322,7 @@ const viewStringJob = (jobId: number) => {
       </div>
 
       <!-- Stringer Not Found -->
-      <v-card v-else-if="!stringer" class="text-center pa-8 mb-6">
+      <v-card v-else-if="!stringer" class="text-center pa-8 mb-6 mt-6">
         <v-icon icon="mdi-alert-circle" size="64" color="warning" class="mb-4"></v-icon>
         <h3 class="text-h5 mb-2">Stringer Not Found</h3>
         <p class="mb-6">The requested stringer could not be found or you don't have permission to view it.</p>
@@ -346,17 +346,19 @@ const viewStringJob = (jobId: number) => {
                     <span class="stringer-details__info-label">Name:</span>
                     <span class="stringer-details__info-value">{{ stringer.name }} {{ stringer.lastName }}</span>
                   </div>
-                  
+
                   <div class="stringer-details__info-item" v-if="stringer.email">
                     <span class="stringer-details__info-label">Email:</span>
-                    <a :href="`mailto:${stringer.email}`" class="stringer-details__info-value stringer-details__info-link">
+                    <a :href="`mailto:${stringer.email}`"
+                      class="stringer-details__info-value stringer-details__info-link">
                       {{ stringer.email }}
                     </a>
                   </div>
-                  
+
                   <div class="stringer-details__info-item" v-if="stringer.phoneNumber">
                     <span class="stringer-details__info-label">Phone:</span>
-                    <a :href="`tel:${stringer.phoneNumber}`" class="stringer-details__info-value stringer-details__info-link">
+                    <a :href="`tel:${stringer.phoneNumber}`"
+                      class="stringer-details__info-value stringer-details__info-link">
                       {{ stringer.phoneNumber }}
                     </a>
                   </div>
@@ -364,7 +366,8 @@ const viewStringJob = (jobId: number) => {
               </v-col>
 
               <v-col cols="12" md="6" class="d-flex justify-end align-center" v-if="canManageStringers">
-                <v-btn color="primary" variant="text" prepend-icon="mdi-pencil" class="mr-2" @click="openEditStringerDialog">
+                <v-btn color="primary" variant="text" prepend-icon="mdi-pencil" class="mr-2"
+                  @click="openEditStringerDialog">
                   Edit
                 </v-btn>
                 <v-btn color="error" variant="text" prepend-icon="mdi-delete" @click="openDeleteDialog">
@@ -390,21 +393,21 @@ const viewStringJob = (jobId: number) => {
                   <div class="stringer-details__stat-label">Total Jobs</div>
                 </div>
               </v-col>
-              
+
               <v-col cols="12" sm="6" md="3">
                 <div class="stringer-details__stat-card">
                   <div class="stringer-details__stat-value text-success">{{ jobStatistics.completed }}</div>
                   <div class="stringer-details__stat-label">Completed Jobs</div>
                 </div>
               </v-col>
-              
+
               <v-col cols="12" sm="6" md="3">
                 <div class="stringer-details__stat-card">
                   <div class="stringer-details__stat-value text-warning">{{ jobStatistics.pending }}</div>
                   <div class="stringer-details__stat-label">Pending Jobs</div>
                 </div>
               </v-col>
-              
+
               <v-col cols="12" sm="6" md="3">
                 <div class="stringer-details__stat-card">
                   <div class="stringer-details__stat-value text-info">{{ jobStatistics.inProgress }}</div>
@@ -417,20 +420,15 @@ const viewStringJob = (jobId: number) => {
               <v-col cols="12" sm="6">
                 <div class="stringer-details__completion-rate">
                   <div class="stringer-details__completion-label">Completion Rate</div>
-                  <v-progress-linear
-                    :model-value="jobStatistics.completionRate"
-                    height="20"
-                    rounded
-                    color="success"
-                    bg-color="grey-lighten-3"
-                  >
+                  <v-progress-linear :model-value="jobStatistics.completionRate" height="20" rounded color="success"
+                    bg-color="grey-lighten-3">
                     <template v-slot:default>
                       <span class="font-weight-bold">{{ jobStatistics.completionRate }}%</span>
                     </template>
                   </v-progress-linear>
                 </div>
               </v-col>
-              
+
               <v-col cols="12" sm="6">
                 <div class="stringer-details__completion-rate">
                   <div class="stringer-details__completion-label">Completed Today</div>
@@ -468,7 +466,8 @@ const viewStringJob = (jobId: number) => {
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="job in sortedJobs" :key="job.id" @click="viewStringJob(job.id)" class="stringer-details__table-row">
+                <tr v-for="job in sortedJobs" :key="job.id" @click="viewStringJob(job.id)"
+                  class="stringer-details__table-row">
                   <td>{{ job.id }}</td>
                   <td>{{ job.player ? `${job.player.name} ${job.player.lastName}` : 'N/A' }}</td>
                   <td>{{ job.racquet ? `${job.racquet.brand} ${job.racquet.model}` : 'N/A' }}</td>
@@ -481,7 +480,8 @@ const viewStringJob = (jobId: number) => {
                   </td>
                   <td>{{ formatDate(job.createdAt) }}</td>
                   <td class="text-right">
-                    <v-btn icon="mdi-eye" size="small" variant="text" color="primary" @click.stop="viewStringJob(job.id)"></v-btn>
+                    <v-btn icon="mdi-eye" size="small" variant="text" color="primary"
+                      @click.stop="viewStringJob(job.id)"></v-btn>
                   </td>
                 </tr>
               </tbody>
@@ -512,56 +512,27 @@ const viewStringJob = (jobId: number) => {
           <v-form @submit.prevent="submitEditStringer">
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.name"
-                  label="First Name"
-                  :error-messages="formErrors.name"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.name" label="First Name" :error-messages="formErrors.name" required
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
-              
+
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.lastName"
-                  label="Last Name"
-                  :error-messages="formErrors.lastName"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.lastName" label="Last Name" :error-messages="formErrors.lastName"
+                  required variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
             </v-row>
 
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.email"
-                  label="Email"
-                  :error-messages="formErrors.email"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  hint="Optional"
-                  persistent-hint
-                  type="email"
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.email" label="Email" :error-messages="formErrors.email"
+                  variant="outlined" density="comfortable" class="mb-3" hint="Optional" persistent-hint
+                  type="email"></v-text-field>
               </v-col>
-              
+
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.phoneNumber"
-                  label="Phone Number"
-                  :error-messages="formErrors.phoneNumber"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  hint="Optional"
-                  persistent-hint
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.phoneNumber" label="Phone Number"
+                  :error-messages="formErrors.phoneNumber" variant="outlined" density="comfortable" class="mb-3"
+                  hint="Optional" persistent-hint></v-text-field>
               </v-col>
             </v-row>
           </v-form>
@@ -583,7 +554,7 @@ const viewStringJob = (jobId: number) => {
           <p class="font-weight-bold">{{ stringer?.name }} {{ stringer?.lastName }}</p>
           <p v-if="stringer?.email" class="text-body-2">{{ stringer.email }}</p>
           <p class="text-caption text-grey mt-4">
-            Note: Stringers with associated string jobs cannot be deleted. 
+            Note: Stringers with associated string jobs cannot be deleted.
             You must delete or reassign their string jobs first.
           </p>
         </v-card-text>
@@ -629,7 +600,7 @@ const viewStringJob = (jobId: number) => {
 
     &-item {
       margin-bottom: $spacing-md;
-      
+
       &:last-child {
         margin-bottom: 0;
       }
@@ -649,7 +620,7 @@ const viewStringJob = (jobId: number) => {
     &-link {
       color: $primary;
       text-decoration: none;
-      
+
       &:hover {
         text-decoration: underline;
       }
