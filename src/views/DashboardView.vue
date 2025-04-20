@@ -371,7 +371,7 @@ const createNewJob = (): void => {
                 Top Stringers
               </v-card-title>
 
-              <v-card-text class="pt-4">
+              <v-card-text class="pa-0">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(stringer, index) in topStringers" :key="stringer.stringerId"
                     :title="stringer.stringerName" :subtitle="`${stringer.completedJobs} jobs completed`"
@@ -393,7 +393,7 @@ const createNewJob = (): void => {
                 Top Players
               </v-card-title>
 
-              <v-card-text class="pt-4">
+              <v-card-text class="pa-0">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(player, index) in topPlayers" :key="player.playerId" :title="player.playerName"
                     :subtitle="`${player.totalJobs} total jobs`" :to="`/players/${player.playerId}`">
@@ -414,7 +414,7 @@ const createNewJob = (): void => {
                 Top Strings
               </v-card-title>
 
-              <v-card-text class="pt-4">
+              <v-card-text class="pa-0">
                 <v-list class="home__ranking-list">
                   <v-list-item v-for="(string, index) in topStrings" :key="string.stringId" :title="string.stringName"
                     :subtitle="`${string.totalUses} total uses`" :to="`/strings`">
@@ -558,7 +558,7 @@ const createNewJob = (): void => {
 
     :deep(.v-list-item) {
       min-height: 56px;
-      padding: 4px 16px;
+      padding: $spacing-md !important;
       cursor: pointer;
 
       &:hover {
