@@ -611,7 +611,7 @@ const headers = [
                   {{ daysRemaining(item.endDate) }} days remaining
                 </div>
 
-                <v-icon v-if="isCurrentTournament(item)" color="success" size="small" class="ml-1"
+                <v-icon v-if="isCurrentTournament(item)" color="success" size="small" class="ml-2"
                   icon="mdi-star"></v-icon>
               </div>
             </div>
