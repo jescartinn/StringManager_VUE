@@ -4,7 +4,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { usePlayerStore, useRacquetStore, useStringJobStore, useAuthStore } from '../stores'
 import { getCountryOptions, getCountryName, getCountryFlag } from '../utils/countryUtils'
 
-// Import stores and router
 const playerStore = usePlayerStore()
 const racquetStore = useRacquetStore()
 const stringJobStore = useStringJobStore()
@@ -12,22 +11,18 @@ const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-// Reactive state
 const loading = ref(true)
 const racquetsLoading = ref(true)
 const jobsLoading = ref(true)
 const showEditPlayerDialog = ref(false)
 const showDeleteConfirmation = ref(false)
 
-// Get player ID from route params
 const playerId = computed(() => {
   return route.params.id ? parseInt(route.params.id as string) : null
 })
 
-// Current player data
 const player = computed(() => playerStore.currentPlayer)
 
-// Player form data for edit
 const playerForm = ref({
   id: null as number | null,
   name: '',
@@ -35,17 +30,14 @@ const playerForm = ref({
   countryCode: ''
 })
 
-// Validation errors
 const formErrors = ref({
   name: '',
   lastName: '',
   countryCode: ''
 })
 
-// Countries options for the form
 const countryOptions = computed(() => getCountryOptions())
 
-// Check if user has permissions to manage players
 const canManagePlayers = computed(() => {
   return authStore.isAdmin || authStore.isStringer
 })
@@ -54,7 +46,6 @@ const canManagePlayers = computed(() => {
 onMounted(async () => {
   if (playerId.value) {
     try {
-      // Load player data
       await playerStore.fetchPlayerById(playerId.value)
 
       // Load player's racquets
@@ -72,7 +63,6 @@ onMounted(async () => {
       loading.value = false
     }
   } else {
-    // No player ID provided, redirect to players list
     router.replace('/players')
   }
 })
@@ -125,7 +115,7 @@ const sortedJobs = computed(() => {
   })
 })
 
-// Format date helper
+// Format date
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
@@ -198,8 +188,6 @@ const validatePlayerForm = () => {
     formErrors.value.lastName = ''
   }
 
-  // Country code is optional, so no validation needed
-
   return isValid
 }
 
@@ -228,7 +216,6 @@ const deletePlayer = async () => {
     const result = await playerStore.deletePlayer(player.value.id)
     if (result) {
       showDeleteConfirmation.value = false
-      // Navigate back to players list
       router.push('/players')
     }
   } catch (error) {
@@ -262,6 +249,7 @@ const viewStringJob = (jobId: number) => {
 <template>
   <div class="player-details">
     <v-container class="player-details__container">
+
       <!-- Page Header with Navigation -->
       <v-row>
         <v-col cols="12" sm="8">
@@ -303,6 +291,7 @@ const viewStringJob = (jobId: number) => {
 
       <!-- Player Details Content -->
       <div v-else class="player-details__content">
+
         <!-- Player Information Card -->
         <v-card class="mb-6">
           <v-card-title class="player-details__section-title">

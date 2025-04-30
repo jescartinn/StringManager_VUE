@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import api from '../services/apiService'
 import { useAuthStore } from './auth'
 
-// Define types
 interface User {
   id: number
   username: string
@@ -22,7 +21,7 @@ interface UpdateUserDTO {
 export const useUserStore = defineStore('user', () => {
   // Get auth store for checking permissions
   const authStore = useAuthStore()
-  
+
   // State
   const users = ref<User[]>([])
   const currentUser = ref<User | null>(null)
@@ -32,20 +31,20 @@ export const useUserStore = defineStore('user', () => {
 
   // Computed
   const userCount = computed(() => users.value.length)
-  
-  const adminUsers = computed(() => 
+
+  const adminUsers = computed(() =>
     users.value.filter(user => user.role === 'Admin')
   )
-  
-  const stringerUsers = computed(() => 
+
+  const stringerUsers = computed(() =>
     users.value.filter(user => user.role === 'Stringer')
   )
-  
-  const regularUsers = computed(() => 
+
+  const regularUsers = computed(() =>
     users.value.filter(user => user.role === 'User')
   )
-  
-  const canManageUsers = computed(() => 
+
+  const canManageUsers = computed(() =>
     authStore.isAuthenticated && authStore.isAdmin
   )
 
@@ -61,14 +60,14 @@ export const useUserStore = defineStore('user', () => {
       error.value = 'Unauthorized: Only administrators can access user list'
       return []
     }
-    
+
     if (users.value.length > 0 && initialized.value) {
       return users.value // Return cached data if already fetched
     }
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       users.value = await api.users.getAll()
       initialized.value = true
@@ -91,20 +90,20 @@ export const useUserStore = defineStore('user', () => {
         return existingUser
       }
     }
-    
+
     // Check if the current user is admin or fetching their own record
     if (!canManageUsers.value && authStore.user?.id !== id) {
       error.value = 'Unauthorized: You can only access your own user details'
       return null
     }
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       const user = await api.users.getById(id)
       currentUser.value = user
-      
+
       // Update the user in our local cache
       const index = users.value.findIndex(u => u.id === id)
       if (index !== -1) {
@@ -112,7 +111,7 @@ export const useUserStore = defineStore('user', () => {
       } else {
         users.value.push(user)
       }
-      
+
       return user
     } catch (e) {
       console.error(`Error fetching user ${id}:`, e)
@@ -129,36 +128,36 @@ export const useUserStore = defineStore('user', () => {
       error.value = 'Unauthorized: You can only update your own user details'
       return false
     }
-    
+
     // Regular users can't change their role
     if (!canManageUsers.value && userData.role !== authStore.user?.role) {
       error.value = 'Unauthorized: You cannot change your role'
       return false
     }
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       await api.users.update(id, userData)
-      
+
       // Update the user in the local state
       const index = users.value.findIndex(user => user.id === id)
       if (index !== -1) {
         users.value[index] = { ...users.value[index], ...userData }
       }
-      
+
       // Also update currentUser if it's the one being updated
       if (currentUser.value && currentUser.value.id === id) {
         currentUser.value = { ...currentUser.value, ...userData }
       }
-      
+
       // If the user updated their own profile, update the auth store
       if (authStore.user && authStore.user.id === id) {
         // Use auth store's own method to refresh user data
         await authStore.checkAuth()
       }
-      
+
       return true
     } catch (e) {
       console.error(`Error updating user ${id}:`, e)
@@ -175,27 +174,27 @@ export const useUserStore = defineStore('user', () => {
       error.value = 'Unauthorized: Only administrators can delete users'
       return false
     }
-    
+
     // Prevent deleting own account
     if (authStore.user?.id === id) {
       error.value = 'Cannot delete your own account'
       return false
     }
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       await api.users.delete(id)
-      
+
       // Remove the user from the local state
       users.value = users.value.filter(user => user.id !== id)
-      
+
       // Clear currentUser if it's the one being deleted
       if (currentUser.value && currentUser.value.id === id) {
         currentUser.value = null
       }
-      
+
       return true
     } catch (e) {
       console.error(`Error deleting user ${id}:`, e)
@@ -227,7 +226,7 @@ export const useUserStore = defineStore('user', () => {
     loading,
     error,
     initialized,
-    
+
     // Getters/Computed
     userCount,
     adminUsers,
@@ -235,7 +234,7 @@ export const useUserStore = defineStore('user', () => {
     regularUsers,
     canManageUsers,
     getUserById,
-    
+
     // Actions
     fetchAllUsers,
     fetchUserById,

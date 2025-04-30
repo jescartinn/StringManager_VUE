@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/apiService'
 
-// Define types
 interface Tournament {
   id: number
   name: string

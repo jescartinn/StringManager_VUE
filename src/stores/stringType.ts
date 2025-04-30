@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import api from '../services/apiService'
 
-// Define types
 interface StringType {
   id: number
   brand: string
@@ -38,7 +37,7 @@ export const useStringTypeStore = defineStore('stringType', () => {
 
   // Computed properties
   const stringTypeCount = computed(() => stringTypes.value.length)
-  
+
   const stringsByBrand = computed(() => {
     const brands: Record<string, StringType[]> = {}
     stringTypes.value.forEach(string => {
@@ -49,7 +48,7 @@ export const useStringTypeStore = defineStore('stringType', () => {
     })
     return brands
   })
-  
+
   const stringTypeOptions = computed(() => {
     return stringTypes.value.map(string => ({
       value: string.id,
@@ -62,12 +61,12 @@ export const useStringTypeStore = defineStore('stringType', () => {
   const getStringTypeById = (id: number) => {
     return stringTypes.value.find(string => string.id === id) || null
   }
-  
+
   // Get string type description
   const getStringTypeDescription = (id: number) => {
     const stringType = getStringTypeById(id)
     if (!stringType) return 'Unknown'
-    
+
     let description = `${stringType.brand} ${stringType.model}`
     if (stringType.gauge) description += ` ${stringType.gauge}`
     if (stringType.color) description += ` (${stringType.color})`
@@ -79,10 +78,10 @@ export const useStringTypeStore = defineStore('stringType', () => {
     if (stringTypes.value.length > 0 && initialized.value) {
       return stringTypes.value // Return cached data if already fetched
     }
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       stringTypes.value = await api.stringTypes.getAll()
       initialized.value = true
@@ -105,14 +104,14 @@ export const useStringTypeStore = defineStore('stringType', () => {
         return existingStringType
       }
     }
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       const stringType = await api.stringTypes.getById(id)
       currentStringType.value = stringType
-      
+
       // Update the string type in our local cache
       const index = stringTypes.value.findIndex(s => s.id === id)
       if (index !== -1) {
@@ -120,7 +119,7 @@ export const useStringTypeStore = defineStore('stringType', () => {
       } else {
         stringTypes.value.push(stringType)
       }
-      
+
       return stringType
     } catch (e) {
       console.error(`Error fetching string type ${id}:`, e)
@@ -134,7 +133,7 @@ export const useStringTypeStore = defineStore('stringType', () => {
   async function createStringType(stringTypeData: CreateStringTypeDTO) {
     loading.value = true
     error.value = null
-    
+
     try {
       const newStringType = await api.stringTypes.create(stringTypeData)
       stringTypes.value.push(newStringType)
@@ -151,21 +150,21 @@ export const useStringTypeStore = defineStore('stringType', () => {
   async function updateStringType(id: number, stringTypeData: UpdateStringTypeDTO) {
     loading.value = true
     error.value = null
-    
+
     try {
       await api.stringTypes.update(id, stringTypeData)
-      
+
       // Update the string type in the local state
       const index = stringTypes.value.findIndex(string => string.id === id)
       if (index !== -1) {
         stringTypes.value[index] = { ...stringTypes.value[index], ...stringTypeData }
       }
-      
+
       // Also update currentStringType if it's the one being updated
       if (currentStringType.value && currentStringType.value.id === id) {
         currentStringType.value = { ...currentStringType.value, ...stringTypeData }
       }
-      
+
       return true
     } catch (e) {
       console.error(`Error updating string type ${id}:`, e)
@@ -179,18 +178,18 @@ export const useStringTypeStore = defineStore('stringType', () => {
   async function deleteStringType(id: number) {
     loading.value = true
     error.value = null
-    
+
     try {
       await api.stringTypes.delete(id)
-      
+
       // Remove the string type from the local state
       stringTypes.value = stringTypes.value.filter(string => string.id !== id)
-      
+
       // Clear currentStringType if it's the one being deleted
       if (currentStringType.value && currentStringType.value.id === id) {
         currentStringType.value = null
       }
-      
+
       return true
     } catch (e) {
       console.error(`Error deleting string type ${id}:`, e)
@@ -222,14 +221,14 @@ export const useStringTypeStore = defineStore('stringType', () => {
     loading,
     error,
     initialized,
-    
+
     // Getters/Computed
     stringTypeCount,
     stringsByBrand,
     stringTypeOptions,
     getStringTypeById,
     getStringTypeDescription,
-    
+
     // Actions
     fetchAllStringTypes,
     fetchStringTypeById,

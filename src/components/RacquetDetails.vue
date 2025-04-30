@@ -3,7 +3,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useRacquetStore, usePlayerStore, useStringJobStore, useAuthStore } from '../stores'
 
-// Import stores and router
 const racquetStore = useRacquetStore()
 const playerStore = usePlayerStore()
 const stringJobStore = useStringJobStore()
@@ -11,21 +10,17 @@ const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-// Reactive state
 const loading = ref(true)
 const jobsLoading = ref(true)
 const showEditRacquetDialog = ref(false)
 const showDeleteConfirmation = ref(false)
 
-// Get racquet ID from route params
 const racquetId = computed(() => {
   return route.params.id ? parseInt(route.params.id as string) : null
 })
 
-// Current racquet data
 const racquet = computed(() => racquetStore.currentRacquet)
 
-// Racquet form data for edit
 const racquetForm = ref({
   id: null as number | null,
   brand: '',
@@ -35,7 +30,6 @@ const racquetForm = ref({
   notes: ''
 })
 
-// Validation errors
 const formErrors = ref({
   brand: '',
   model: '',
@@ -67,7 +61,6 @@ onMounted(async () => {
       loading.value = false
     }
   } else {
-    // No racquet ID provided, redirect to racquets list
     router.replace('/racquets')
   }
 })
@@ -105,7 +98,7 @@ const sortedJobs = computed(() => {
   })
 })
 
-// Format date helper
+// Format date
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
@@ -220,7 +213,6 @@ const deleteRacquet = async () => {
     const result = await racquetStore.deleteRacquet(racquet.value.id)
     if (result) {
       showDeleteConfirmation.value = false
-      // Navigate back to racquets list
       router.push('/racquets')
     }
   } catch (error) {
@@ -249,6 +241,7 @@ const viewStringJob = (jobId: number) => {
 <template>
   <div class="racquet-details">
     <v-container class="racquet-details__container">
+
       <!-- Page Header with Navigation -->
       <v-row>
         <v-col cols="12" sm="8">
@@ -290,6 +283,7 @@ const viewStringJob = (jobId: number) => {
 
       <!-- Racquet Details Content -->
       <div v-else class="racquet-details__content">
+
         <!-- Racquet Information Card -->
         <v-card class="mb-6">
           <v-card-title class="racquet-details__section-title">

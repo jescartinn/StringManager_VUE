@@ -1,4 +1,3 @@
-// Export all stores from this central file
 export { useAuthStore } from './auth'
 export { useDashboardStore } from './dashboard'
 export { usePlayerStore } from './player'

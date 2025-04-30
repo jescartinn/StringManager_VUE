@@ -2,7 +2,6 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import api from '../services/apiService'
 
-// Define dashboard data types
 interface DashboardStats {
   pendingJobs: number
   inProgressJobs: number
@@ -82,10 +81,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
         return dashboardStats.value
       }
     }
-    
+
     loading.value = true
     error.value = null
-    
+
     try {
       const stats = await api.dashboard.getStats()
       dashboardStats.value = stats
@@ -111,19 +110,19 @@ export const useDashboardStore = defineStore('dashboard', () => {
         return distributionStats.value
       }
     }
-    
+
     // If requesting current tournament data and we have it cached
-    if (tournamentId && !forceRefresh && currentTournamentDistribution.value && 
-        dashboardStats.value?.currentTournament?.id === tournamentId) {
+    if (tournamentId && !forceRefresh && currentTournamentDistribution.value &&
+      dashboardStats.value?.currentTournament?.id === tournamentId) {
       return currentTournamentDistribution.value
     }
-    
+
     distributionLoading.value = true
     distributionError.value = null
-    
+
     try {
       const stats = await api.dashboard.getDistribution(tournamentId)
-      
+
       if (tournamentId) {
         // Store tournament-specific distribution
         currentTournamentDistribution.value = stats
@@ -132,7 +131,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
         distributionStats.value = stats
         lastDistributionFetchTime.value = now
       }
-      
+
       return stats
     } catch (e) {
       console.error('Error fetching distribution stats:', e)
@@ -146,7 +145,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
   // Helper to transform distribution data for charts
   function getStatusDistributionForChart() {
     if (!distributionStats.value?.statusDistribution) return []
-    
+
     return distributionStats.value.statusDistribution.map(item => ({
       name: item.status,
       value: item.count
@@ -155,7 +154,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   function getTensionDistributionForChart() {
     if (!distributionStats.value?.tensionDistribution) return []
-    
+
     return distributionStats.value.tensionDistribution.map(item => ({
       name: item.range,
       value: item.count
@@ -164,7 +163,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
 
   function getStringBrandDistributionForChart() {
     if (!distributionStats.value?.stringBrandDistribution) return []
-    
+
     return distributionStats.value.stringBrandDistribution.map(item => ({
       name: item.brand,
       value: item.count
@@ -203,7 +202,7 @@ export const useDashboardStore = defineStore('dashboard', () => {
     distributionError,
     lastFetchTime,
     lastDistributionFetchTime,
-    
+
     // Actions
     fetchDashboardStats,
     fetchDistributionStats,
