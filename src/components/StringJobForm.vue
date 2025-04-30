@@ -10,7 +10,6 @@ import {
     useTournamentStore
 } from '../stores'
 
-// Import stores
 const stringJobStore = useStringJobStore()
 const playerStore = usePlayerStore()
 const racquetStore = useRacquetStore()
@@ -18,7 +17,6 @@ const stringTypeStore = useStringTypeStore()
 const stringerStore = useStringerStore()
 const tournamentStore = useTournamentStore()
 
-// Router
 const router = useRouter()
 const route = useRoute()
 
@@ -172,8 +170,6 @@ const handleSubmit = async () => {
         } else {
             await updateJob()
         }
-
-        // Redirect back to job list after success
         router.push('/jobs')
     } catch (error) {
         console.error('Error submitting form:', error)
@@ -243,10 +239,9 @@ const validateForm = () => {
         isValid = false
     }
 
-    // Main string validation (optional but recommended)
+    // Main string validation
     if (!formData.value.mainStringId) {
         errors.value.mainStringId = 'Main string is recommended'
-        // Don't set isValid = false as this is just a warning
     }
 
     // Tension validation
@@ -309,6 +304,7 @@ const goBack = () => {
 <template>
     <div class="string-job-form">
         <v-container class="string-job-form__container">
+
             <!-- Page Header with Navigation -->
             <v-row>
                 <v-col cols="12" sm="8">
@@ -352,6 +348,7 @@ const goBack = () => {
 
                         <v-card-text class="pa-4">
                             <v-row>
+
                                 <!-- Player Selection - disabled in edit mode -->
                                 <v-col cols="12" md="6">
                                     <v-autocomplete v-model="formData.playerId" :items="playerStore.playerOptions"
@@ -413,6 +410,7 @@ const goBack = () => {
 
                         <v-card-text class="pa-4">
                             <v-row>
+
                                 <!-- Main String Selection -->
                                 <v-col cols="12" md="6">
                                     <v-select v-model="formData.mainStringId" :items="stringTypeStore.stringTypeOptions"
@@ -533,6 +531,7 @@ const goBack = () => {
 
                         <v-card-text class="pa-4">
                             <v-row>
+
                                 <!-- Stringer Selection -->
                                 <v-col cols="12" md="6">
                                     <v-select v-model="formData.stringerId" :items="stringerStore.stringerOptions"

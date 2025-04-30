@@ -3,25 +3,21 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStringJobStore, useAuthStore } from '../stores'
 
-// Import stores 
 const stringJobStore = useStringJobStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-// UI State
 const loading = ref(true)
 const showConfirmCancel = ref(false)
 const showConfirmComplete = ref(false)
 const completeJobNotes = ref('')
 const cancelJobReason = ref('')
 
-// Get job ID from route params
 const jobId = computed(() => {
     return route.params.id ? parseInt(route.params.id as string) : null
 })
 
-// Current job data
 const job = computed(() => stringJobStore.currentJob)
 
 // Check if user has permissions to perform actions
@@ -42,7 +38,7 @@ const canEditJob = computed(() => {
     return false
 })
 
-// Format date helper
+// Format date
 const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
@@ -94,7 +90,6 @@ onMounted(async () => {
             loading.value = false
         }
     } else {
-        // No job ID provided, redirect to jobs list
         router.replace('/jobs')
     }
 })
@@ -166,6 +161,7 @@ const cancelJob = async () => {
 <template>
     <div class="string-job-details">
         <v-container class="string-job-details__container">
+
             <!-- Page Header with Navigation -->
             <v-row>
                 <v-col cols="12" sm="8">
@@ -177,6 +173,7 @@ const cancelJob = async () => {
                     </div>
                 </v-col>
                 <v-col cols="12" sm="4" class="d-flex justify-end align-center">
+
                     <!-- Action buttons based on job status and user permissions -->
                     <v-menu v-if="job && canEditJob">
                         <template v-slot:activator="{ props }">
@@ -233,6 +230,7 @@ const cancelJob = async () => {
 
             <!-- Job Details Content -->
             <div v-else class="string-job-details__content">
+
                 <!-- Status Banner -->
                 <v-card class="mb-6">
                     <v-card-title class="string-job-details__section-title">
@@ -290,8 +288,10 @@ const cancelJob = async () => {
                 </v-card>
 
                 <v-row>
+
                     <!-- Left Column -->
                     <v-col cols="12" md="6">
+
                         <!-- Player and Racquet Information -->
                         <v-card class="mb-6">
                             <v-card-title class="string-job-details__section-title">
@@ -322,7 +322,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-tennis-ball</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.racquet.brand }} {{ job.racquet.model
-                                        }}</v-list-item-title>
+                                            }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.racquet.serialNumber">
                                             Serial: {{ job.racquet.serialNumber }}
                                         </v-list-item-subtitle>
@@ -371,7 +371,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-account-wrench</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.stringer.name }} {{ job.stringer.lastName
-                                        }}</v-list-item-title>
+                                            }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.stringer.email">
                                             Email: {{ job.stringer.email }}
                                         </v-list-item-subtitle>
@@ -393,6 +393,7 @@ const cancelJob = async () => {
 
                     <!-- Right Column -->
                     <v-col cols="12" md="6">
+
                         <!-- Stringing Details -->
                         <v-card class="mb-6">
                             <v-card-title class="string-job-details__section-title">
@@ -402,6 +403,7 @@ const cancelJob = async () => {
 
                             <v-card-text class="pa-4">
                                 <v-list>
+
                                     <!-- Main String -->
                                     <v-list-item v-if="job.mainString">
                                         <template v-slot:prepend>

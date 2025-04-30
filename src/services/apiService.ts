@@ -322,14 +322,12 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     }
 
     if (!response.ok) {
-      // Try to parse error message from response if possible
       try {
         const errorData = await response.json();
         if (errorData && typeof errorData === 'object' && 'message' in errorData) {
           throw new Error(errorData.message as string);
         }
       } catch (parseError) {
-        // If we can't parse the error, just use the status
       }
       throw new Error(`HTTP error! Status: ${response.status}`);
     }

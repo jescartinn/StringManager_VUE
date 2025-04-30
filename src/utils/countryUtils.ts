@@ -1,6 +1,5 @@
 import { countries } from 'countries-list'
 
-// Interface for a country option in selects
 export interface CountryOption {
     value: string  // ISO code (e.g. 'US')
     title: string  // Display name (e.g. 'United States (US)')

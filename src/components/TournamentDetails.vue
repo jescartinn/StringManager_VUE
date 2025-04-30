@@ -3,28 +3,23 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTournamentStore, useStringJobStore, useAuthStore } from '../stores'
 
-// Import stores and router
 const tournamentStore = useTournamentStore()
 const stringJobStore = useStringJobStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-// Reactive state
 const loading = ref(true)
 const jobsLoading = ref(true)
 const showEditTournamentDialog = ref(false)
 const showDeleteConfirmation = ref(false)
 
-// Get tournament ID from route params
 const tournamentId = computed(() => {
   return route.params.id ? parseInt(route.params.id as string) : null
 })
 
-// Current tournament data
 const tournament = computed(() => tournamentStore.currentTournament)
 
-// Tournament form data for edit
 const tournamentForm = ref({
   id: null as number | null,
   name: '',
@@ -34,7 +29,6 @@ const tournamentForm = ref({
   category: ''
 })
 
-// Validation errors
 const formErrors = ref({
   name: '',
   startDate: '',
@@ -85,7 +79,6 @@ onMounted(async () => {
       loading.value = false
     }
   } else {
-    // No tournament ID provided, redirect to tournaments list
     router.replace('/tournaments')
   }
 })
@@ -364,6 +357,7 @@ const isTournamentStarted = computed(() => {
 <template>
   <div class="tournament-details">
     <v-container class="tournament-details__container">
+
       <!-- Page Header with Navigation -->
       <v-row>
         <v-col cols="12" sm="8">
@@ -405,6 +399,7 @@ const isTournamentStarted = computed(() => {
 
       <!-- Tournament Details Content -->
       <div v-else class="tournament-details__content">
+
         <!-- Tournament Information Card -->
         <v-card class="mb-6">
           <v-card-title class="tournament-details__section-title">
@@ -417,6 +412,7 @@ const isTournamentStarted = computed(() => {
 
           <v-card-text class="pa-4">
             <v-row>
+
               <!-- Tournament Info -->
               <v-col cols="12" md="6">
                 <div class="tournament-details__info-section">

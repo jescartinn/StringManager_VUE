@@ -3,28 +3,23 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStringerStore, useStringJobStore, useAuthStore } from '../stores'
 
-// Import stores and router
 const stringerStore = useStringerStore()
 const stringJobStore = useStringJobStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-// Reactive state
 const loading = ref(true)
 const jobsLoading = ref(true)
 const showEditStringerDialog = ref(false)
 const showDeleteConfirmation = ref(false)
 
-// Get stringer ID from route params
 const stringerId = computed(() => {
   return route.params.id ? parseInt(route.params.id as string) : null
 })
 
-// Current stringer data
 const stringer = computed(() => stringerStore.currentStringer)
 
-// Stringer form data for edit
 const stringerForm = ref({
   id: null as number | null,
   name: '',
@@ -33,7 +28,6 @@ const stringerForm = ref({
   phoneNumber: ''
 })
 
-// Validation errors
 const formErrors = ref({
   name: '',
   lastName: '',
@@ -63,7 +57,6 @@ onMounted(async () => {
       loading.value = false
     }
   } else {
-    // No stringer ID provided, redirect to stringers list
     router.replace('/stringers')
   }
 })
@@ -137,7 +130,7 @@ const jobStatistics = computed(() => {
   }
 })
 
-// Format date helper
+// Format date
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
@@ -267,7 +260,6 @@ const deleteStringer = async () => {
     const result = await stringerStore.deleteStringer(stringer.value.id)
     if (result) {
       showDeleteConfirmation.value = false
-      // Navigate back to stringers list
       router.push('/stringers')
     }
   } catch (error) {
@@ -290,6 +282,7 @@ const viewStringJob = (jobId: number) => {
 <template>
   <div class="stringer-details">
     <v-container class="stringer-details__container">
+
       <!-- Page Header with Navigation -->
       <v-row>
         <v-col cols="12" sm="8">
@@ -331,6 +324,7 @@ const viewStringJob = (jobId: number) => {
 
       <!-- Stringer Details Content -->
       <div v-else class="stringer-details__content">
+
         <!-- Stringer Information Card -->
         <v-card class="mb-6">
           <v-card-title class="stringer-details__section-title">

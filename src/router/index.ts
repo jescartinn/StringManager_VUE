@@ -142,7 +142,6 @@ router.beforeEach((to, from, next) => {
     // If user is already authenticated and tries to access landing page, redirect to dashboard
     next({ name: 'dashboard' });
   } else {
-    // Otherwise proceed normally
     next();
   }
 })

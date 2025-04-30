@@ -3,7 +3,6 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import api from '../services/apiService'
 
-// Define the User type
 interface User {
     id: number
     username: string
@@ -13,7 +12,6 @@ interface User {
     lastLoginAt: string | null
 }
 
-// Define the auth response type
 interface AuthResponse {
     token: string
     user: User
@@ -23,13 +21,11 @@ interface AuthResponse {
 export const useAuthStore = defineStore('auth', () => {
     const router = useRouter()
 
-    // State
     const token = ref<string | null>(localStorage.getItem('token'))
     const user = ref<User | null>(null)
     const loading = ref(false)
     const error = ref<string | null>(null)
 
-    // Try to load user from localStorage on initialization
     try {
         const storedUser = localStorage.getItem('user')
         if (storedUser) {
@@ -48,19 +44,19 @@ export const useAuthStore = defineStore('auth', () => {
     async function login(username: string, password: string) {
         loading.value = true
         error.value = null
-    
+
         try {
             // Make API request to login endpoint
             const data = await api.auth.login(username, password)
-    
+
             // Save auth data
             token.value = data.token
             user.value = data.user
-    
+
             // Save to localStorage
             localStorage.setItem('token', data.token)
             localStorage.setItem('user', JSON.stringify(data.user))
-    
+
             // Navigate to dashboard
             router.push('/dashboard')
             return true
@@ -119,7 +115,6 @@ export const useAuthStore = defineStore('auth', () => {
             return true
         } catch (e) {
             console.error('Token validation error:', e)
-            // If token is invalid, logout
             logout()
             return false
         } finally {
@@ -160,7 +155,7 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    // New method for updating profile
+    // Method for updating profile
     async function updateProfile(profileData: { username: string, email: string }) {
         loading.value = true
         error.value = null
