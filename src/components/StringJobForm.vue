@@ -58,7 +58,8 @@ const errors = ref({
     racquetId: '',
     mainStringId: '',
     mainTension: '',
-    crossTension: ''
+    crossTension: '',
+    stringerId: ''
 })
 
 // Loading states for reference data
@@ -111,6 +112,7 @@ const loadJobForEdit = async (id: number) => {
             formData.value.status = job.status
             formData.value.notes = job.notes || ''
             formData.value.priority = job.priority || 2
+            formData.value.price = job.price
 
             // If player is selected, load their racquets
             if (job.playerId) {
@@ -256,6 +258,12 @@ const validateForm = () => {
     // Cross tension validation (if provided)
     if (formData.value.crossTension !== null && formData.value.crossTension <= 0) {
         errors.value.crossTension = 'Cross tension must be greater than 0'
+        isValid = false
+    }
+
+    // Stringer validation
+    if (!formData.value.stringerId) {
+        errors.value.stringerId = 'Stringer is required'
         isValid = false
     }
 
