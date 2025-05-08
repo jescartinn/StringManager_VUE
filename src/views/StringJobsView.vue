@@ -406,7 +406,7 @@ const handleSort = (column: string) => {
                                 density="comfortable" hide-details variant="outlined"></v-text-field>
                         </v-col>
                         <v-col cols="6" md="1">
-                            <v-btn color="secondary" variant="text" block @click="showFilters = !showFilters">
+                            <v-btn color="primary" variant="outlined" block @click="showFilters = !showFilters">
                                 {{ showFilters ? 'Hide' : 'Filters' }}
                             </v-btn>
                         </v-col>

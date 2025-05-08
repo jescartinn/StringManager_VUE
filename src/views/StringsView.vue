@@ -83,11 +83,11 @@ const filteredStringTypes = computed(() => {
       const material = stringType.material ? stringType.material.toLowerCase() : ''
       const gauge = stringType.gauge ? stringType.gauge.toLowerCase() : ''
       const color = stringType.color ? stringType.color.toLowerCase() : ''
-      
-      return brandModel.includes(searchLower) || 
-             material.includes(searchLower) || 
-             gauge.includes(searchLower) ||
-             color.includes(searchLower)
+
+      return brandModel.includes(searchLower) ||
+        material.includes(searchLower) ||
+        gauge.includes(searchLower) ||
+        color.includes(searchLower)
     })
   }
 
@@ -104,7 +104,7 @@ const filteredStringTypes = computed(() => {
   // Sort the filtered strings
   filtered.sort((a, b) => {
     let aValue: any, bValue: any;
-    
+
     if (sortBy.value === 'brand') {
       aValue = a.brand
       bValue = b.brand
@@ -125,17 +125,17 @@ const filteredStringTypes = computed(() => {
       aValue = a[sortBy.value as keyof typeof a]
       bValue = b[sortBy.value as keyof typeof b]
     }
-    
+
     if (aValue === null || aValue === undefined) return sortDesc.value ? 1 : -1
     if (bValue === null || bValue === undefined) return sortDesc.value ? -1 : 1
-    
+
     if (typeof aValue === 'string' && typeof bValue === 'string') {
       return sortDesc.value ? bValue.localeCompare(aValue) : aValue.localeCompare(bValue)
     }
-    
+
     return sortDesc.value ? (bValue as number) - (aValue as number) : (aValue as number) - (bValue as number)
   })
-  
+
   return filtered
 })
 
@@ -179,7 +179,7 @@ const openNewStringDialog = () => {
     material: '',
     color: ''
   }
-  
+
   // Reset errors
   formErrors.value = {
     brand: '',
@@ -188,7 +188,7 @@ const openNewStringDialog = () => {
     material: '',
     color: ''
   }
-  
+
   showNewStringDialog.value = true
 }
 
@@ -202,7 +202,7 @@ const openEditStringDialog = (stringType: any) => {
     material: stringType.material || '',
     color: stringType.color || ''
   }
-  
+
   // Reset errors
   formErrors.value = {
     brand: '',
@@ -211,7 +211,7 @@ const openEditStringDialog = (stringType: any) => {
     material: '',
     color: ''
   }
-  
+
   showEditStringDialog.value = true
 }
 
@@ -225,14 +225,14 @@ const openDeleteDialog = (stringType: any) => {
     material: stringType.material || '',
     color: stringType.color || ''
   }
-  
+
   showDeleteConfirmation.value = true
 }
 
 // Validate string type form
 const validateStringForm = () => {
   let isValid = true
-  
+
   // Validate brand
   if (!stringForm.value.brand.trim()) {
     formErrors.value.brand = 'Brand is required'
@@ -240,7 +240,7 @@ const validateStringForm = () => {
   } else {
     formErrors.value.brand = ''
   }
-  
+
   // Validate model
   if (!stringForm.value.model.trim()) {
     formErrors.value.model = 'Model is required'
@@ -248,16 +248,16 @@ const validateStringForm = () => {
   } else {
     formErrors.value.model = ''
   }
-  
+
   // Gauge, material, and color are optional, so no validation needed
-  
+
   return isValid
 }
 
 // Submit new string type
 const submitNewString = async () => {
   if (!validateStringForm()) return
-  
+
   try {
     await stringTypeStore.createStringType({
       brand: stringForm.value.brand,
@@ -266,7 +266,7 @@ const submitNewString = async () => {
       material: stringForm.value.material || undefined,
       color: stringForm.value.color || undefined
     })
-    
+
     showNewStringDialog.value = false
   } catch (error) {
     console.error('Error creating string type:', error)
@@ -276,7 +276,7 @@ const submitNewString = async () => {
 // Submit string type edit
 const submitEditString = async () => {
   if (!validateStringForm() || !stringForm.value.id) return
-  
+
   try {
     await stringTypeStore.updateStringType(stringForm.value.id, {
       brand: stringForm.value.brand,
@@ -285,7 +285,7 @@ const submitEditString = async () => {
       material: stringForm.value.material || undefined,
       color: stringForm.value.color || undefined
     })
-    
+
     showEditStringDialog.value = false
   } catch (error) {
     console.error('Error updating string type:', error)
@@ -295,7 +295,7 @@ const submitEditString = async () => {
 // Delete string type
 const deleteStringType = async () => {
   if (!stringForm.value.id) return
-  
+
   try {
     await stringTypeStore.deleteStringType(stringForm.value.id)
     showDeleteConfirmation.value = false
@@ -313,7 +313,7 @@ const canManageStringTypes = computed(() => {
 const viewStringTypeDetails = (stringTypeId: number) => {
   // For future implementation - string type details page
   // router.push(`/strings/${stringTypeId}`)
-  
+
   // For now, just open the edit dialog
   const stringType = stringTypeStore.getStringTypeById(stringTypeId)
   if (stringType) {
@@ -347,7 +347,8 @@ const headers = [
           <h1 class="strings-view__title">Strings</h1>
         </v-col>
         <v-col cols="12" sm="4" class="d-flex justify-end align-center">
-          <v-btn v-if="canManageStringTypes" class="mb-3" color="primary" prepend-icon="mdi-plus" @click="openNewStringDialog">
+          <v-btn v-if="canManageStringTypes" class="mb-3" color="primary" prepend-icon="mdi-plus"
+            @click="openNewStringDialog">
             New String
           </v-btn>
         </v-col>
@@ -371,7 +372,7 @@ const headers = [
                 density="comfortable" hide-details variant="outlined"></v-text-field>
             </v-col>
             <v-col cols="6" md="1">
-              <v-btn color="secondary" variant="text" block @click="showFilters = !showFilters">
+              <v-btn color="primary" variant="outlined" block @click="showFilters = !showFilters">
                 {{ showFilters ? 'Hide' : 'Filters' }}
               </v-btn>
             </v-col>
@@ -388,13 +389,12 @@ const headers = [
               <v-divider class="my-3"></v-divider>
               <v-row>
                 <v-col cols="12" sm="6" md="4">
-                  <v-select v-model="brandFilter" label="Brand" :items="uniqueBrands"
-                    variant="outlined" density="comfortable" clearable hide-details></v-select>
+                  <v-select v-model="brandFilter" label="Brand" :items="uniqueBrands" variant="outlined"
+                    density="comfortable" clearable hide-details></v-select>
                 </v-col>
                 <v-col cols="12" sm="6" md="4">
-                  <v-select v-model="materialFilter" label="Material" :items="materialOptions"
-                    item-title="title" item-value="value" variant="outlined" density="comfortable"
-                    clearable hide-details></v-select>
+                  <v-select v-model="materialFilter" label="Material" :items="materialOptions" item-title="title"
+                    item-value="value" variant="outlined" density="comfortable" clearable hide-details></v-select>
                 </v-col>
               </v-row>
             </div>
@@ -407,7 +407,8 @@ const headers = [
         <v-icon icon="mdi-grid" size="64" color="grey-lighten-1" class="mb-4"></v-icon>
         <h3 class="text-h5 mb-2">No strings found</h3>
         <p class="text-body-1 mb-6 text-grey">Try adjusting your filters or add a new string type.</p>
-        <v-btn v-if="canManageStringTypes" color="primary" prepend-icon="mdi-plus" @click="openNewStringDialog">Add New String</v-btn>
+        <v-btn v-if="canManageStringTypes" color="primary" prepend-icon="mdi-plus" @click="openNewStringDialog">Add New
+          String</v-btn>
       </v-card>
 
       <!-- String Types List Table -->
@@ -421,9 +422,8 @@ const headers = [
           <template v-slot:header.column="{ column }">
             <div class="d-flex align-center">
               {{ column.title }}
-              <v-btn v-if="column.key && column.key !== 'actions' && column.sortable"
-                icon="mdi-arrow-up-down" size="small" variant="text"
-                @click.stop="handleSort(column.key)"></v-btn>
+              <v-btn v-if="column.key && column.key !== 'actions' && column.sortable" icon="mdi-arrow-up-down"
+                size="small" variant="text" @click.stop="handleSort(column.key)"></v-btn>
             </div>
           </template>
 
@@ -490,11 +490,10 @@ const headers = [
 
         <!-- Pagination Controls -->
         <div class="d-flex justify-center align-center pa-4">
-          <v-pagination v-model="page" :length="totalPages" :total-visible="7"
-            density="comfortable"></v-pagination>
+          <v-pagination v-model="page" :length="totalPages" :total-visible="7" density="comfortable"></v-pagination>
 
-          <v-select v-model="itemsPerPage" :items="[10, 25, 50, 100]" label="Per page" density="compact"
-            class="ms-4" style="max-width: 120px;" hide-details></v-select>
+          <v-select v-model="itemsPerPage" :items="[10, 25, 50, 100]" label="Per page" density="compact" class="ms-4"
+            style="max-width: 120px;" hide-details></v-select>
         </div>
       </v-card>
     </v-container>
@@ -507,67 +506,29 @@ const headers = [
           <v-form @submit.prevent="submitNewString">
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringForm.brand"
-                  label="Brand"
-                  :error-messages="formErrors.brand"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringForm.brand" label="Brand" :error-messages="formErrors.brand" required
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringForm.model"
-                  label="Model"
-                  :error-messages="formErrors.model"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringForm.model" label="Model" :error-messages="formErrors.model" required
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
             </v-row>
 
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringForm.gauge"
-                  label="Gauge"
-                  hint="e.g., 1.25mm, 17g"
-                  persistent-hint
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringForm.gauge" label="Gauge" hint="e.g., 1.25mm, 17g" persistent-hint
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-select
-                  v-model="stringForm.material"
-                  label="Material"
-                  :items="materialOptions"
-                  item-title="title"
-                  item-value="value"
-                  hint="String material type"
-                  persistent-hint
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  clearable
-                ></v-select>
+                <v-select v-model="stringForm.material" label="Material" :items="materialOptions" item-title="title"
+                  item-value="value" hint="String material type" persistent-hint variant="outlined"
+                  density="comfortable" class="mb-3" clearable></v-select>
               </v-col>
             </v-row>
 
-            <v-text-field
-              v-model="stringForm.color"
-              label="Color"
-              hint="e.g., Black, Natural, Blue, etc."
-              persistent-hint
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-            ></v-text-field>
+            <v-text-field v-model="stringForm.color" label="Color" hint="e.g., Black, Natural, Blue, etc."
+              persistent-hint variant="outlined" density="comfortable" class="mb-3"></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -586,67 +547,29 @@ const headers = [
           <v-form @submit.prevent="submitEditString">
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringForm.brand"
-                  label="Brand"
-                  :error-messages="formErrors.brand"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringForm.brand" label="Brand" :error-messages="formErrors.brand" required
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringForm.model"
-                  label="Model"
-                  :error-messages="formErrors.model"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringForm.model" label="Model" :error-messages="formErrors.model" required
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
             </v-row>
 
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringForm.gauge"
-                  label="Gauge"
-                  hint="e.g., 1.25mm, 17g"
-                  persistent-hint
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringForm.gauge" label="Gauge" hint="e.g., 1.25mm, 17g" persistent-hint
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
               <v-col cols="12" sm="6">
-                <v-select
-                  v-model="stringForm.material"
-                  label="Material"
-                  :items="materialOptions"
-                  item-title="title"
-                  item-value="value"
-                  hint="String material type"
-                  persistent-hint
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  clearable
-                ></v-select>
+                <v-select v-model="stringForm.material" label="Material" :items="materialOptions" item-title="title"
+                  item-value="value" hint="String material type" persistent-hint variant="outlined"
+                  density="comfortable" class="mb-3" clearable></v-select>
               </v-col>
             </v-row>
 
-            <v-text-field
-              v-model="stringForm.color"
-              label="Color"
-              hint="e.g., Black, Natural, Blue, etc."
-              persistent-hint
-              variant="outlined"
-              density="comfortable"
-              class="mb-3"
-            ></v-text-field>
+            <v-text-field v-model="stringForm.color" label="Color" hint="e.g., Black, Natural, Blue, etc."
+              persistent-hint variant="outlined" density="comfortable" class="mb-3"></v-text-field>
           </v-form>
         </v-card-text>
         <v-card-actions>
@@ -668,7 +591,7 @@ const headers = [
             {{ stringForm.gauge ? stringForm.gauge + ' ' : '' }}{{ stringForm.material || '' }}
           </p>
           <p class="text-caption text-grey mt-4">
-            Note: Strings that are used in any string jobs cannot be deleted. 
+            Note: Strings that are used in any string jobs cannot be deleted.
             You must delete or update the string jobs first.
           </p>
         </v-card-text>
