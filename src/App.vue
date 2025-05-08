@@ -237,7 +237,7 @@ const viewNotifications = () => {
       <v-divider></v-divider>
 
       <!-- Current Tournament Banner (if exists) -->
-      <v-alert v-if="currentTournament" color="secondary" variant="tonal" border="start" class="mt-2 mx-2"
+      <v-alert v-if="currentTournament" color="primary" variant="tonal" border="start" class="mt-2 mx-2"
         density="compact">
         <div class="text-subtitle-2">{{ currentTournament.name }}</div>
         <div class="text-caption">
