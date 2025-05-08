@@ -48,7 +48,8 @@ const formData = ref({
     logo: '' as string,
     status: 'Pending' as string,
     notes: '' as string,
-    priority: 2 as number | null // Default to medium priority
+    priority: 2 as number | null, // Default to medium priority
+    price: 25 as number
 })
 
 // Validation errors
@@ -192,7 +193,8 @@ const createJob = async () => {
         isTensionInKg: formData.value.isTensionInKg,
         logo: formData.value.logo || undefined,
         notes: formData.value.notes || undefined,
-        priority: formData.value.priority || undefined
+        priority: formData.value.priority || undefined,
+        price: formData.value.price
     }
 
     await stringJobStore.createJob(jobData)
@@ -212,7 +214,8 @@ const updateJob = async () => {
         logo: formData.value.logo || undefined,
         status: formData.value.status,
         notes: formData.value.notes || undefined,
-        priority: formData.value.priority || undefined
+        priority: formData.value.priority || undefined,
+        price: formData.value.price
     }
 
     await stringJobStore.updateJob(jobId.value, jobData)
@@ -476,7 +479,7 @@ const goBack = () => {
                                             @click="toggleCrossTension"
                                             :title="usesCrossTension ? 'Use same tension' : 'Use different cross tension'">
                                             <v-icon>{{ usesCrossTension ? 'mdi-link' : 'mdi-link-variant-off'
-                                            }}</v-icon>
+                                                }}</v-icon>
                                         </v-btn>
                                     </div>
                                 </v-col>
@@ -552,6 +555,15 @@ const goBack = () => {
                                             <v-icon color="primary">mdi-trophy</v-icon>
                                         </template>
                                     </v-select>
+                                </v-col>
+
+                                <v-col cols="12" sm="6" md="3">
+                                    <v-text-field v-model.number="formData.price" label="Precio (€)" variant="outlined"
+                                        type="number" step="0.01" min="0" :prefix="'€'" density="comfortable">
+                                        <template v-slot:prepend>
+                                            <v-icon color="primary">mdi-cash</v-icon>
+                                        </template>
+                                    </v-text-field>
                                 </v-col>
 
                                 <!-- Notes Text Area -->

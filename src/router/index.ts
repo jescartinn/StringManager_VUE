@@ -15,6 +15,7 @@ import TournamentsView from '@/views/TournamentsView.vue'
 import TournamentDetails from '@/components/TournamentDetails.vue'
 import ReportsView from '@/views/ReportsView.vue'
 import ProfileView from '@/views/ProfileView.vue'
+import PaymentsView from '@/views/PaymentsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -119,6 +120,12 @@ const router = createRouter({
       path: '/reports',
       name: 'reports',
       component: ReportsView,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/payments',
+      name: 'payments',
+      component: PaymentsView,
       meta: { requiresAuth: true }
     },
 

@@ -482,6 +482,24 @@ const cancelJob = async () => {
                                             Stencil logo to paint on the strings
                                         </v-list-item-subtitle>
                                     </v-list-item>
+
+                                    <v-divider class="my-2" v-if="job && job.logo"></v-divider>
+
+                                    <!-- Price -->
+                                    <v-list-item>
+                                        <template v-slot:prepend>
+                                            <v-icon color="primary" size="32">mdi-cash</v-icon>
+                                        </template>
+                                        <v-list-item-title class="text-h6">
+                                            Price: €{{ job.price?.toFixed(2) || '25.00' }}
+                                        </v-list-item-title>
+                                        <v-list-item-subtitle>
+                                            <v-chip :color="job.isPaid ? 'success' : 'warning'" size="small"
+                                                text-color="white" class="mt-1">
+                                                {{ job.isPaid ? 'Paid' : 'To be paid' }}
+                                            </v-chip>
+                                        </v-list-item-subtitle>
+                                    </v-list-item>
                                 </v-list>
                             </v-card-text>
                         </v-card>

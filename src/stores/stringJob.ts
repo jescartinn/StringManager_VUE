@@ -25,6 +25,8 @@ interface StringJob {
   status: string
   notes?: string
   priority?: number
+  price?: number
+  isPaid: boolean
 }
 
 interface Player {
@@ -82,6 +84,7 @@ interface CreateStringJobDTO {
   isTensionInKg: boolean
   logo?: string
   notes?: string
+  price?: number
   priority?: number
 }
 
@@ -96,6 +99,7 @@ interface UpdateStringJobDTO {
   status: string
   notes?: string
   priority?: number
+  price?: number
 }
 
 interface CompleteStringJobDTO {
@@ -109,7 +113,7 @@ export const useStringJobStore = defineStore('stringJob', () => {
   const currentJob = ref<StringJob | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
-  const lastFetchType = ref<'all' | 'status' | 'tournament' | 'player' | 'stringer' | null>(null)
+  const lastFetchType = ref<'all' | 'status' | 'tournament' | 'player' | 'stringer' | 'player-unpaid' | null>(null)
   const lastFetchValue = ref<string | number | null>(null)
 
   // Computed properties
@@ -457,6 +461,63 @@ export const useStringJobStore = defineStore('stringJob', () => {
     }
   }
 
+  async function fetchUnpaidJobsByPlayer(playerId: number) {
+    loading.value = true
+    error.value = null
+
+    try {
+      stringJobs.value = await api.stringJobs.getUnpaidByPlayer(playerId)
+      lastFetchType.value = 'player-unpaid'
+      lastFetchValue.value = playerId
+      return stringJobs.value
+    } catch (e) {
+      console.error(`Error fetching unpaid string jobs for player ${playerId}:`, e)
+      error.value = e instanceof Error
+        ? e.message
+        : `No se pudieron cargar los trabajos pendientes de pago del jugador #${playerId}.`
+
+      // Set empty jobs array
+      stringJobs.value = []
+
+      return []
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function markJobAsPaid(id: number) {
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.stringJobs.markAsPaid(id)
+
+      // Update the job in the local state if it exists
+      const index = stringJobs.value.findIndex(job => job.id === id)
+      if (index !== -1) {
+        stringJobs.value[index] = { ...stringJobs.value[index], isPaid: true }
+
+        // If we're showing unpaid jobs, remove this one from the list
+        if (lastFetchType.value === 'player-unpaid') {
+          stringJobs.value = stringJobs.value.filter(job => job.id !== id)
+        }
+      }
+
+      // Also update currentJob if it's the one being marked as paid
+      if (currentJob.value && currentJob.value.id === id) {
+        currentJob.value = { ...currentJob.value, isPaid: true }
+      }
+
+      return true
+    } catch (e) {
+      console.error(`Error marking string job ${id} as paid:`, e)
+      error.value = e instanceof Error ? e.message : `Failed to mark job #${id} as paid`
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   // Helper function to determine if a new job should be added to the current list
   function shouldAddJobToCurrentList(job: StringJob): boolean {
     if (!lastFetchType.value) return false
@@ -534,6 +595,14 @@ export const useStringJobStore = defineStore('stringJob', () => {
     startJob,
     deleteJob,
     refreshCurrentJobList,
-    clearCurrentJob
+    clearCurrentJob,
+    fetchUnpaidJobsByPlayer,
+    markJobAsPaid,
+
+    clearJobs: () => {
+      stringJobs.value = []
+      lastFetchType.value = null
+      lastFetchValue.value = null
+    }
   }
 })

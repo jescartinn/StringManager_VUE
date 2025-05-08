@@ -183,6 +183,8 @@ export interface StringJob {
   status: string
   notes?: string
   priority?: number
+  price: number
+  isPaid: boolean
 }
 
 export interface CreateStringJobDTO {
@@ -198,6 +200,7 @@ export interface CreateStringJobDTO {
   logo?: string
   notes?: string
   priority?: number
+  price?: number
 }
 
 export interface UpdateStringJobDTO {
@@ -211,6 +214,7 @@ export interface UpdateStringJobDTO {
   status: string
   notes?: string
   priority?: number
+  price?: number
 }
 
 export interface CompleteStringJobDTO {
@@ -524,6 +528,14 @@ const stringJobs = {
 
   getById: (id: number): Promise<StringJob> =>
     request<StringJob>(`/stringjobs/${id}`),
+
+  getUnpaidByPlayer: (playerId: number): Promise<StringJob[]> =>
+    request<StringJob[]>(`/stringjobs/player/${playerId}/unpaid`),
+
+  markAsPaid: (id: number): Promise<void> =>
+    request<void>(`/stringjobs/${id}/paid`, {
+      method: 'PATCH'
+    }),
 
   create: (jobData: CreateStringJobDTO): Promise<StringJob> =>
     request<StringJob>('/stringjobs', {

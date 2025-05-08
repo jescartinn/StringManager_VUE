@@ -43,6 +43,7 @@ const navigationItems = [
   { title: 'Strings', icon: 'mdi-grid', route: '/strings' },
   { title: 'Stringers', icon: 'mdi-account-wrench', route: '/stringers' },
   { title: 'Tournaments', icon: 'mdi-trophy', route: '/tournaments' },
+  { title: 'Payments', icon: 'mdi-cash-multiple', route: '/payments' },
   { title: 'Reports', icon: 'mdi-chart-bar', route: '/reports' },
 ]
 
