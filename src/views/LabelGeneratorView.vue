@@ -132,6 +132,7 @@ const updateLabelSize = (size: 'small' | 'medium' | 'large') => {
 <template>
     <div class="label-generator" :class="{ 'print-mode': isPrintMode }">
         <v-container class="label-generator__container" v-if="!isPrintMode">
+
             <!-- Page Header with Navigation -->
             <v-row>
                 <v-col cols="12" sm="8">
@@ -166,6 +167,7 @@ const updateLabelSize = (size: 'small' | 'medium' | 'large') => {
             <!-- Content when job is loaded -->
             <div v-else-if="job" class="label-generator__content">
                 <v-row>
+
                     <!-- Label Settings Panel -->
                     <v-col cols="12" md="4">
                         <v-card class="mb-6">
@@ -176,6 +178,7 @@ const updateLabelSize = (size: 'small' | 'medium' | 'large') => {
 
                             <v-card-text class="pa-4">
                                 <div class="label-settings">
+
                                     <!-- Label Size -->
                                     <div class="mb-4">
                                         <div class="text-subtitle-1 mb-2">Label Size</div>
