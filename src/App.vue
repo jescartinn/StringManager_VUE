@@ -34,18 +34,30 @@ const showAppLayout = computed(() => {
 // Reference to the drawer state
 const drawer = ref(false)
 
-// Navigation items
-const navigationItems = [
-  { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/dashboard' },
-  { title: 'String Jobs', icon: 'mdi-tennis', route: '/jobs' },
-  { title: 'Players', icon: 'mdi-account-group', route: '/players' },
-  { title: 'Racquets', icon: 'mdi-tennis-ball', route: '/racquets' },
-  { title: 'Strings', icon: 'mdi-grid', route: '/strings' },
-  { title: 'Stringers', icon: 'mdi-account-wrench', route: '/stringers' },
-  { title: 'Tournaments', icon: 'mdi-trophy', route: '/tournaments' },
-  { title: 'Payments', icon: 'mdi-cash-multiple', route: '/payments' },
-  { title: 'Reports', icon: 'mdi-chart-bar', route: '/reports' },
-]
+// Navigation items with role-based access control
+const navigationItems = computed(() => {
+  // Base items that all authenticated users can access
+  const baseItems = [
+    { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/dashboard' },
+    { title: 'String Jobs', icon: 'mdi-tennis', route: '/jobs' },
+    { title: 'Players', icon: 'mdi-account-group', route: '/players' },
+    { title: 'Racquets', icon: 'mdi-tennis-ball', route: '/racquets' },
+    { title: 'Strings', icon: 'mdi-grid', route: '/strings' },
+  ]
+
+  // Items that only admins can access
+  const adminOnlyItems = [
+    { title: 'Stringers', icon: 'mdi-account-wrench', route: '/stringers' },
+    { title: 'Tournaments', icon: 'mdi-trophy', route: '/tournaments' },
+    { title: 'Payments', icon: 'mdi-cash-multiple', route: '/payments' },
+    { title: 'Reports', icon: 'mdi-chart-bar', route: '/reports' },
+  ]
+
+  // Return all items for admins, only base items for stringers and other users
+  return authStore.isAdmin
+    ? [...baseItems, ...adminOnlyItems]
+    : baseItems
+})
 
 // Toggle the drawer
 const toggleDrawer = () => {

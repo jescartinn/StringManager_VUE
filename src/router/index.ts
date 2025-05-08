@@ -96,40 +96,38 @@ const router = createRouter({
       path: '/stringers',
       name: 'stringers',
       component: StringersView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/stringers/:id',
       name: 'stringer-details',
       component: StringerDetails,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/tournaments',
       name: 'tournaments',
       component: TournamentsView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/tournaments/:id',
       name: 'tournament-details',
       component: TournamentDetails,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/reports',
       name: 'reports',
       component: ReportsView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
     {
       path: '/payments',
       name: 'payments',
       component: PaymentsView,
-      meta: { requiresAuth: true }
+      meta: { requiresAuth: true, requiresAdmin: true }
     },
-
-    // Catch-all route to redirect to landing page
     {
       path: '/:pathMatch(.*)*',
       redirect: '/'
@@ -137,16 +135,34 @@ const router = createRouter({
   ]
 })
 
-// Navigation guard to check authentication for protected routes
 router.beforeEach((to, from, next) => {
-  const requiresAuth = to.meta.requiresAuth !== false; // Default to requiring auth if not specified
+  const requiresAuth = to.meta.requiresAuth !== false;
+  const requiresAdmin = to.meta.requiresAdmin === true;
+
   const isAuthenticated = localStorage.getItem('token') !== null;
 
-  if (requiresAuth && !isAuthenticated) {
+  // Get user role from localStorage
+  let userRole = 'User';
+  try {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      const user = JSON.parse(userData);
+      userRole = user.role;
+    }
+  } catch (error) {
+    console.error('Error parsing user data from localStorage:', error);
+  }
+
+  const isAdmin = userRole === 'Admin';
+
+  if (!isAuthenticated && requiresAuth) {
     // If route requires auth but user is not authenticated, redirect to landing
     next({ name: 'landing' });
-  } else if (!requiresAuth && isAuthenticated) {
+  } else if (isAuthenticated && !requiresAuth) {
     // If user is already authenticated and tries to access landing page, redirect to dashboard
+    next({ name: 'dashboard' });
+  } else if (requiresAdmin && !isAdmin) {
+    // If route requires admin privileges but user is not an admin, redirect to dashboard
     next({ name: 'dashboard' });
   } else {
     next();
