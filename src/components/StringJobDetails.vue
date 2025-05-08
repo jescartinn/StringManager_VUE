@@ -203,6 +203,11 @@ const cancelJob = async () => {
                     <v-btn color="primary" prepend-icon="mdi-format-list-bulleted" @click="returnToList">
                         All Jobs
                     </v-btn>
+
+                    <v-btn v-if="job && job.status === 'Completed'" color="primary" variant="outlined" class="ml-2"
+                        prepend-icon="mdi-tag" @click="router.push(`/jobs/${jobId}/label`)">
+                        Generate Label
+                    </v-btn>
                 </v-col>
             </v-row>
 

@@ -303,7 +303,7 @@ watch(() => props.showQRCode, async (showQR) => {
 
 .label-id {
     font-weight: bold;
-    color: #666;
+    color: #1867c0;
 }
 
 .label-content {

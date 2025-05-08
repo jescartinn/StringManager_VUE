@@ -222,6 +222,38 @@ export interface CompleteStringJobDTO {
   notes?: string
 }
 
+// Interface for label data
+export interface LabelDto {
+  jobId: number
+  playerName: string
+  playerLastName: string
+  racquetBrand: string
+  racquetModel: string
+  stringBrand: string
+  stringModel: string
+  crossStringBrand?: string
+  crossStringModel?: string
+  mainTension: number
+  crossTension?: number
+  isTensionInKg: boolean
+  dateCompleted: string
+  logo?: string
+  qrCodeData?: string
+}
+
+// Interface for generate label request
+export interface GenerateLabelDto {
+  jobId: number
+  includePlayerInfo?: boolean
+  includeRacquetInfo?: boolean
+  includeStringInfo?: boolean
+  includeTensionInfo?: boolean
+  includeDateInfo?: boolean
+  includeLogo?: boolean
+  generateQRCode?: boolean
+  labelSize?: 'small' | 'medium' | 'large'
+}
+
 // Interfaces - Dashboard
 export interface DashboardStats {
   pendingJobs: number
@@ -601,6 +633,18 @@ const users = {
     })
 };
 
+// Label API
+const labels = {
+  generateLabel: (generateLabelDto: GenerateLabelDto): Promise<LabelDto> =>
+    request<LabelDto>('/labels', {
+      method: 'POST',
+      body: generateLabelDto
+    }),
+
+  getQRCodeData: (jobId: number): Promise<string> =>
+    request<string>(`/labels/${jobId}/qrcode`)
+}
+
 // Export all API services
 export default {
   auth,
@@ -611,5 +655,6 @@ export default {
   tournaments,
   stringJobs,
   dashboard,
-  users
+  users,
+  labels
 };

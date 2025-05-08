@@ -4,6 +4,7 @@ import LandingPage from '@/views/LandingPage.vue'
 import StringJobsView from '@/views/StringJobsView.vue'
 import StringJobForm from '@/components/StringJobForm.vue'
 import StringJobDetails from '@/components/StringJobDetails.vue'
+import LabelGeneratorView from '@/views/LabelGeneratorView.vue'
 import PlayersView from '@/views/PlayersView.vue'
 import PlayerDetails from '@/components/PlayerDetails.vue'
 import RacquetsView from '@/views/RacquetsView.vue'
@@ -60,6 +61,12 @@ const router = createRouter({
       path: '/jobs/edit/:id',
       name: 'edit-job',
       component: StringJobForm,
+      meta: { requiresAuth: true }
+    },
+    {
+      path: '/jobs/:id/label',
+      name: 'job-label',
+      component: LabelGeneratorView,
       meta: { requiresAuth: true }
     },
     {
