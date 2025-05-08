@@ -166,7 +166,7 @@ const viewNotifications = () => {
         <span class="font-weight-bold">StringManager</span>
         <!-- Display current tournament if available -->
         <span v-if="currentTournament" class="ml-2 text-caption d-none d-md-inline-block">
-          <v-chip color="secondary" size="small" class="ml-2">
+          <v-chip color="white" size="small" class="ml-2">
             {{ currentTournament.name }}
           </v-chip>
         </span>
