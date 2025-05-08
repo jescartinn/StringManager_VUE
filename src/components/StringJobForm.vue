@@ -479,7 +479,7 @@ const goBack = () => {
                                             @click="toggleCrossTension"
                                             :title="usesCrossTension ? 'Use same tension' : 'Use different cross tension'">
                                             <v-icon>{{ usesCrossTension ? 'mdi-link' : 'mdi-link-variant-off'
-                                                }}</v-icon>
+                                            }}</v-icon>
                                         </v-btn>
                                     </div>
                                 </v-col>
@@ -558,7 +558,7 @@ const goBack = () => {
                                 </v-col>
 
                                 <v-col cols="12" sm="6" md="3">
-                                    <v-text-field v-model.number="formData.price" label="Precio (€)" variant="outlined"
+                                    <v-text-field v-model.number="formData.price" label="Price (€)" variant="outlined"
                                         type="number" step="0.01" min="0" :prefix="'€'" density="comfortable">
                                         <template v-slot:prepend>
                                             <v-icon color="primary">mdi-cash</v-icon>
