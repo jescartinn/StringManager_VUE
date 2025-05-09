@@ -2,7 +2,6 @@
 import { ref, onMounted, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useDashboardStore, useStringJobStore, useTournamentStore } from '../stores'
-import type { DashboardStats } from '../services/apiService'
 
 const dashboardStore = useDashboardStore()
 const stringJobStore = useStringJobStore()
