@@ -19,13 +19,13 @@ const sortDesc = ref(true)
 const showPaymentModal = ref(false)
 const showPaymentSuccessAlert = ref(false)
 const showInvoiceModal = ref(false)
-const jobToMarkAsPaid = ref<number | null>(null)
 const selectedJobs = ref<number[]>([])
 const selectAll = ref(false)
 const processingPayment = ref(false)
 const invoiceNumber = ref('')
 const paymentMethod = ref('cash')
 const paymentNote = ref('')
+const invoiceItems = ref<any[]>([])
 
 // Initialize component
 onMounted(async () => {
@@ -211,17 +211,28 @@ const toggleJobSelection = (jobId: number) => {
     }
 }
 
+// Prepare invoice items from selected jobs
+const prepareInvoiceItems = () => {
+    // Get all selected job objects
+    invoiceItems.value = unpaidJobs.value.filter(job => selectedJobs.value.includes(job.id))
+    
+    // Make sure invoice shows a value if nothing is selected
+    if (invoiceItems.value.length === 0) {
+        console.warn('No invoice items found for the selected jobs')
+    }
+    
+    console.log('Prepared invoice items:', invoiceItems.value)
+}
+
 // Handle payments
 const openPaymentModal = (jobId?: number) => {
     if (jobId) {
         // Single job payment
-        jobToMarkAsPaid.value = jobId
         selectedJobs.value = [jobId]
     } else if (selectedJobs.value.length === 0) {
         // No jobs selected, pay all
         selectedJobs.value = filteredJobs.value.map(job => job.id)
     }
-    // Otherwise use the currently selected jobs
     
     paymentMethod.value = 'cash'
     paymentNote.value = ''
@@ -234,17 +245,17 @@ const confirmPayment = async () => {
     try {
         processingPayment.value = true
         
+        // Prepare invoice data before marking jobs as paid
+        prepareInvoiceItems()
+        
+        // Store the selected amount before marking as paid (since it might change afterward)
+        
         // Process each selected job
         for (const jobId of selectedJobs.value) {
             await stringJobStore.markJobAsPaid(jobId)
         }
         
         showPaymentModal.value = false
-
-        // Refresh the list of unpaid jobs
-        if (selectedPlayerId.value) {
-            await loadPlayerPayments(selectedPlayerId.value)
-        }
 
         // Show success alert
         showPaymentSuccessAlert.value = true
@@ -254,14 +265,18 @@ const confirmPayment = async () => {
 
         // Show the invoice
         showInvoiceModal.value = true
+        
+        // After showing invoice, then refresh the list of unpaid jobs
+        // This is done after to prevent clearing the invoice data
+        if (selectedPlayerId.value) {
+            await loadPlayerPayments(selectedPlayerId.value)
+        }
     } catch (error) {
         console.error('Error marking jobs as paid:', error)
     } finally {
         processingPayment.value = false
     }
 }
-
-// Generate receipt/invoice
 
 // Download invoice as image
 const downloadInvoice = async () => {
@@ -306,11 +321,6 @@ const getTodayDate = () => {
     const today = new Date()
     return today.toLocaleDateString()
 }
-
-// Get the jobs to include in the invoice
-const invoiceJobs = computed(() => {
-    return filteredJobs.value.filter(job => selectedJobs.value.includes(job.id))
-})
 </script>
 
 <template>
@@ -673,7 +683,7 @@ const invoiceJobs = computed(() => {
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr v-for="job in invoiceJobs" :key="job.id">
+                                <tr v-for="job in invoiceItems" :key="job.id">
                                     <td>#{{ job.id }}</td>
                                     <td>
                                         {{ job.racquet ? `${job.racquet.brand} ${job.racquet.model}` : 'Racquet' }} - 
@@ -686,7 +696,7 @@ const invoiceJobs = computed(() => {
                             <tfoot>
                                 <tr>
                                     <td colspan="3" class="text-right font-weight-bold">Total</td>
-                                    <td>{{ formatCurrency(selectedAmount) }}</td>
+                                    <td>{{ formatCurrency(invoiceItems.reduce((sum, job) => sum + (job.price || 0), 0)) }}</td>
                                 </tr>
                             </tfoot>
                         </table>
