@@ -2,21 +2,16 @@
 import { ref, computed, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores'
-import { useDisplay } from 'vuetify'
 import type { RegisterDTO } from '../services/apiService'
 
 const router = useRouter()
 const authStore = useAuthStore()
-const { mdAndDown } = useDisplay()
 
-// Reference to control the display of different sections
 const activeSection = ref<'login' | 'register'>('login')
 
-// Navigation to login/register sections
 const navigateTo = (section: 'login' | 'register') => {
     activeSection.value = section
 
-    // Reset validation when switching between login and register
     if (section === 'login') {
         loginErrors.value = {
             username: '',
@@ -32,7 +27,6 @@ const navigateTo = (section: 'login' | 'register') => {
     }
 }
 
-// Form data with proper typing
 interface LoginForm {
     username: string
     password: string
@@ -59,7 +53,6 @@ const registerForm = ref<RegisterForm>({
     confirmPassword: ''
 })
 
-// Validation errors with proper typing
 interface LoginErrors {
     username: string
     password: string
@@ -84,7 +77,6 @@ const registerErrors = ref<RegisterErrors>({
     confirmPassword: ''
 })
 
-// Form validity
 const isLoginFormValid = computed(() => {
     return !loginErrors.value.username && !loginErrors.value.password &&
         loginForm.value.username && loginForm.value.password
@@ -97,29 +89,23 @@ const isRegisterFormValid = computed(() => {
         registerForm.value.password && registerForm.value.confirmPassword
 })
 
-// Password strength indicator
 const passwordStrength = computed(() => {
     const password = registerForm.value.password
     if (!password) return 0
 
     let strength = 0
 
-    // Length check
     if (password.length >= 8) strength++
 
-    // Contains uppercase
     if (/[A-Z]/.test(password)) strength++
 
-    // Contains lowercase
     if (/[a-z]/.test(password)) strength++
 
-    // Contains numbers
     if (/\d/.test(password)) strength++
 
-    // Contains special characters
     if (/[^A-Za-z0-9]/.test(password)) strength++
 
-    return Math.min(strength, 4) // Normalize to max 4
+    return Math.min(strength, 4)
 })
 
 const passwordStrengthColor = computed(() => {
@@ -140,12 +126,10 @@ const passwordStrengthText = computed(() => {
     return 'Very Strong'
 })
 
-// Password visibility
 const showLoginPassword = ref(false)
 const showRegisterPassword = ref(false)
 const showRegisterConfirmPassword = ref(false)
 
-// Validation functions
 const validateUsername = (username: string): string => {
     if (!username) return 'Username is required'
     if (username.length < 3) return 'Username must be at least 3 characters'
@@ -171,7 +155,6 @@ const validateConfirmPassword = (confirmPassword: string, password: string): str
     return ''
 }
 
-// Validate login form fields
 const validateLoginUsername = (): void => {
     loginErrors.value.username = validateUsername(loginForm.value.username)
 }
@@ -180,7 +163,6 @@ const validateLoginPassword = (): void => {
     loginErrors.value.password = loginForm.value.password ? '' : 'Password is required'
 }
 
-// Validate register form fields
 const validateRegisterUsername = (): void => {
     registerErrors.value.username = validateUsername(registerForm.value.username)
 }
@@ -191,7 +173,6 @@ const validateRegisterEmail = (): void => {
 
 const validateRegisterPassword = (): void => {
     registerErrors.value.password = validatePassword(registerForm.value.password)
-    // Also revalidate confirm password when password changes
     if (registerForm.value.confirmPassword) {
         validateRegisterConfirmPassword()
     }
@@ -204,9 +185,7 @@ const validateRegisterConfirmPassword = (): void => {
     )
 }
 
-// Handle login form submission
 const handleLogin = async (): Promise<void> => {
-    // Validate all fields
     validateLoginUsername()
     validateLoginPassword()
 
@@ -217,16 +196,13 @@ const handleLogin = async (): Promise<void> => {
     try {
         const success = await authStore.login(loginForm.value.username, loginForm.value.password)
         if (success) {
-            // The router navigation is handled in the store
         }
     } catch (error) {
         console.error('Login error:', error)
     }
 }
 
-// Handle register form submission
 const handleRegister = async (): Promise<void> => {
-    // Validate all fields
     validateRegisterUsername()
     validateRegisterEmail()
     validateRegisterPassword()
@@ -236,7 +212,6 @@ const handleRegister = async (): Promise<void> => {
         return
     }
 
-    // Create a valid RegisterDTO object
     const registerData: RegisterDTO = {
         username: registerForm.value.username,
         email: registerForm.value.email,
@@ -247,14 +222,12 @@ const handleRegister = async (): Promise<void> => {
     try {
         const success = await authStore.register(registerData)
         if (success) {
-            // The router navigation is handled in the store
         }
     } catch (error) {
         console.error('Registration error:', error)
     }
 }
 
-// Check if user is already logged in
 onMounted(() => {
     if (authStore.isAuthenticated) {
         router.push('/dashboard')
@@ -265,6 +238,7 @@ onMounted(() => {
 <template>
     <div class="landing">
         <v-container fluid class="landing__container pa-0">
+
             <!-- Mobile Header - Only visible on small screens -->
             <div class="landing__mobile-header">
                 <div class="landing__logo landing__logo--mobile">
@@ -274,9 +248,11 @@ onMounted(() => {
             </div>
 
             <v-row no-gutters>
+
                 <!-- Left side - Promotional content -->
                 <v-col cols="12" md="7" class="landing__promo">
                     <div class="landing__promo-content">
+
                         <!-- Logo - Hidden on mobile since we show it in the header -->
                         <div class="landing__logo landing__logo--desktop">
                             <v-icon size="48" color="white" icon="mdi-tennis"></v-icon>
@@ -320,6 +296,7 @@ onMounted(() => {
                 <!-- Right side - Auth forms -->
                 <v-col cols="12" md="5" class="landing__auth">
                     <v-card class="landing__auth-card mx-auto">
+
                         <!-- Card tabs -->
                         <div class="landing__auth-tabs">
                             <button class="landing__auth-tab"
@@ -335,6 +312,7 @@ onMounted(() => {
                         </div>
 
                         <v-card-text class="landing__auth-content">
+
                             <!-- Login form -->
                             <div v-if="activeSection === 'login'" class="landing__form">
                                 <h2 class="landing__form-title">Welcome Back</h2>
@@ -488,7 +466,6 @@ onMounted(() => {
         min-height: 100vh;
     }
 
-    // Mobile header
     &__mobile-header {
         display: none;
         padding: $spacing-md;
@@ -503,7 +480,6 @@ onMounted(() => {
         }
     }
 
-    // Promotional side
     &__promo {
         background-color: $secondary;
         color: white;
@@ -627,7 +603,6 @@ onMounted(() => {
         }
     }
 
-    // Auth side
     &__auth {
         @include flex(column, center, center);
         padding: $spacing-lg !important;
@@ -655,7 +630,6 @@ onMounted(() => {
             border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 
             @media (max-width: $breakpoint-md) {
-                // Hide tabs on mobile as we'll have toggle buttons in the form
                 display: none;
             }
         }
@@ -714,7 +688,7 @@ onMounted(() => {
 
     &__submit-btn {
         margin-top: $spacing-md;
-        min-height: 48px; // Ensure button is easy to tap on mobile
+        min-height: 48px;
     }
 
     &__mobile-switch-section {
@@ -733,13 +707,11 @@ onMounted(() => {
         }
     }
 
-    // Mobile responsive adjustments
     @media (max-width: $breakpoint-md) {
         &__promo {
             min-height: auto;
             padding: $spacing-lg 0;
 
-            // Make promo section collapsible on smaller screens for better UX
             max-height: 600px;
             overflow-y: auto;
         }
@@ -749,21 +721,18 @@ onMounted(() => {
         }
     }
 
-    // For very small screens
     @media (max-width: $breakpoint-sm) {
         &__promo {
-            // Optional: On very small screens, make the promo section even more compact
             padding: $spacing-md 0;
         }
 
         &__feature {
-            align-items: center; // Align icon with text better on small screens
+            align-items: center;
         }
     }
 }
 
-// Add extra spacing between form fields
 .form-field-wrapper {
-    margin-bottom: 24px; // Increased spacing between form fields
+    margin-bottom: 24px;
 }
 </style>

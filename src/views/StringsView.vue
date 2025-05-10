@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStringTypeStore, useAuthStore } from '../stores'
 
-// Import stores and router
 const stringTypeStore = useStringTypeStore()
 const authStore = useAuthStore()
 const router = useRouter()
-const route = useRoute()
 
-// Reactive state
 const loading = ref(true)
 const search = ref('')
 const brandFilter = ref<string | null>(null)
@@ -23,7 +20,6 @@ const showNewStringDialog = ref(false)
 const showEditStringDialog = ref(false)
 const showDeleteConfirmation = ref(false)
 
-// StringType form data
 const stringForm = ref({
   id: null as number | null,
   brand: '',
@@ -33,7 +29,6 @@ const stringForm = ref({
   color: ''
 })
 
-// Validation errors
 const formErrors = ref({
   brand: '',
   model: '',
@@ -42,7 +37,6 @@ const formErrors = ref({
   color: ''
 })
 
-// List of common string materials for filtering/selection
 const materialOptions = ref([
   { title: 'Polyester', value: 'Polyester' },
   { title: 'Natural Gut', value: 'Natural Gut' },
@@ -53,16 +47,13 @@ const materialOptions = ref([
   { title: 'Nylon', value: 'Nylon' }
 ])
 
-// Get unique brands for filter
 const uniqueBrands = computed(() => {
   const brands = stringTypeStore.stringTypes.map(string => string.brand)
   return [...new Set(brands)].sort()
 })
 
-// Initialize component
 onMounted(async () => {
   try {
-    // Load strings data
     await stringTypeStore.fetchAllStringTypes()
   } catch (error) {
     console.error('Error initializing string types view:', error)
@@ -71,11 +62,9 @@ onMounted(async () => {
   }
 })
 
-// Computed property to filter and sort string types
 const filteredStringTypes = computed(() => {
   let filtered = [...stringTypeStore.stringTypes]
 
-  // Apply search filter if search text exists
   if (search.value) {
     const searchLower = search.value.toLowerCase()
     filtered = filtered.filter(stringType => {
@@ -91,17 +80,14 @@ const filteredStringTypes = computed(() => {
     })
   }
 
-  // Apply brand filter if set
   if (brandFilter.value) {
     filtered = filtered.filter(stringType => stringType.brand === brandFilter.value)
   }
 
-  // Apply material filter if set
   if (materialFilter.value) {
     filtered = filtered.filter(stringType => stringType.material === materialFilter.value)
   }
 
-  // Sort the filtered strings
   filtered.sort((a, b) => {
     let aValue: any, bValue: any;
 
@@ -121,7 +107,6 @@ const filteredStringTypes = computed(() => {
       aValue = a.color || ''
       bValue = b.color || ''
     } else {
-      // For other properties, access them safely
       aValue = a[sortBy.value as keyof typeof a]
       bValue = b[sortBy.value as keyof typeof b]
     }
@@ -139,7 +124,6 @@ const filteredStringTypes = computed(() => {
   return filtered
 })
 
-// Pagination
 const paginatedStringTypes = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
@@ -150,15 +134,13 @@ const totalPages = computed(() => {
   return Math.ceil(filteredStringTypes.value.length / itemsPerPage.value)
 })
 
-// Reset filters and reload data
 const resetAndReload = async () => {
   search.value = ''
   brandFilter.value = null
   materialFilter.value = null
-  await stringTypeStore.fetchAllStringTypes() // Force refresh
+  await stringTypeStore.fetchAllStringTypes()
 }
 
-// Handle sort change
 const handleSort = (column: string) => {
   if (sortBy.value === column) {
     sortDesc.value = !sortDesc.value
@@ -168,9 +150,7 @@ const handleSort = (column: string) => {
   }
 }
 
-// Open dialog to add new string type
 const openNewStringDialog = () => {
-  // Reset form
   stringForm.value = {
     id: null,
     brand: '',
@@ -180,7 +160,6 @@ const openNewStringDialog = () => {
     color: ''
   }
 
-  // Reset errors
   formErrors.value = {
     brand: '',
     model: '',
@@ -192,7 +171,6 @@ const openNewStringDialog = () => {
   showNewStringDialog.value = true
 }
 
-// Open dialog to edit string type
 const openEditStringDialog = (stringType: any) => {
   stringForm.value = {
     id: stringType.id,
@@ -203,7 +181,6 @@ const openEditStringDialog = (stringType: any) => {
     color: stringType.color || ''
   }
 
-  // Reset errors
   formErrors.value = {
     brand: '',
     model: '',
@@ -215,7 +192,6 @@ const openEditStringDialog = (stringType: any) => {
   showEditStringDialog.value = true
 }
 
-// Open dialog to confirm string type deletion
 const openDeleteDialog = (stringType: any) => {
   stringForm.value = {
     id: stringType.id,
@@ -229,11 +205,9 @@ const openDeleteDialog = (stringType: any) => {
   showDeleteConfirmation.value = true
 }
 
-// Validate string type form
 const validateStringForm = () => {
   let isValid = true
 
-  // Validate brand
   if (!stringForm.value.brand.trim()) {
     formErrors.value.brand = 'Brand is required'
     isValid = false
@@ -241,7 +215,6 @@ const validateStringForm = () => {
     formErrors.value.brand = ''
   }
 
-  // Validate model
   if (!stringForm.value.model.trim()) {
     formErrors.value.model = 'Model is required'
     isValid = false
@@ -249,12 +222,9 @@ const validateStringForm = () => {
     formErrors.value.model = ''
   }
 
-  // Gauge, material, and color are optional, so no validation needed
-
   return isValid
 }
 
-// Submit new string type
 const submitNewString = async () => {
   if (!validateStringForm()) return
 
@@ -273,7 +243,6 @@ const submitNewString = async () => {
   }
 }
 
-// Submit string type edit
 const submitEditString = async () => {
   if (!validateStringForm() || !stringForm.value.id) return
 
@@ -292,7 +261,6 @@ const submitEditString = async () => {
   }
 }
 
-// Delete string type
 const deleteStringType = async () => {
   if (!stringForm.value.id) return
 
@@ -304,29 +272,21 @@ const deleteStringType = async () => {
   }
 }
 
-// Check if user has permissions to manage string types
 const canManageStringTypes = computed(() => {
   return authStore.isAdmin || authStore.isStringer
 })
 
-// View string type details (to be implemented)
 const viewStringTypeDetails = (stringTypeId: number) => {
-  // For future implementation - string type details page
-  // router.push(`/strings/${stringTypeId}`)
-
-  // For now, just open the edit dialog
   const stringType = stringTypeStore.getStringTypeById(stringTypeId)
   if (stringType) {
     openEditStringDialog(stringType)
   }
 }
 
-// View string jobs that use this string type
 const viewStringJobs = (stringTypeId: number) => {
   router.push({ path: '/jobs', query: { string: stringTypeId.toString() } })
 }
 
-// Table headers
 const headers = [
   { title: 'ID', key: 'id', sortable: true },
   { title: 'Brand', key: 'brand', sortable: true },
@@ -341,6 +301,7 @@ const headers = [
 <template>
   <div class="strings-view">
     <v-container class="strings-view__container">
+      
       <!-- Page Header -->
       <v-row class="mb-3">
         <v-col cols="12" sm="8">

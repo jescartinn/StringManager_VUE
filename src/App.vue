@@ -19,24 +19,17 @@ const stringJobStore = useStringJobStore()
 const route = useRoute()
 const router = useRouter()
 
-// Determine if we should show the app layout or just the router view
 const showAppLayout = computed(() => {
-
-  // If the route doesn't require auth (like landing page), don't show app layout
   if (route.meta.requiresAuth === false) {
     return false
   }
 
-  // Otherwise, show app layout if authenticated
   return authStore.isAuthenticated
 })
 
-// Reference to the drawer state
 const drawer = ref(false)
 
-// Navigation items with role-based access control
 const navigationItems = computed(() => {
-  // Base items that all authenticated users can access
   const baseItems = [
     { title: 'Dashboard', icon: 'mdi-view-dashboard', route: '/dashboard' },
     { title: 'String Jobs', icon: 'mdi-tennis', route: '/jobs' },
@@ -45,7 +38,6 @@ const navigationItems = computed(() => {
     { title: 'Strings', icon: 'mdi-grid', route: '/strings' },
   ]
 
-  // Items that only admins can access
   const adminOnlyItems = [
     { title: 'Stringers', icon: 'mdi-account-wrench', route: '/stringers' },
     { title: 'Tournaments', icon: 'mdi-trophy', route: '/tournaments' },
@@ -53,18 +45,15 @@ const navigationItems = computed(() => {
     { title: 'Reports', icon: 'mdi-chart-bar', route: '/reports' },
   ]
 
-  // Return all items for admins, only base items for stringers and other users
   return authStore.isAdmin
     ? [...baseItems, ...adminOnlyItems]
     : baseItems
 })
 
-// Toggle the drawer
 const toggleDrawer = () => {
   drawer.value = !drawer.value
 }
 
-// Computed properties for user display
 const userInitials = computed(() => {
   if (!authStore.user?.username) return '';
   return authStore.user.username.split(' ')
@@ -81,11 +70,9 @@ const userRole = computed(() => {
   return authStore.user?.role || ''
 })
 
-// Notification counts from various stores
 const pendingJobsCount = computed(() => stringJobStore.pendingJobs.length)
 const highPriorityJobsCount = computed(() => stringJobStore.highPriorityJobs.length)
 
-// Total notifications count
 const notificationCount = computed(() => {
   let count = 0
   if (highPriorityJobsCount.value > 0) {
@@ -94,33 +81,22 @@ const notificationCount = computed(() => {
   return count > 0 ? count : null
 })
 
-// Current tournament info
 const currentTournament = computed(() => tournamentStore.activeTournament)
 
-// Watch for login/logout
 watch(() => authStore.isAuthenticated, (isAuthenticated, wasAuthenticated) => {
-  // If user just logged in
   if (isAuthenticated && !wasAuthenticated) {
-    // Let's ensure UI is updated before prefetching data
     nextTick(() => prefetchData())
   }
 })
 
-// Prefetch common data on application start
 const prefetchData = async () => {
-  // Only run if user is authenticated
   if (!authStore.isAuthenticated) return
 
   try {
-    // Start loading data in parallel
     const fetchPromises = [
-      // Fetch current tournament data
       tournamentStore.fetchCurrentTournament(),
-      // Fetch basic dashboard stats
       dashboardStore.fetchDashboardStats(),
-      // Fetch pending jobs
       stringJobStore.fetchJobsByStatus('Pending'),
-      // Prefetch players and stringers for form select options
       playerStore.fetchPlayers(),
       stringerStore.fetchAllStringers()
     ]
@@ -131,26 +107,20 @@ const prefetchData = async () => {
   }
 }
 
-// Wait for app to be ready, auth to be checked and then prefetch data
 onMounted(async () => {
-  // If user is authenticated, prefetch data
   if (authStore.isAuthenticated) {
     await prefetchData()
   }
 })
 
-// Watch for route changes to update currently viewed job/player/etc
 watch(() => route.path, () => {
-  // Auto-close drawer on mobile when navigating
   if (window.innerWidth < 960) {
     drawer.value = false
   }
 })
 
-// Handle logout
 const handleLogout = async () => {
   await authStore.logout()
-  // Reset all stores when logging out
   playerStore.reset()
   stringJobStore.clearCurrentJob()
   tournamentStore.reset()
@@ -158,7 +128,6 @@ const handleLogout = async () => {
   dashboardStore.reset()
 }
 
-// Navigate to notifications view with appropriate filter
 const viewNotifications = () => {
   if (highPriorityJobsCount.value > 0) {
     router.push({ path: '/jobs', query: { priority: 'high' } })
@@ -169,13 +138,16 @@ const viewNotifications = () => {
 </script>
 
 <template>
+
   <!-- App Layout for authenticated users -->
   <v-app v-if="showAppLayout" class="app">
+
     <!-- App Bar -->
     <v-app-bar color="primary" app flat>
       <v-app-bar-nav-icon @click="toggleDrawer" color="white"></v-app-bar-nav-icon>
       <v-toolbar-title class="app__title">
         <span class="font-weight-bold">StringManager</span>
+
         <!-- Display current tournament if available -->
         <span v-if="currentTournament" class="ml-2 text-caption d-none d-md-inline-block">
           <v-chip color="white" size="small" class="ml-2">
@@ -407,7 +379,6 @@ const viewNotifications = () => {
   }
 }
 
-// Mobile adaptations
 @media (max-width: $breakpoint-sm) {
   .app {
     &__drawer {

@@ -148,7 +148,6 @@ router.beforeEach((to, from, next) => {
 
   const isAuthenticated = localStorage.getItem('token') !== null;
 
-  // Get user role from localStorage
   let userRole = 'User';
   try {
     const userData = localStorage.getItem('user');
@@ -163,13 +162,10 @@ router.beforeEach((to, from, next) => {
   const isAdmin = userRole === 'Admin';
 
   if (!isAuthenticated && requiresAuth) {
-    // If route requires auth but user is not authenticated, redirect to landing
     next({ name: 'landing' });
   } else if (isAuthenticated && !requiresAuth) {
-    // If user is already authenticated and tries to access landing page, redirect to dashboard
     next({ name: 'dashboard' });
   } else if (requiresAdmin && !isAdmin) {
-    // If route requires admin privileges but user is not an admin, redirect to dashboard
     next({ name: 'dashboard' });
   } else {
     next();

@@ -1,28 +1,22 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useStringerStore, useAuthStore, useStringJobStore } from '../stores'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useStringerStore, useAuthStore } from '../stores'
 
-// Import stores and router
 const stringerStore = useStringerStore()
 const authStore = useAuthStore()
-const stringJobStore = useStringJobStore()
 const router = useRouter()
-const route = useRoute()
 
-// Reactive state
 const loading = ref(true)
 const search = ref('')
 const page = ref(1)
 const itemsPerPage = ref(10)
 const sortBy = ref<string>('lastName')
 const sortDesc = ref(false)
-const showFilters = ref(false)
 const showNewStringerDialog = ref(false)
 const showEditStringerDialog = ref(false)
 const showDeleteConfirmation = ref(false)
 
-// Stringer form data
 const stringerForm = ref({
   id: null as number | null,
   name: '',
@@ -31,7 +25,6 @@ const stringerForm = ref({
   phoneNumber: ''
 })
 
-// Validation errors
 const formErrors = ref({
   name: '',
   lastName: '',
@@ -39,10 +32,8 @@ const formErrors = ref({
   phoneNumber: ''
 })
 
-// Initialize component
 onMounted(async () => {
   try {
-    // Load stringers data
     await stringerStore.fetchAllStringers()
   } catch (error) {
     console.error('Error initializing stringer view:', error)
@@ -51,11 +42,9 @@ onMounted(async () => {
   }
 })
 
-// Computed property to filter and sort stringers
 const filteredStringers = computed(() => {
   let filtered = [...stringerStore.stringers]
 
-  // Apply search filter if search text exists
   if (search.value) {
     const searchLower = search.value.toLowerCase()
     filtered = filtered.filter(stringer => {
@@ -67,7 +56,6 @@ const filteredStringers = computed(() => {
     })
   }
 
-  // Sort the filtered stringers
   filtered.sort((a, b) => {
     let aValue: any, bValue: any;
 
@@ -87,7 +75,6 @@ const filteredStringers = computed(() => {
       aValue = a.phoneNumber || ''
       bValue = b.phoneNumber || ''
     } else {
-      // For other properties, access them safely
       aValue = a[sortBy.value as keyof typeof a]
       bValue = b[sortBy.value as keyof typeof b]
     }
@@ -105,7 +92,6 @@ const filteredStringers = computed(() => {
   return filtered
 })
 
-// Pagination
 const paginatedStringers = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
@@ -116,13 +102,6 @@ const totalPages = computed(() => {
   return Math.ceil(filteredStringers.value.length / itemsPerPage.value)
 })
 
-// Reset filters and reload data
-const resetAndReload = async () => {
-  search.value = ''
-  await stringerStore.fetchAllStringers() // Force refresh
-}
-
-// Handle sort change
 const handleSort = (column: string) => {
   if (sortBy.value === column) {
     sortDesc.value = !sortDesc.value
@@ -132,9 +111,7 @@ const handleSort = (column: string) => {
   }
 }
 
-// Open dialog to add new stringer
 const openNewStringerDialog = () => {
-  // Reset form
   stringerForm.value = {
     id: null,
     name: '',
@@ -143,7 +120,6 @@ const openNewStringerDialog = () => {
     phoneNumber: ''
   }
   
-  // Reset errors
   formErrors.value = {
     name: '',
     lastName: '',
@@ -154,7 +130,6 @@ const openNewStringerDialog = () => {
   showNewStringerDialog.value = true
 }
 
-// Open dialog to edit stringer
 const openEditStringerDialog = (stringer: any) => {
   stringerForm.value = {
     id: stringer.id,
@@ -164,7 +139,6 @@ const openEditStringerDialog = (stringer: any) => {
     phoneNumber: stringer.phoneNumber || ''
   }
   
-  // Reset errors
   formErrors.value = {
     name: '',
     lastName: '',
@@ -175,7 +149,6 @@ const openEditStringerDialog = (stringer: any) => {
   showEditStringerDialog.value = true
 }
 
-// Open dialog to confirm stringer deletion
 const openDeleteDialog = (stringer: any) => {
   stringerForm.value = {
     id: stringer.id,
@@ -188,11 +161,9 @@ const openDeleteDialog = (stringer: any) => {
   showDeleteConfirmation.value = true
 }
 
-// Validate stringer form
 const validateStringerForm = () => {
   let isValid = true
   
-  // Validate name
   if (!stringerForm.value.name.trim()) {
     formErrors.value.name = 'Name is required'
     isValid = false
@@ -200,7 +171,6 @@ const validateStringerForm = () => {
     formErrors.value.name = ''
   }
   
-  // Validate last name
   if (!stringerForm.value.lastName.trim()) {
     formErrors.value.lastName = 'Last name is required'
     isValid = false
@@ -208,7 +178,6 @@ const validateStringerForm = () => {
     formErrors.value.lastName = ''
   }
   
-  // Validate email if provided
   if (stringerForm.value.email.trim()) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(stringerForm.value.email)) {
@@ -221,7 +190,6 @@ const validateStringerForm = () => {
     formErrors.value.email = ''
   }
   
-  // Validate phone number if provided
   if (stringerForm.value.phoneNumber.trim()) {
     const phoneRegex = /^[+]?[\d\s()-]{7,}$/
     if (!phoneRegex.test(stringerForm.value.phoneNumber)) {
@@ -237,7 +205,6 @@ const validateStringerForm = () => {
   return isValid
 }
 
-// Submit new stringer
 const submitNewStringer = async () => {
   if (!validateStringerForm()) return
   
@@ -255,7 +222,6 @@ const submitNewStringer = async () => {
   }
 }
 
-// Submit stringer edit
 const submitEditStringer = async () => {
   if (!validateStringerForm() || !stringerForm.value.id) return
   
@@ -273,7 +239,6 @@ const submitEditStringer = async () => {
   }
 }
 
-// Delete stringer
 const deleteStringer = async () => {
   if (!stringerForm.value.id) return
   
@@ -285,22 +250,18 @@ const deleteStringer = async () => {
   }
 }
 
-// Check if user has permissions to add/edit stringers (only admins)
 const canManageStringers = computed(() => {
   return authStore.isAdmin
 })
 
-// View stringer's jobs
 const viewStringerJobs = (stringerId: number) => {
   router.push({ path: '/jobs', query: { stringer: stringerId.toString() } })
 }
 
-// View stringer details
 const viewStringerDetails = (stringerId: number) => {
   router.push(`/stringers/${stringerId}`)
 }
 
-// Table headers
 const headers = [
   { title: 'ID', key: 'id', sortable: true },
   { title: 'Last Name', key: 'lastName', sortable: true },
@@ -314,6 +275,7 @@ const headers = [
 <template>
   <div class="stringers-view">
     <v-container class="stringers-view__container">
+      
       <!-- Page Header -->
       <v-row class="mb-3">
         <v-col cols="12" sm="8">

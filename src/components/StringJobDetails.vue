@@ -20,17 +20,13 @@ const jobId = computed(() => {
 
 const job = computed(() => stringJobStore.currentJob)
 
-// Check if user has permissions to perform actions
 const canEditJob = computed(() => {
     if (!job.value) return false
 
-    // No one can edit completed jobs
     if (job.value.status === 'Completed') return false
 
-    // Admins can edit any job that's not completed
     if (authStore.isAdmin) return true
 
-    // Stringers can edit jobs that are not completed or cancelled
     if (authStore.isStringer && job.value.status !== 'Cancelled') {
         return true
     }
@@ -38,14 +34,12 @@ const canEditJob = computed(() => {
     return false
 })
 
-// Format date
 const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
     return date.toLocaleString()
 }
 
-// Get status color
 const getStatusColor = (status?: string) => {
     if (!status) return 'grey'
 
@@ -58,7 +52,6 @@ const getStatusColor = (status?: string) => {
     }
 }
 
-// Get priority info
 const getPriorityInfo = (priority?: number | null) => {
     if (priority === 1) return { text: 'High', color: 'error' }
     if (priority === 2) return { text: 'Medium', color: 'warning' }
@@ -66,7 +59,6 @@ const getPriorityInfo = (priority?: number | null) => {
     return { text: 'None', color: 'grey' }
 }
 
-// Format tension string
 const formatTension = (mainTension?: number, crossTension?: number | null, isTensionInKg = true) => {
     if (!mainTension) return 'N/A'
 
@@ -79,7 +71,6 @@ const formatTension = (mainTension?: number, crossTension?: number | null, isTen
     return `${mainTension} ${unit}`
 }
 
-// Load job data
 onMounted(async () => {
     if (jobId.value) {
         try {
@@ -94,7 +85,6 @@ onMounted(async () => {
     }
 })
 
-// Navigation functions
 const editJob = () => {
     if (jobId.value) {
         router.push(`/jobs/edit/${jobId.value}`)
@@ -105,7 +95,6 @@ const returnToList = () => {
     router.push('/jobs')
 }
 
-// Action functions
 const startJob = async () => {
     if (jobId.value) {
         try {
@@ -130,7 +119,6 @@ const completeJob = async () => {
                 completedAt: new Date().toISOString(),
                 notes: completeJobNotes.value
             })
-            // Refresh job data
             await stringJobStore.fetchJobById(jobId.value)
             showConfirmComplete.value = false
         } catch (error) {
@@ -148,7 +136,6 @@ const cancelJob = async () => {
     if (jobId.value) {
         try {
             await stringJobStore.cancelJob(jobId.value, cancelJobReason.value)
-            // Refresh job data
             await stringJobStore.fetchJobById(jobId.value)
             showConfirmCancel.value = false
         } catch (error) {
@@ -605,7 +592,6 @@ const cancelJob = async () => {
     }
 }
 
-// Status colors
 :deep(.v-chip) {
     &.v-theme--light {
         &.bg-warning {

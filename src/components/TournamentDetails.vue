@@ -37,7 +37,6 @@ const formErrors = ref({
   category: ''
 })
 
-// Tournament categories for selection
 const tournamentCategories = ref([
   'Grand Slam',
   'ATP 1000',
@@ -51,25 +50,19 @@ const tournamentCategories = ref([
   'Other'
 ])
 
-// Check if user has permissions to manage tournaments
 const canManageTournaments = computed(() => {
   return authStore.isAdmin
 })
 
-// Check if this is the current active tournament
 const isCurrentTournament = computed(() => {
   if (!tournament.value || !tournamentStore.activeTournament) return false
   return tournament.value.id === tournamentStore.activeTournament.id
 })
 
-// Load tournament data
 onMounted(async () => {
   if (tournamentId.value) {
     try {
-      // Load tournament data
       await tournamentStore.fetchTournamentById(tournamentId.value)
-
-      // Load tournament's string jobs
       jobsLoading.value = true
       await stringJobStore.fetchJobsByTournament(tournamentId.value)
       jobsLoading.value = false
@@ -83,7 +76,6 @@ onMounted(async () => {
   }
 })
 
-// Watch for tournament changes to reload jobs
 watch(() => tournamentId.value, async (newTournamentId) => {
   if (newTournamentId) {
     loading.value = true
@@ -101,21 +93,18 @@ watch(() => tournamentId.value, async (newTournamentId) => {
   }
 })
 
-// Sort string jobs by date (most recent first)
 const sortedJobs = computed(() => {
   return [...stringJobStore.stringJobs].sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 })
 
-// Format date helper
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
   return date.toLocaleDateString()
 }
 
-// Get status color
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Pending': return 'warning'
@@ -126,7 +115,6 @@ const getStatusColor = (status: string) => {
   }
 }
 
-// Get tournament status
 const getTournamentStatus = () => {
   if (!tournament.value) return { text: 'Unknown', color: 'grey' }
 
@@ -134,7 +122,6 @@ const getTournamentStatus = () => {
   const startDate = new Date(tournament.value.startDate)
   const endDate = new Date(tournament.value.endDate)
 
-  // Set times for more accurate calculation
   startDate.setHours(0, 0, 0, 0)
   endDate.setHours(23, 59, 59, 999)
   today.setHours(12, 0, 0, 0)
@@ -148,7 +135,6 @@ const getTournamentStatus = () => {
   }
 }
 
-// Calculate days until/remaining
 const getDateInfo = () => {
   if (!tournament.value) return { text: '', days: 0 }
 
@@ -156,7 +142,6 @@ const getDateInfo = () => {
   const startDate = new Date(tournament.value.startDate)
   const endDate = new Date(tournament.value.endDate)
 
-  // Set times for more accurate calculation
   startDate.setHours(0, 0, 0, 0)
   endDate.setHours(23, 59, 59, 999)
   today.setHours(12, 0, 0, 0)
@@ -179,7 +164,6 @@ const getDateInfo = () => {
   }
 }
 
-// Navigation functions
 const goBack = () => {
   router.back()
 }
@@ -188,7 +172,6 @@ const returnToTournamentsList = () => {
   router.push('/tournaments')
 }
 
-// Open edit tournament dialog
 const openEditTournamentDialog = () => {
   if (!tournament.value) return
 
@@ -201,7 +184,6 @@ const openEditTournamentDialog = () => {
     category: tournament.value.category || ''
   }
 
-  // Reset errors
   formErrors.value = {
     name: '',
     startDate: '',
@@ -213,16 +195,13 @@ const openEditTournamentDialog = () => {
   showEditTournamentDialog.value = true
 }
 
-// Open delete confirmation dialog
 const openDeleteDialog = () => {
   showDeleteConfirmation.value = true
 }
 
-// Validate tournament form
 const validateTournamentForm = () => {
   let isValid = true
 
-  // Validate name
   if (!tournamentForm.value.name.trim()) {
     formErrors.value.name = 'Tournament name is required'
     isValid = false
@@ -230,7 +209,6 @@ const validateTournamentForm = () => {
     formErrors.value.name = ''
   }
 
-  // Validate startDate
   if (!tournamentForm.value.startDate) {
     formErrors.value.startDate = 'Start date is required'
     isValid = false
@@ -238,12 +216,10 @@ const validateTournamentForm = () => {
     formErrors.value.startDate = ''
   }
 
-  // Validate endDate
   if (!tournamentForm.value.endDate) {
     formErrors.value.endDate = 'End date is required'
     isValid = false
   } else {
-    // Check if end date is after start date
     const startDate = new Date(tournamentForm.value.startDate)
     const endDate = new Date(tournamentForm.value.endDate)
 
@@ -255,7 +231,6 @@ const validateTournamentForm = () => {
     }
   }
 
-  // Check for conflicting tournament dates if changing dates
   if (isValid) {
     const hasConflict = tournamentStore.hasDateConflict(
       tournamentForm.value.startDate,
@@ -273,7 +248,6 @@ const validateTournamentForm = () => {
   return isValid
 }
 
-// Submit tournament edit
 const submitEditTournament = async () => {
   if (!validateTournamentForm() || !tournamentForm.value.id) return
 
@@ -288,14 +262,12 @@ const submitEditTournament = async () => {
 
     showEditTournamentDialog.value = false
 
-    // Re-fetch current tournament in case the edited one is current
     await tournamentStore.fetchCurrentTournament()
   } catch (error) {
     console.error('Error updating tournament:', error)
   }
 }
 
-// Delete tournament
 const deleteTournament = async () => {
   if (!tournament.value) return
 
@@ -303,28 +275,23 @@ const deleteTournament = async () => {
     await tournamentStore.deleteTournament(tournament.value.id)
     showDeleteConfirmation.value = false
 
-    // Navigate back to tournaments list
     router.push('/tournaments')
 
-    // Re-fetch current tournament in case the deleted one was current
     await tournamentStore.fetchCurrentTournament()
   } catch (error) {
     console.error('Error deleting tournament:', error)
   }
 }
 
-// Create new string job for this tournament
 const createNewStringJob = () => {
   if (!tournament.value) return
   router.push(`/jobs/new?tournamentId=${tournament.value.id}`)
 }
 
-// View string job details
 const viewStringJob = (jobId: number) => {
   router.push(`/jobs/${jobId}`)
 }
 
-// Get statistics
 const jobStatistics = computed(() => {
   if (stringJobStore.stringJobs.length === 0) return { total: 0, pending: 0, inProgress: 0, completed: 0, cancelled: 0 }
 
@@ -337,7 +304,6 @@ const jobStatistics = computed(() => {
   }
 })
 
-// Check if tournament has ended
 const isTournamentEnded = computed(() => {
   if (!tournament.value) return false
   const endDate = new Date(tournament.value.endDate)
@@ -345,7 +311,6 @@ const isTournamentEnded = computed(() => {
   return today > endDate
 })
 
-// Check if tournament has started
 const isTournamentStarted = computed(() => {
   if (!tournament.value) return false
   const startDate = new Date(tournament.value.startDate)
@@ -764,7 +729,6 @@ const isTournamentStarted = computed(() => {
   }
 }
 
-// Status colors
 :deep(.v-chip) {
   &.v-theme--light {
     &.bg-warning {

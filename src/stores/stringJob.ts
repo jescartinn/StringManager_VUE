@@ -108,7 +108,6 @@ interface CompleteStringJobDTO {
 }
 
 export const useStringJobStore = defineStore('stringJob', () => {
-  // State
   const stringJobs = ref<StringJob[]>([])
   const currentJob = ref<StringJob | null>(null)
   const loading = ref(false)
@@ -116,7 +115,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
   const lastFetchType = ref<'all' | 'status' | 'tournament' | 'player' | 'stringer' | 'player-unpaid' | null>(null)
   const lastFetchValue = ref<string | number | null>(null)
 
-  // Computed properties
   const pendingJobs = computed(() => stringJobs.value.filter(job => job.status === 'Pending'))
   const inProgressJobs = computed(() => stringJobs.value.filter(job => job.status === 'InProgress'))
   const completedJobs = computed(() => stringJobs.value.filter(job => job.status === 'Completed'))
@@ -135,7 +133,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
     )
   })
 
-  // Actions
   async function fetchAllJobs() {
     loading.value = true
     error.value = null
@@ -197,7 +194,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
     try {
       const jobs = await api.stringJobs.getByPlayer(playerId)
 
-      // API will return empty array for non-existent players
       stringJobs.value = jobs
       lastFetchType.value = 'player'
       lastFetchValue.value = playerId
@@ -206,12 +202,10 @@ export const useStringJobStore = defineStore('stringJob', () => {
     } catch (e) {
       console.error(`Error fetching string jobs for player ${playerId}:`, e)
 
-      // Set a user-friendly error message
       error.value = e instanceof Error
         ? e.message
         : `No se pudieron cargar los trabajos del jugador #${playerId}. El jugador puede no existir.`
 
-      // Set empty jobs array so UI shows "no jobs found" instead of loading indefinitely
       stringJobs.value = []
 
       return []
@@ -261,7 +255,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
 
     try {
       const newJob = await api.stringJobs.create(jobData)
-      // If the current list is for the same context as this new job, add it to the list
       if (shouldAddJobToCurrentList(newJob)) {
         stringJobs.value = [...stringJobs.value, newJob]
       }
@@ -282,21 +275,17 @@ export const useStringJobStore = defineStore('stringJob', () => {
     try {
       await api.stringJobs.update(id, jobData)
 
-      // Update the job in the local state if it exists
       const index = stringJobs.value.findIndex(job => job.id === id)
       if (index !== -1) {
         stringJobs.value[index] = { ...stringJobs.value[index], ...jobData }
       }
 
-      // Also update currentJob if it's the one being updated
       if (currentJob.value && currentJob.value.id === id) {
         currentJob.value = { ...currentJob.value, ...jobData }
       }
 
-      // Refetch the job to ensure we have the latest data
       await fetchJobById(id)
 
-      // If this was a status change, we might need to refresh the list based on last fetch type
       if (jobData.status && lastFetchType.value === 'status') {
         refreshCurrentJobList()
       }
@@ -318,7 +307,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
     try {
       await api.stringJobs.complete(id, completeData)
 
-      // Update the job in the local state if it exists
       const index = stringJobs.value.findIndex(job => job.id === id)
       if (index !== -1) {
         stringJobs.value[index] = {
@@ -331,7 +319,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
         }
       }
 
-      // Also update currentJob if it's the one being completed
       if (currentJob.value && currentJob.value.id === id) {
         currentJob.value = {
           ...currentJob.value,
@@ -343,7 +330,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
         }
       }
 
-      // If we're currently showing a status-filtered list, refresh it
       if (lastFetchType.value === 'status') {
         refreshCurrentJobList()
       }
@@ -365,7 +351,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
     try {
       await api.stringJobs.cancel(id, cancelReason || '')
 
-      // Update the job in the local state if it exists
       const index = stringJobs.value.findIndex(job => job.id === id)
       if (index !== -1) {
         stringJobs.value[index] = {
@@ -377,7 +362,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
         }
       }
 
-      // Also update currentJob if it's the one being cancelled
       if (currentJob.value && currentJob.value.id === id) {
         currentJob.value = {
           ...currentJob.value,
@@ -388,7 +372,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
         }
       }
 
-      // If we're currently showing a status-filtered list, refresh it
       if (lastFetchType.value === 'status') {
         refreshCurrentJobList()
       }
@@ -410,18 +393,15 @@ export const useStringJobStore = defineStore('stringJob', () => {
     try {
       await api.stringJobs.start(id)
 
-      // Update the job in the local state if it exists
       const index = stringJobs.value.findIndex(job => job.id === id)
       if (index !== -1) {
         stringJobs.value[index] = { ...stringJobs.value[index], status: 'InProgress' }
       }
 
-      // Also update currentJob if it's the one being started
       if (currentJob.value && currentJob.value.id === id) {
         currentJob.value = { ...currentJob.value, status: 'InProgress' }
       }
 
-      // If we're currently showing a status-filtered list, refresh it
       if (lastFetchType.value === 'status') {
         refreshCurrentJobList()
       }
@@ -443,10 +423,8 @@ export const useStringJobStore = defineStore('stringJob', () => {
     try {
       await api.stringJobs.delete(id)
 
-      // Remove the job from the local state
       stringJobs.value = stringJobs.value.filter(job => job.id !== id)
 
-      // Clear currentJob if it's the one being deleted
       if (currentJob.value && currentJob.value.id === id) {
         currentJob.value = null
       }
@@ -476,7 +454,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
         ? e.message
         : `No se pudieron cargar los trabajos pendientes de pago del jugador #${playerId}.`
 
-      // Set empty jobs array
       stringJobs.value = []
 
       return []
@@ -492,18 +469,15 @@ export const useStringJobStore = defineStore('stringJob', () => {
     try {
       await api.stringJobs.markAsPaid(id)
 
-      // Update the job in the local state if it exists
       const index = stringJobs.value.findIndex(job => job.id === id)
       if (index !== -1) {
         stringJobs.value[index] = { ...stringJobs.value[index], isPaid: true }
 
-        // If we're showing unpaid jobs, remove this one from the list
         if (lastFetchType.value === 'player-unpaid') {
           stringJobs.value = stringJobs.value.filter(job => job.id !== id)
         }
       }
 
-      // Also update currentJob if it's the one being marked as paid
       if (currentJob.value && currentJob.value.id === id) {
         currentJob.value = { ...currentJob.value, isPaid: true }
       }
@@ -518,7 +492,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
     }
   }
 
-  // Helper function to determine if a new job should be added to the current list
   function shouldAddJobToCurrentList(job: StringJob): boolean {
     if (!lastFetchType.value) return false
 
@@ -538,7 +511,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
     }
   }
 
-  // Function to refresh the current list based on last fetch parameters
   async function refreshCurrentJobList() {
     if (!lastFetchType.value) return
 
@@ -561,19 +533,15 @@ export const useStringJobStore = defineStore('stringJob', () => {
     }
   }
 
-  // Clear current job selection
   function clearCurrentJob() {
     currentJob.value = null
   }
 
   return {
-    // State
     stringJobs,
     currentJob,
     loading,
     error,
-
-    // Getters
     pendingJobs,
     inProgressJobs,
     completedJobs,
@@ -581,7 +549,6 @@ export const useStringJobStore = defineStore('stringJob', () => {
     highPriorityJobs,
     todayCompletedJobs,
 
-    // Actions
     fetchAllJobs,
     fetchJobsByStatus,
     fetchJobsByTournament,

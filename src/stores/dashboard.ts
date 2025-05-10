@@ -59,7 +59,6 @@ interface StringBrandDistribution {
 }
 
 export const useDashboardStore = defineStore('dashboard', () => {
-  // State
   const dashboardStats = ref<DashboardStats | null>(null)
   const distributionStats = ref<DistributionStats | null>(null)
   const currentTournamentDistribution = ref<DistributionStats | null>(null)
@@ -70,13 +69,10 @@ export const useDashboardStore = defineStore('dashboard', () => {
   const lastFetchTime = ref<Date | null>(null)
   const lastDistributionFetchTime = ref<Date | null>(null)
 
-  // Actions
   async function fetchDashboardStats(forceRefresh = false) {
-    // If we have recent data and force refresh is not requested, return cached data
     const now = new Date()
     if (!forceRefresh && dashboardStats.value && lastFetchTime.value) {
       const timeDiff = now.getTime() - lastFetchTime.value.getTime()
-      // Return cached data if it's less than 5 minutes old
       if (timeDiff < 5 * 60 * 1000) {
         return dashboardStats.value
       }
@@ -100,18 +96,14 @@ export const useDashboardStore = defineStore('dashboard', () => {
   }
 
   async function fetchDistributionStats(tournamentId?: number, forceRefresh = false) {
-    // If requesting specific tournament data, always fetch fresh
-    // Otherwise check if we have recent data
     const now = new Date()
     if (!tournamentId && !forceRefresh && distributionStats.value && lastDistributionFetchTime.value) {
       const timeDiff = now.getTime() - lastDistributionFetchTime.value.getTime()
-      // Return cached data if it's less than 5 minutes old
       if (timeDiff < 5 * 60 * 1000) {
         return distributionStats.value
       }
     }
 
-    // If requesting current tournament data and we have it cached
     if (tournamentId && !forceRefresh && currentTournamentDistribution.value &&
       dashboardStats.value?.currentTournament?.id === tournamentId) {
       return currentTournamentDistribution.value
@@ -124,10 +116,8 @@ export const useDashboardStore = defineStore('dashboard', () => {
       const stats = await api.dashboard.getDistribution(tournamentId)
 
       if (tournamentId) {
-        // Store tournament-specific distribution
         currentTournamentDistribution.value = stats
       } else {
-        // Store overall distribution
         distributionStats.value = stats
         lastDistributionFetchTime.value = now
       }
@@ -142,7 +132,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }
   }
 
-  // Helper to transform distribution data for charts
   function getStatusDistributionForChart() {
     if (!distributionStats.value?.statusDistribution) return []
 
@@ -170,7 +159,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     }))
   }
 
-  // Refresh all dashboard data
   async function refreshAllData() {
     await Promise.all([
       fetchDashboardStats(true),
@@ -178,7 +166,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     ])
   }
 
-  // Reset store state
   function reset() {
     dashboardStats.value = null
     distributionStats.value = null
@@ -192,7 +179,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
   }
 
   return {
-    // State
     dashboardStats,
     distributionStats,
     currentTournamentDistribution,
@@ -203,7 +189,6 @@ export const useDashboardStore = defineStore('dashboard', () => {
     lastFetchTime,
     lastDistributionFetchTime,
 
-    // Actions
     fetchDashboardStats,
     fetchDistributionStats,
     getStatusDistributionForChart,

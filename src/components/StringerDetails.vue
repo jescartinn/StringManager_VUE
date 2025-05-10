@@ -35,19 +35,15 @@ const formErrors = ref({
   phoneNumber: ''
 })
 
-// Check if user has permissions to manage stringers (only admins)
 const canManageStringers = computed(() => {
   return authStore.isAdmin
 })
 
-// Load stringer data
 onMounted(async () => {
   if (stringerId.value) {
     try {
-      // Load stringer data
       await stringerStore.fetchStringerById(stringerId.value)
 
-      // Load stringer's string jobs
       jobsLoading.value = true
       await stringJobStore.fetchJobsByStringer(stringerId.value)
       jobsLoading.value = false
@@ -61,7 +57,6 @@ onMounted(async () => {
   }
 })
 
-// Watch for stringer changes to reload related data
 watch(() => stringerId.value, async (newStringerId) => {
   if (newStringerId) {
     loading.value = true
@@ -79,19 +74,16 @@ watch(() => stringerId.value, async (newStringerId) => {
   }
 })
 
-// Get stringer string jobs
 const stringJobs = computed(() => {
   return stringJobStore.stringJobs
 })
 
-// Sort string jobs by date (most recent first)
 const sortedJobs = computed(() => {
   return [...stringJobs.value].sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 })
 
-// Calculate string job statistics
 const jobStatistics = computed(() => {
   if (!stringJobs.value.length) return {
     total: 0,
@@ -115,7 +107,6 @@ const jobStatistics = computed(() => {
     job.completedAt.startsWith(today)
   ).length
 
-  // Calculate completion rate (completed jobs / total non-cancelled jobs)
   const nonCancelled = total - cancelled
   const completionRate = nonCancelled > 0 ? Math.round((completed / nonCancelled) * 100) : 0
 
@@ -130,14 +121,12 @@ const jobStatistics = computed(() => {
   }
 })
 
-// Format date
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
   return date.toLocaleString()
 }
 
-// Get status color
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Pending': return 'warning'
@@ -148,7 +137,6 @@ const getStatusColor = (status: string) => {
   }
 }
 
-// Navigation functions
 const goBack = () => {
   router.back()
 }
@@ -157,7 +145,6 @@ const returnToStringersList = () => {
   router.push('/stringers')
 }
 
-// Open edit stringer dialog
 const openEditStringerDialog = () => {
   if (!stringer.value) return
 
@@ -169,7 +156,6 @@ const openEditStringerDialog = () => {
     phoneNumber: stringer.value.phoneNumber || ''
   }
 
-  // Reset errors
   formErrors.value = {
     name: '',
     lastName: '',
@@ -180,16 +166,13 @@ const openEditStringerDialog = () => {
   showEditStringerDialog.value = true
 }
 
-// Open delete confirmation dialog
 const openDeleteDialog = () => {
   showDeleteConfirmation.value = true
 }
 
-// Validate stringer form
 const validateStringerForm = () => {
   let isValid = true
 
-  // Validate name
   if (!stringerForm.value.name.trim()) {
     formErrors.value.name = 'Name is required'
     isValid = false
@@ -197,7 +180,6 @@ const validateStringerForm = () => {
     formErrors.value.name = ''
   }
 
-  // Validate last name
   if (!stringerForm.value.lastName.trim()) {
     formErrors.value.lastName = 'Last name is required'
     isValid = false
@@ -205,7 +187,6 @@ const validateStringerForm = () => {
     formErrors.value.lastName = ''
   }
 
-  // Validate email if provided
   if (stringerForm.value.email.trim()) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(stringerForm.value.email)) {
@@ -218,7 +199,6 @@ const validateStringerForm = () => {
     formErrors.value.email = ''
   }
 
-  // Validate phone number if provided
   if (stringerForm.value.phoneNumber.trim()) {
     const phoneRegex = /^[+]?[\d\s()-]{7,}$/
     if (!phoneRegex.test(stringerForm.value.phoneNumber)) {
@@ -234,7 +214,6 @@ const validateStringerForm = () => {
   return isValid
 }
 
-// Submit stringer edit
 const submitEditStringer = async () => {
   if (!validateStringerForm() || !stringerForm.value.id) return
 
@@ -252,7 +231,6 @@ const submitEditStringer = async () => {
   }
 }
 
-// Delete stringer
 const deleteStringer = async () => {
   if (!stringer.value) return
 
@@ -267,13 +245,11 @@ const deleteStringer = async () => {
   }
 }
 
-// Create new string job with this stringer pre-selected
 const createNewStringJob = () => {
   if (!stringer.value) return
   router.push(`/jobs/new?stringerId=${stringer.value.id}`)
 }
 
-// View string job details
 const viewStringJob = (jobId: number) => {
   router.push(`/jobs/${jobId}`)
 }
@@ -670,7 +646,6 @@ const viewStringJob = (jobId: number) => {
   }
 }
 
-// Status colors
 :deep(.v-chip) {
   &.v-theme--light {
     &.bg-warning {

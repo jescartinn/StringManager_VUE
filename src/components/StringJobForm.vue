@@ -20,21 +20,17 @@ const tournamentStore = useTournamentStore()
 const router = useRouter()
 const route = useRoute()
 
-// Mode: 'create' or 'edit'
 const mode = computed(() => {
     return route.params.id ? 'edit' : 'create'
 })
 
-// For edit mode, get the job ID
 const jobId = computed(() => {
     return route.params.id ? parseInt(route.params.id as string) : null
 })
 
-// Form state
 const formValid = ref(false)
 const loading = ref(false)
 
-// Form data with initial empty values
 const formData = ref({
     playerId: null as number | null,
     racquetId: null as number | null,
@@ -52,7 +48,6 @@ const formData = ref({
     price: 25 as number
 })
 
-// Validation errors
 const errors = ref({
     playerId: '',
     racquetId: '',
@@ -62,15 +57,12 @@ const errors = ref({
     stringerId: ''
 })
 
-// Loading states for reference data
 const loadingReferences = ref(true)
 const playerRacquets = ref([] as any[])
 const playerSelected = ref(false)
 
-// Initialize component
 onMounted(async () => {
     try {
-        // Load reference data in parallel
         await Promise.all([
             playerStore.fetchPlayers(),
             stringTypeStore.fetchAllStringTypes(),
@@ -79,10 +71,8 @@ onMounted(async () => {
         ])
 
         if (mode.value === 'edit' && jobId.value) {
-            // Fetch the job to edit
             await loadJobForEdit(jobId.value)
         } else if (tournamentStore.activeTournament) {
-            // If there's a current tournament, pre-select it
             formData.value.tournamentId = tournamentStore.activeTournament.id
         }
     } catch (error) {
@@ -92,13 +82,11 @@ onMounted(async () => {
     }
 })
 
-// Load job data for editing
 const loadJobForEdit = async (id: number) => {
     loading.value = true
     try {
         const job = await stringJobStore.fetchJobById(id)
         if (job) {
-            // Update form data with job values
             formData.value.playerId = job.playerId
             formData.value.racquetId = job.racquetId
             formData.value.mainStringId = job.mainStringId || null
@@ -114,7 +102,6 @@ const loadJobForEdit = async (id: number) => {
             formData.value.priority = job.priority || 2
             formData.value.price = job.price
 
-            // If player is selected, load their racquets
             if (job.playerId) {
                 playerSelected.value = true
                 await loadPlayerRacquets(job.playerId)
@@ -127,7 +114,6 @@ const loadJobForEdit = async (id: number) => {
     }
 }
 
-// Watch for player selection to load their racquets
 watch(() => formData.value.playerId, async (newPlayerId) => {
     if (newPlayerId) {
         playerSelected.value = true
@@ -140,18 +126,15 @@ watch(() => formData.value.playerId, async (newPlayerId) => {
     }
 })
 
-// Load racquets for a specific player
 const loadPlayerRacquets = async (playerId: number) => {
     try {
         const racquets = await racquetStore.fetchRacquetsByPlayer(playerId)
         playerRacquets.value = racquets
 
-        // If there's only one racquet, auto-select it
         if (racquets.length === 1 && !formData.value.racquetId) {
             formData.value.racquetId = racquets[0].id
         }
 
-        // If player has no racquets, show warning
         if (racquets.length === 0) {
             errors.value.racquetId = 'This player has no racquets. Please add a racquet first.'
         } else {
@@ -162,7 +145,6 @@ const loadPlayerRacquets = async (playerId: number) => {
     }
 }
 
-// Handle form submission
 const handleSubmit = async () => {
     if (!validateForm()) return
 
@@ -181,7 +163,6 @@ const handleSubmit = async () => {
     }
 }
 
-// Create new job
 const createJob = async () => {
     const jobData = {
         playerId: formData.value.playerId as number,
@@ -202,7 +183,6 @@ const createJob = async () => {
     await stringJobStore.createJob(jobData)
 }
 
-// Update existing job
 const updateJob = async () => {
     if (!jobId.value) return
 
@@ -223,45 +203,37 @@ const updateJob = async () => {
     await stringJobStore.updateJob(jobId.value, jobData)
 }
 
-// Form validation
 const validateForm = () => {
-    // Reset errors
     Object.keys(errors.value).forEach(key => {
         errors.value[key as keyof typeof errors.value] = ''
     })
 
     let isValid = true
 
-    // Player validation
     if (!formData.value.playerId) {
         errors.value.playerId = 'Player is required'
         isValid = false
     }
 
-    // Racquet validation
     if (!formData.value.racquetId) {
         errors.value.racquetId = 'Racquet is required'
         isValid = false
     }
 
-    // Main string validation
     if (!formData.value.mainStringId) {
         errors.value.mainStringId = 'Main string is recommended'
     }
 
-    // Tension validation
     if (formData.value.mainTension <= 0) {
         errors.value.mainTension = 'Main tension must be greater than 0'
         isValid = false
     }
 
-    // Cross tension validation (if provided)
     if (formData.value.crossTension !== null && formData.value.crossTension <= 0) {
         errors.value.crossTension = 'Cross tension must be greater than 0'
         isValid = false
     }
 
-    // Stringer validation
     if (!formData.value.stringerId) {
         errors.value.stringerId = 'Stringer is required'
         isValid = false
@@ -270,23 +242,14 @@ const validateForm = () => {
     return isValid
 }
 
-// Navigate back to job list
 const cancelForm = () => {
     router.push('/jobs')
 }
 
-// Helper function to get player full name
-const getPlayerFullName = (playerId: number) => {
-    const player = playerStore.getPlayerById(playerId)
-    return player ? `${player.name} ${player.lastName}` : ''
-}
-
-// Helper to check if cross tension is being used
 const usesCrossTension = computed(() => {
     return formData.value.crossTension !== null
 })
 
-// Toggle cross tension usage
 const toggleCrossTension = () => {
     if (formData.value.crossTension === null) {
         formData.value.crossTension = formData.value.mainTension
@@ -295,18 +258,15 @@ const toggleCrossTension = () => {
     }
 }
 
-// Custom filter function for player autocomplete
 const customPlayerFilter = (item: any, queryText: string) => {
     if (queryText.trim() === '') return true
 
     const playerName = item.text.toLowerCase()
     const query = queryText.toLowerCase()
 
-    // Search in player full name
     return playerName.includes(query)
 }
 
-// Go back function
 const goBack = () => {
     router.back()
 }
@@ -506,7 +466,7 @@ const goBack = () => {
                                     </v-select>
                                 </v-col>
 
-                                <!-- Logo Field (Nuevo) -->
+                                <!-- Logo Field -->
                                 <v-col cols="12" md="12">
                                     <v-text-field v-model="formData.logo" label="Logo (optional)" variant="outlined"
                                         clearable>
@@ -643,7 +603,6 @@ const goBack = () => {
     }
 }
 
-// Status colors
 :deep(.v-chip) {
     &.v-theme--light {
         &.bg-warning {

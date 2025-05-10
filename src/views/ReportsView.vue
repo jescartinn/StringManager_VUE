@@ -3,7 +3,6 @@ import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import { useDashboardStore, useStringJobStore, useStringTypeStore, usePlayerStore, useTournamentStore } from '../stores'
 import { Chart, registerables } from 'chart.js';
 
-// Chart.js
 Chart.register(...registerables);
 
 const statusChartRef = ref<HTMLCanvasElement | null>(null);
@@ -18,27 +17,23 @@ let tensionChart: Chart | null = null;
 let stringUsageChart: Chart | null = null;
 let tensionDistChart: Chart | null = null;
 
-// Import stores for data access
 const dashboardStore = useDashboardStore()
 const stringJobStore = useStringJobStore()
 const stringTypeStore = useStringTypeStore()
 const playerStore = usePlayerStore()
 const tournamentStore = useTournamentStore()
 
-// UI state
 const loading = ref(true)
 const selectedReport = ref('overview')
 const selectedTimeframe = ref('all')
 const selectedTournament = ref<number | null>(null)
 const showFilters = ref(false)
 
-// Custom range dates (if timeframe is 'custom')
 const dateRange = ref({
   start: '',
   end: ''
 })
 
-// Options for report selector
 const reportOptions = [
   { title: 'Overview', value: 'overview', icon: 'mdi-chart-box' },
   { title: 'String Usage', value: 'strings', icon: 'mdi-grid' },
@@ -47,7 +42,6 @@ const reportOptions = [
   { title: 'Player Activity', value: 'players', icon: 'mdi-account-group' }
 ]
 
-// Options for timeframe selector
 const timeframeOptions = [
   { title: 'All Time', value: 'all' },
   { title: 'This Year', value: 'year' },
@@ -56,23 +50,18 @@ const timeframeOptions = [
   { title: 'Custom Range', value: 'custom' }
 ]
 
-// Load initial data
 onMounted(async () => {
   try {
-    // Load distribution stats for overview report
     await dashboardStore.fetchDistributionStats()
 
-    // Load string jobs for detailed reports
     await stringJobStore.fetchAllJobs()
 
-    // Load reference data for filtering and display
     await Promise.all([
       stringTypeStore.fetchAllStringTypes(),
       playerStore.fetchPlayers(),
       tournamentStore.fetchAllTournaments()
     ])
 
-    // Set start date to tournament start if a tournament is selected
     if (tournamentStore.activeTournament) {
       selectedTournament.value = tournamentStore.activeTournament.id
     }
@@ -83,12 +72,10 @@ onMounted(async () => {
   }
 })
 
-// Watch for tournament changes
 watch(selectedTournament, async (newTournamentId) => {
   if (newTournamentId) {
     loading.value = true
     try {
-      // Load distribution stats for the selected tournament
       await dashboardStore.fetchDistributionStats(newTournamentId)
     } catch (error) {
       console.error('Error loading tournament stats:', error)
@@ -96,7 +83,6 @@ watch(selectedTournament, async (newTournamentId) => {
       loading.value = false
     }
   } else {
-    // Load overall distribution stats
     loading.value = true
     try {
       await dashboardStore.fetchDistributionStats()
@@ -108,16 +94,13 @@ watch(selectedTournament, async (newTournamentId) => {
   }
 })
 
-// Filtered jobs based on selected timeframe and tournament
 const filteredJobs = computed(() => {
   let filtered = [...stringJobStore.stringJobs]
 
-  // Apply tournament filter
   if (selectedTournament.value) {
     filtered = filtered.filter(job => job.tournamentId === selectedTournament.value)
   }
 
-  // Apply timeframe filter
   if (selectedTimeframe.value !== 'all') {
     const now = new Date()
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
@@ -147,7 +130,6 @@ const filteredJobs = computed(() => {
   return filtered
 })
 
-// Status distribution data for charts
 const statusData = computed(() => {
   const distribution = dashboardStore.distributionStats?.statusDistribution || []
   return {
@@ -164,7 +146,6 @@ const statusData = computed(() => {
   }
 })
 
-// Tension distribution data for charts
 const tensionData = computed(() => {
   const distribution = dashboardStore.distributionStats?.tensionDistribution || []
   return {
@@ -176,7 +157,6 @@ const tensionData = computed(() => {
   }
 })
 
-// String brand distribution data for charts
 const stringBrandData = computed(() => {
   const distribution = dashboardStore.distributionStats?.stringBrandDistribution || []
   return {
@@ -184,7 +164,6 @@ const stringBrandData = computed(() => {
     datasets: [{
       data: distribution.map(item => item.count),
       backgroundColor: distribution.map((_, index) => {
-        // Generate colors based on primary color with varying opacity
         const hue = 160 + (index * 20) % 60 // Variations of green/blue
         return `hsl(${hue}, 70%, 50%)`
       })
@@ -192,11 +171,9 @@ const stringBrandData = computed(() => {
   }
 })
 
-// Compute string type usage for string report
 const stringUsageData = computed(() => {
   const stringMap = new Map<number, { id: number, name: string, count: number }>()
 
-  // Count occurrences of each string type
   filteredJobs.value.forEach(job => {
     if (job.mainStringId) {
       const id = job.mainStringId
@@ -209,7 +186,6 @@ const stringUsageData = computed(() => {
       stringMap.get(id)!.count++
     }
 
-    // Count cross strings if different from main
     if (job.crossStringId && job.crossStringId !== job.mainStringId) {
       const id = job.crossStringId
       const name = job.crossString ? `${job.crossString.brand} ${job.crossString.model}` : `String #${id}`
@@ -222,27 +198,22 @@ const stringUsageData = computed(() => {
     }
   })
 
-  // Convert to array and sort by count
   return Array.from(stringMap.values())
     .sort((a, b) => b.count - a.count)
     .slice(0, 10) // Top 10
 })
 
-// Compute tension distribution for tension report
 const tensionDistributionData = computed(() => {
   const tensionMap = new Map<string, number>()
 
-  // Group tensions into ranges
   filteredJobs.value.forEach(job => {
     if (!job.mainTension) return
 
-    // Convert to kg if needed for consistent reporting
     let tension = job.mainTension
     if (!job.isTensionInKg) {
       tension = Math.round(tension * 0.453592) // Convert lb to kg
     }
 
-    // Group into ranges
     let range: string
     if (tension < 20) range = 'Under 20kg'
     else if (tension < 22) range = '20-21.9kg'
@@ -254,24 +225,20 @@ const tensionDistributionData = computed(() => {
     tensionMap.set(range, (tensionMap.get(range) || 0) + 1)
   })
 
-  // Define all possible ranges for consistent display
   const allRanges = ['Under 20kg', '20-21.9kg', '22-23.9kg', '24-25.9kg', '26-27.9kg', '28kg+']
 
-  // Ensure all ranges exist in the map
   allRanges.forEach(range => {
     if (!tensionMap.has(range)) {
       tensionMap.set(range, 0)
     }
   })
 
-  // Convert to array and sort by range order
   return allRanges.map(range => ({
     range,
     count: tensionMap.get(range) || 0
   }))
 })
 
-// Compute stringer performance data for stringer report
 const stringerPerformanceData = computed(() => {
   const stringerMap = new Map<number, {
     id: number,
@@ -282,7 +249,6 @@ const stringerPerformanceData = computed(() => {
     totalJobs: number
   }>()
 
-  // Count jobs by stringer
   filteredJobs.value.forEach(job => {
     if (!job.stringerId) return
 
@@ -310,7 +276,6 @@ const stringerPerformanceData = computed(() => {
     }
   })
 
-  // Calculate avg jobs per day if we have data
   if (filteredJobs.value.length > 0) {
     const dates = filteredJobs.value
       .filter(job => job.completedAt) // Only consider completed jobs
@@ -319,18 +284,15 @@ const stringerPerformanceData = computed(() => {
     const uniqueDates = new Set(dates)
     const numberOfDays = Math.max(uniqueDates.size, 1) // Avoid division by zero
 
-    // Update avg jobs per day
     stringerMap.forEach(stringer => {
       stringer.avgJobsPerDay = parseFloat((stringer.completed / numberOfDays).toFixed(1))
     })
   }
 
-  // Convert to array and sort by completed jobs
   return Array.from(stringerMap.values())
     .sort((a, b) => b.completed - a.completed)
 })
 
-// Compute player activity data for player report
 const playerActivityData = computed(() => {
   const playerMap = new Map<number, {
     id: number,
@@ -340,7 +302,6 @@ const playerActivityData = computed(() => {
     lastActivity: Date | null
   }>()
 
-  // Count jobs by player
   filteredJobs.value.forEach(job => {
     const id = job.playerId
     const name = job.player ? `${job.player.name} ${job.player.lastName}` : `Player #${id}`
@@ -362,19 +323,16 @@ const playerActivityData = computed(() => {
       player.pendingJobs++
     }
 
-    // Update last activity
     const jobDate = job.completedAt ? new Date(job.completedAt) : new Date(job.createdAt)
     if (!player.lastActivity || jobDate > player.lastActivity) {
       player.lastActivity = jobDate
     }
   })
 
-  // Convert to array and sort by total jobs
   return Array.from(playerMap.values())
     .sort((a, b) => b.totalJobs - a.totalJobs)
 })
 
-// Compute totals for overview report
 const totals = computed(() => {
   const jobs = filteredJobs.value
   return {
@@ -386,38 +344,29 @@ const totals = computed(() => {
   }
 })
 
-// Format date for display
 const formatDate = (date: Date | null): string => {
   if (!date) return 'N/A'
   return date.toLocaleDateString()
 }
 
-// Apply filters from dashboard
 const applyFilters = () => {
   if (selectedTimeframe.value === 'custom' && (!dateRange.value.start || !dateRange.value.end)) {
-    // If custom timeframe selected but dates not provided, show error or reset
     return
   }
 
-  // Close filter panel
   showFilters.value = false
 }
 
-// Reset filters
 const resetFilters = () => {
   selectedTimeframe.value = 'all'
   selectedTournament.value = null
   dateRange.value = { start: '', end: '' }
 }
 
-// Función para inicializar los gráficos
 const initCharts = () => {
-  // Destruir gráficos existentes antes de crear nuevos
   destroyCharts();
 
-  // Solo inicializar si hay datos disponibles
   if (!loading.value && dashboardStore.distributionStats) {
-    // Status Distribution Chart
     if (statusChartRef.value && statusData.value.labels.length > 0) {
       statusChart = new Chart(statusChartRef.value, {
         type: 'pie',
@@ -427,14 +376,13 @@ const initCharts = () => {
           maintainAspectRatio: false,
           plugins: {
             legend: {
-              display: false // No mostrar leyenda interna porque creamos nuestra propia leyenda
+              display: false
             }
           }
         }
       });
     }
 
-    // String Brand Distribution Chart
     if (stringBrandChartRef.value && stringBrandData.value.labels.length > 0) {
       stringBrandChart = new Chart(stringBrandChartRef.value, {
         type: 'pie',
@@ -451,7 +399,6 @@ const initCharts = () => {
       });
     }
 
-    // Tension Distribution Chart
     if (tensionChartRef.value && tensionData.value.labels.length > 0) {
       tensionChart = new Chart(tensionChartRef.value, {
         type: 'bar',
@@ -475,7 +422,6 @@ const initCharts = () => {
       });
     }
 
-    // String Usage Chart
     if (stringUsageChartRef.value && stringUsageData.value.length > 0) {
       const labels = stringUsageData.value.map(item => item.name);
       const data = stringUsageData.value.map(item => item.count);
@@ -493,7 +439,7 @@ const initCharts = () => {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          indexAxis: 'y', // Horizontal bar chart
+          indexAxis: 'y',
           scales: {
             x: {
               beginAtZero: true
@@ -503,7 +449,6 @@ const initCharts = () => {
       });
     }
 
-    // Tension Distribution Chart for Tension Report
     if (tensionDistChartRef.value && tensionDistributionData.value.length > 0) {
       const labels = tensionDistributionData.value.map(item => item.range);
       const data = tensionDistributionData.value.map(item => item.count);
@@ -532,7 +477,6 @@ const initCharts = () => {
   }
 };
 
-// Función para destruir los gráficos existentes
 const destroyCharts = () => {
   if (statusChart) {
     statusChart.destroy();
@@ -560,12 +504,10 @@ const destroyCharts = () => {
   }
 };
 
-// Limpia los gráficos cuando el componente se desmonta
 onUnmounted(() => {
   destroyCharts();
 });
 
-// Observa cambios en los datos y el reporte seleccionado para actualizar los gráficos
 watch(
   [
     () => loading.value,
@@ -574,16 +516,13 @@ watch(
     () => filteredJobs.value.length
   ],
   () => {
-    // Espera a que Vue actualice el DOM antes de inicializar los gráficos
     setTimeout(initCharts, 100);
   }
 );
 
-// Observa cambios en los filtros
 watch(
   [selectedTimeframe, selectedTournament, dateRange],
   () => {
-    // Reconstruir gráficos si cambian los filtros
     if (!loading.value) {
       setTimeout(initCharts, 100);
     }
@@ -591,10 +530,8 @@ watch(
   { deep: true }
 );
 
-// Modifica la función onMounted para inicializar los gráficos después de cargar los datos
 onMounted(async () => {
   try {
-    // Carga los datos como antes
     await dashboardStore.fetchDistributionStats();
     await stringJobStore.fetchAllJobs();
     await Promise.all([
@@ -607,7 +544,6 @@ onMounted(async () => {
       selectedTournament.value = tournamentStore.activeTournament.id;
     }
 
-    // Inicializa los gráficos después de cargar los datos
     setTimeout(initCharts, 100);
   } catch (error) {
     console.error('Error loading report data:', error);
@@ -620,6 +556,7 @@ onMounted(async () => {
 <template>
   <div class="reports-view">
     <v-container class="reports-view__container">
+
       <!-- Page Header -->
       <v-row class="mb-3">
         <v-col cols="12" md="8">
@@ -640,6 +577,7 @@ onMounted(async () => {
       <v-card class="mb-12">
         <v-card-text>
           <v-row class="align-center">
+
             <!-- Report Selector -->
             <v-col cols="12" md="6">
               <v-select v-model="selectedReport" label="Select Report" :items="reportOptions" item-title="title"
@@ -668,6 +606,7 @@ onMounted(async () => {
             <div v-if="showFilters">
               <v-divider class="my-3"></v-divider>
               <v-row>
+
                 <!-- Timeframe Filter -->
                 <v-col cols="12" md="4">
                   <v-select v-model="selectedTimeframe" label="Time Period" :items="timeframeOptions" item-title="title"
@@ -722,8 +661,10 @@ onMounted(async () => {
 
       <!-- Report Content -->
       <template v-else>
+
         <!-- Overview Report -->
         <div v-if="selectedReport === 'overview'" class="reports-view__report">
+
           <!-- Stats Summary -->
           <v-row class="reports-view__stats mb-6">
             <v-col cols="6" md="3">
@@ -782,6 +723,7 @@ onMounted(async () => {
 
           <!-- Distribution Charts -->
           <v-row>
+
             <!-- Status Distribution -->
             <v-col cols="12" md="6">
               <v-card class="reports-view__chart-card">
@@ -863,12 +805,14 @@ onMounted(async () => {
             <v-card-text>
               <v-row>
                 <v-col cols="12" lg="6">
+
                   <!-- String Usage Chart -->
                   <div class="reports-view__chart-container">
                     <canvas id="stringUsageChart" ref="stringUsageChartRef"></canvas>
                   </div>
                 </v-col>
                 <v-col cols="12" lg="6">
+
                   <!-- String Usage Table -->
                   <v-table class="reports-view__table">
                     <thead>
@@ -909,12 +853,14 @@ onMounted(async () => {
             <v-card-text>
               <v-row>
                 <v-col cols="12" lg="6">
+
                   <!-- Tension Distribution Chart -->
                   <div class="reports-view__chart-container">
                     <canvas id="tensionDistChart" ref="tensionDistChartRef"></canvas>
                   </div>
                 </v-col>
                 <v-col cols="12" lg="6">
+
                   <!-- Tension Distribution Table -->
                   <v-table class="reports-view__table">
                     <thead>
@@ -1112,7 +1058,6 @@ onMounted(async () => {
   }
 }
 
-// Status colors
 :deep(.v-chip) {
   &.v-theme--light {
     &.bg-warning {

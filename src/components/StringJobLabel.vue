@@ -25,12 +25,10 @@ const qrCodeURL = ref('')
 const loading = ref(false)
 const error = ref<string | null>(null)
 
-// Get the current job from the store
 const job = computed(() => {
     return stringJobStore.currentJob
 })
 
-// Generate label sizes based on the size prop
 const labelSizes = computed(() => {
     switch (props.size) {
         case 'small':
@@ -63,14 +61,12 @@ const labelSizes = computed(() => {
     }
 })
 
-// Format date
 const formatDate = (dateString?: string) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
     return date.toLocaleDateString()
 }
 
-// Format tension
 const formatTension = (mainTension?: number, crossTension?: number | null, isTensionInKg = true) => {
     if (!mainTension) return 'N/A'
 
@@ -83,21 +79,17 @@ const formatTension = (mainTension?: number, crossTension?: number | null, isTen
     return `${mainTension} ${unit}`
 }
 
-// Download the label as an image
 const downloadLabel = () => {
     const labelElement = document.getElementById('string-job-label')
     if (!labelElement) return
 
-    // Emit download event so parent can handle it
     emit('download', labelElement)
 }
 
-// Generate QR code
 const generateQRCode = async () => {
     if (!job.value) return
 
     try {
-        // Create a URL or data for the QR code
         const jobData = {
             id: job.value.id,
             player: job.value.player ? `${job.value.player.name} ${job.value.player.lastName}` : 'Unknown',
@@ -109,7 +101,6 @@ const generateQRCode = async () => {
 
         const dataString = JSON.stringify(jobData)
 
-        // Generate QR code
         qrCodeURL.value = await QRCode.toDataURL(dataString, {
             width: 100,
             margin: 1,
@@ -124,7 +115,6 @@ const generateQRCode = async () => {
     }
 }
 
-// Watch for job ID changes
 watch(() => props.jobId, async () => {
     loading.value = true
 
@@ -144,7 +134,6 @@ watch(() => props.jobId, async () => {
     }
 }, { immediate: true })
 
-// Watch QR code setting
 watch(() => props.showQRCode, async (showQR) => {
     if (showQR && job.value) {
         await generateQRCode()
@@ -154,6 +143,7 @@ watch(() => props.showQRCode, async (showQR) => {
 
 <template>
     <div class="string-job-label-component">
+
         <!-- Loading state -->
         <div v-if="loading" class="loading-container">
             <v-progress-circular indeterminate color="primary"></v-progress-circular>
@@ -183,6 +173,7 @@ watch(() => props.showQRCode, async (showQR) => {
             </div>
 
             <div class="label-content">
+                
                 <!-- Player info -->
                 <div class="label-section" v-if="includePlayerInfo && job.player">
                     <div class="label-section-title" :style="{ fontSize: labelSizes.fontSize.subtitle }">

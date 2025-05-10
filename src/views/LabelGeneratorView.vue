@@ -9,12 +9,10 @@ const route = useRoute()
 const router = useRouter()
 const stringJobStore = useStringJobStore()
 
-// Get job ID from route params
 const jobId = computed(() => {
     return route.params.id ? parseInt(route.params.id as string) : null
 })
 
-// States for label generator
 const loading = ref(false)
 const error = ref<string | null>(null)
 const job = computed(() => stringJobStore.currentJob)
@@ -33,7 +31,6 @@ const labelSettings = ref({
     printable: false
 })
 
-// Load job data
 onMounted(async () => {
     if (jobId.value) {
         try {
@@ -48,19 +45,15 @@ onMounted(async () => {
     }
 })
 
-// Generate preview vs print mode
 const isPrintMode = ref(false)
 
-// Switch to print mode
 const switchToPrintMode = () => {
     isPrintMode.value = true
     labelSettings.value.printable = true
 
-    // Wait for the DOM to update
     setTimeout(() => {
         window.print()
 
-        // Switch back after printing
         setTimeout(() => {
             isPrintMode.value = false
             labelSettings.value.printable = false
@@ -68,30 +61,25 @@ const switchToPrintMode = () => {
     }, 300)
 }
 
-// Handle download label
 const downloadLabel = async (labelElement: HTMLElement) => {
     try {
         loading.value = true
 
-        // Use html2canvas to convert the label to an image
         const canvas = await html2canvas(labelElement, {
             backgroundColor: '#ffffff',
-            scale: 2 // Higher resolution
+            scale: 2
         })
 
-        // Convert canvas to blob
         canvas.toBlob((blob) => {
             if (!blob) {
                 console.error('Failed to create blob from canvas')
                 return
             }
 
-            // Create download link
             const link = document.createElement('a')
             link.href = URL.createObjectURL(blob)
             link.download = `string-job-label-${jobId.value}.png`
 
-            // Trigger download
             document.body.appendChild(link)
             link.click()
             document.body.removeChild(link)
@@ -105,16 +93,13 @@ const downloadLabel = async (labelElement: HTMLElement) => {
     }
 }
 
-// Go back to job details
 const goBack = () => {
     router.push(`/jobs/${jobId.value}`)
 }
 
-// Update label settings
 const updateLabelSize = (size: 'small' | 'medium' | 'large') => {
     labelSettings.value.size = size
 
-    // Adjust width based on size
     switch (size) {
         case 'small':
             labelSettings.value.width = '280'
@@ -313,7 +298,6 @@ const updateLabelSize = (size: 'small' | 'medium' | 'large') => {
     }
 }
 
-// Print mode styles
 .print-mode {
     .label-generator__container {
         display: none;

@@ -38,15 +38,13 @@ interface UpdateRacquetDTO {
 }
 
 export const useRacquetStore = defineStore('racquet', () => {
-  // State
   const racquets = ref<Racquet[]>([])
-  const playerRacquets = ref<Record<number, Racquet[]>>({}) // Indexed by playerId for quick access
+  const playerRacquets = ref<Record<number, Racquet[]>>({})
   const currentRacquet = ref<Racquet | null>(null)
   const loading = ref(false)
   const error = ref<string | null>(null)
   const initialized = ref(false)
 
-  // Computed
   const racquetCount = computed(() => racquets.value.length)
 
   const racquetsByBrand = computed(() => {
@@ -68,21 +66,18 @@ export const useRacquetStore = defineStore('racquet', () => {
     }))
   })
 
-  // Helper to get racquet by id directly from store
   const getRacquetById = (id: number) => {
     return racquets.value.find(racquet => racquet.id === id) || null
   }
 
-  // Helper to get racquet description
   const getRacquetDescription = (id: number) => {
     const racquet = getRacquetById(id)
     return racquet ? `${racquet.brand} ${racquet.model}${racquet.serialNumber ? ` (${racquet.serialNumber})` : ''}` : 'Unknown'
   }
 
-  // Actions
   async function fetchAllRacquets() {
     if (racquets.value.length > 0 && initialized.value) {
-      return racquets.value // Return cached data if already fetched
+      return racquets.value
     }
 
     loading.value = true
@@ -91,12 +86,10 @@ export const useRacquetStore = defineStore('racquet', () => {
     try {
       racquets.value = await api.racquets.getAll()
 
-      // Update the playerRacquets map for quick access by player
       racquets.value.forEach(racquet => {
         if (!playerRacquets.value[racquet.playerId]) {
           playerRacquets.value[racquet.playerId] = []
         }
-        // Avoid duplicates
         if (!playerRacquets.value[racquet.playerId].find(r => r.id === racquet.id)) {
           playerRacquets.value[racquet.playerId].push(racquet)
         }
@@ -114,7 +107,6 @@ export const useRacquetStore = defineStore('racquet', () => {
   }
 
   async function fetchRacquetsByPlayer(playerId: number, forceRefresh = false) {
-    // If we already have racquets for this player and aren't forcing a refresh, return the cached version
     if (!forceRefresh && playerRacquets.value[playerId]?.length > 0) {
       return playerRacquets.value[playerId]
     }
@@ -125,10 +117,8 @@ export const useRacquetStore = defineStore('racquet', () => {
     try {
       const playerRacquetsList: Racquet[] = await api.racquets.getByPlayer(playerId)
 
-      // Update the player's racquets in our cache
       playerRacquets.value[playerId] = playerRacquetsList
 
-      // Also update the main racquets list
       playerRacquetsList.forEach((racquet: Racquet) => {
         const index = racquets.value.findIndex(r => r.id === racquet.id)
         if (index !== -1) {
@@ -149,7 +139,6 @@ export const useRacquetStore = defineStore('racquet', () => {
   }
 
   async function fetchRacquetById(id: number, forceRefresh = false) {
-    // If we already have the racquet and aren't forcing a refresh, return the cached version
     if (!forceRefresh) {
       const existingRacquet = getRacquetById(id)
       if (existingRacquet) {
@@ -164,7 +153,6 @@ export const useRacquetStore = defineStore('racquet', () => {
     try {
       const racquet = await api.racquets.getById(id)
 
-      // Check if racquet exists (could be null for 404 response)
       if (!racquet) {
         currentRacquet.value = null
         return null
@@ -172,7 +160,6 @@ export const useRacquetStore = defineStore('racquet', () => {
 
       currentRacquet.value = racquet
 
-      // Update the racquet in our local cache
       const index = racquets.value.findIndex(r => r.id === id)
       if (index !== -1) {
         racquets.value[index] = racquet
@@ -180,7 +167,6 @@ export const useRacquetStore = defineStore('racquet', () => {
         racquets.value.push(racquet)
       }
 
-      // Also update the player's racquets map
       if (racquet.playerId) {
         if (!playerRacquets.value[racquet.playerId]) {
           playerRacquets.value[racquet.playerId] = []
@@ -212,10 +198,8 @@ export const useRacquetStore = defineStore('racquet', () => {
     try {
       const newRacquet = await api.racquets.create(racquetData)
 
-      // Add to our main list of racquets
       racquets.value.push(newRacquet)
 
-      // Add to the player's racquets list
       if (!playerRacquets.value[newRacquet.playerId]) {
         playerRacquets.value[newRacquet.playerId] = []
       }
@@ -238,21 +222,17 @@ export const useRacquetStore = defineStore('racquet', () => {
     try {
       await api.racquets.update(id, racquetData)
 
-      // Find the racquet to update
       const racquet = getRacquetById(id)
       if (!racquet) {
-        // If we don't have it in the store, fetch it
         await fetchRacquetById(id, true)
         return true
       }
 
-      // Update in main racquets array
       const index = racquets.value.findIndex(r => r.id === id)
       if (index !== -1) {
         racquets.value[index] = { ...racquets.value[index], ...racquetData }
       }
 
-      // Update in player racquets map
       const playerId = racquet.playerId
       if (playerRacquets.value[playerId]) {
         const playerRacquetIndex = playerRacquets.value[playerId].findIndex(r => r.id === id)
@@ -264,7 +244,6 @@ export const useRacquetStore = defineStore('racquet', () => {
         }
       }
 
-      // Update currentRacquet if it's the one being updated
       if (currentRacquet.value && currentRacquet.value.id === id) {
         currentRacquet.value = { ...currentRacquet.value, ...racquetData }
       }
@@ -286,19 +265,15 @@ export const useRacquetStore = defineStore('racquet', () => {
     try {
       await api.racquets.delete(id)
 
-      // Find the racquet to get its playerId before removing it
       const racquet = getRacquetById(id)
       const playerId = racquet?.playerId
 
-      // Remove from main racquets array
       racquets.value = racquets.value.filter(r => r.id !== id)
 
-      // Remove from player racquets map if we have the playerId
       if (playerId && playerRacquets.value[playerId]) {
         playerRacquets.value[playerId] = playerRacquets.value[playerId].filter(r => r.id !== id)
       }
 
-      // Clear currentRacquet if it's the one being deleted
       if (currentRacquet.value && currentRacquet.value.id === id) {
         currentRacquet.value = null
       }
@@ -313,12 +288,10 @@ export const useRacquetStore = defineStore('racquet', () => {
     }
   }
 
-  // Clear the current racquet selection
   function clearCurrentRacquet() {
     currentRacquet.value = null
   }
 
-  // Reset store state
   function reset() {
     racquets.value = []
     playerRacquets.value = {}
@@ -329,22 +302,18 @@ export const useRacquetStore = defineStore('racquet', () => {
   }
 
   return {
-    // State
     racquets,
     playerRacquets,
     currentRacquet,
     loading,
     error,
     initialized,
-
-    // Getters/Computed
     racquetCount,
     racquetsByBrand,
     racquetOptions,
+
     getRacquetById,
     getRacquetDescription,
-
-    // Actions
     fetchAllRacquets,
     fetchRacquetsByPlayer,
     fetchRacquetById,

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { usePlayerStore, useStringJobStore, useAuthStore } from '../stores'
+import { usePlayerStore, useStringJobStore } from '../stores'
 import html2canvas from 'html2canvas'
 
 const playerStore = usePlayerStore()
@@ -27,20 +27,16 @@ const paymentMethod = ref('cash')
 const paymentNote = ref('')
 const invoiceItems = ref<any[]>([])
 
-// Initialize component
 onMounted(async () => {
     try {
-        // Load players data
         await playerStore.fetchPlayers()
 
-        // Load query parameters
         const queryPlayerId = route.query.playerId ? parseInt(route.query.playerId as string) : null
         if (queryPlayerId) {
             selectedPlayerId.value = queryPlayerId
             await loadPlayerPayments(queryPlayerId)
         }
 
-        // Generate unique invoice number based on date and random number
         invoiceNumber.value = generateInvoiceNumber()
     } catch (error) {
         console.error('Error initializing payments view:', error)
@@ -49,7 +45,6 @@ onMounted(async () => {
     }
 })
 
-// Generate a unique invoice number
 const generateInvoiceNumber = () => {
     const date = new Date()
     const year = date.getFullYear()
@@ -59,14 +54,12 @@ const generateInvoiceNumber = () => {
     return `INV-${year}${month}${day}-${random}`
 }
 
-// Load payments for a specific player
 const loadPlayerPayments = async (playerId: number) => {
     if (!playerId) return
 
     try {
         loading.value = true
         await stringJobStore.fetchUnpaidJobsByPlayer(playerId)
-        // Clear selected jobs when loading a new player
         selectedJobs.value = []
         selectAll.value = false
     } catch (error) {
@@ -76,38 +69,30 @@ const loadPlayerPayments = async (playerId: number) => {
     }
 }
 
-// Watch for changes in selected player
 watch(() => selectedPlayerId.value, async (newPlayerId) => {
     if (newPlayerId) {
-        // Update URL query parameter
         router.replace({ query: { ...route.query, playerId: newPlayerId.toString() } })
 
-        // Load player's payments
         await loadPlayerPayments(newPlayerId)
     } else {
-        // Clear URL query parameter
         router.replace({ query: { ...route.query, playerId: undefined } })
 
-        // Clear jobs
         stringJobStore.clearJobs()
         selectedJobs.value = []
         selectAll.value = false
     }
 })
 
-// Format date helper
 const formatDate = (dateString: string | undefined) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
     return date.toLocaleDateString()
 }
 
-// Format currency helper
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', { style: 'currency', currency: 'EUR' }).format(amount)
 }
 
-// Computed properties
 const unpaidJobs = computed(() => stringJobStore.stringJobs)
 
 const filteredJobs = computed(() => {
@@ -179,21 +164,17 @@ const selectedAmount = computed(() => {
 
 const selectedJobsCount = computed(() => selectedJobs.value.length)
 
-// Check if all available jobs on the current page are selected
 const allPageJobsSelected = computed(() => {
     if (paginatedJobs.value.length === 0) return false
     return paginatedJobs.value.every(job => selectedJobs.value.includes(job.id))
 })
 
-// Toggle selection of all jobs on the current page
 const toggleSelectAllPageJobs = () => {
     if (allPageJobsSelected.value) {
-        // Deselect all jobs on current page
         selectedJobs.value = selectedJobs.value.filter(id => 
             !paginatedJobs.value.some(job => job.id === id)
         )
     } else {
-        // Select all jobs on current page that aren't already selected
         paginatedJobs.value.forEach(job => {
             if (!selectedJobs.value.includes(job.id)) {
                 selectedJobs.value.push(job.id)
@@ -202,7 +183,6 @@ const toggleSelectAllPageJobs = () => {
     }
 }
 
-// Toggle selection of a specific job
 const toggleJobSelection = (jobId: number) => {
     if (selectedJobs.value.includes(jobId)) {
         selectedJobs.value = selectedJobs.value.filter(id => id !== jobId)
@@ -211,12 +191,9 @@ const toggleJobSelection = (jobId: number) => {
     }
 }
 
-// Prepare invoice items from selected jobs
 const prepareInvoiceItems = () => {
-    // Get all selected job objects
     invoiceItems.value = unpaidJobs.value.filter(job => selectedJobs.value.includes(job.id))
     
-    // Make sure invoice shows a value if nothing is selected
     if (invoiceItems.value.length === 0) {
         console.warn('No invoice items found for the selected jobs')
     }
@@ -224,13 +201,10 @@ const prepareInvoiceItems = () => {
     console.log('Prepared invoice items:', invoiceItems.value)
 }
 
-// Handle payments
 const openPaymentModal = (jobId?: number) => {
     if (jobId) {
-        // Single job payment
         selectedJobs.value = [jobId]
     } else if (selectedJobs.value.length === 0) {
-        // No jobs selected, pay all
         selectedJobs.value = filteredJobs.value.map(job => job.id)
     }
     
@@ -245,29 +219,21 @@ const confirmPayment = async () => {
     try {
         processingPayment.value = true
         
-        // Prepare invoice data before marking jobs as paid
         prepareInvoiceItems()
         
-        // Store the selected amount before marking as paid (since it might change afterward)
-        
-        // Process each selected job
         for (const jobId of selectedJobs.value) {
             await stringJobStore.markJobAsPaid(jobId)
         }
         
         showPaymentModal.value = false
 
-        // Show success alert
         showPaymentSuccessAlert.value = true
         setTimeout(() => {
             showPaymentSuccessAlert.value = false
         }, 3000)
 
-        // Show the invoice
         showInvoiceModal.value = true
         
-        // After showing invoice, then refresh the list of unpaid jobs
-        // This is done after to prevent clearing the invoice data
         if (selectedPlayerId.value) {
             await loadPlayerPayments(selectedPlayerId.value)
         }
@@ -278,7 +244,6 @@ const confirmPayment = async () => {
     }
 }
 
-// Download invoice as image
 const downloadInvoice = async () => {
     const invoiceElement = document.getElementById('payment-invoice')
     if (!invoiceElement) return
@@ -301,7 +266,6 @@ const downloadInvoice = async () => {
     }
 }
 
-// Handle sort change
 const handleSort = (column: string) => {
     if (sortBy.value === column) {
         sortDesc.value = !sortDesc.value
@@ -311,12 +275,10 @@ const handleSort = (column: string) => {
     }
 }
 
-// View job details
 const viewJob = (jobId: number) => {
     router.push(`/jobs/${jobId}`)
 }
 
-// Function to get today's date formatted as a string
 const getTodayDate = () => {
     const today = new Date()
     return today.toLocaleDateString()
@@ -326,6 +288,7 @@ const getTodayDate = () => {
 <template>
     <div class="payments-view">
         <v-container class="payments-view__container">
+
             <!-- Page Header -->
             <v-row class="mb-3">
                 <v-col cols="12" sm="8">
@@ -412,6 +375,7 @@ const getTodayDate = () => {
 
             <!-- Unpaid Jobs List -->
             <template v-else>
+
                 <!-- Payment Summary Card -->
                 <v-card class="mb-6">
                     <v-card-title class="payments-view__section-title">
@@ -769,7 +733,6 @@ const getTodayDate = () => {
   }
 }
 
-// Payment receipt/invoice styles
 .payment-invoice {
   background-color: white;
   padding: $spacing-lg;

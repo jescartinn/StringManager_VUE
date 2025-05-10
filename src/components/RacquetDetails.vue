@@ -4,7 +4,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useRacquetStore, usePlayerStore, useStringJobStore, useAuthStore } from '../stores'
 
 const racquetStore = useRacquetStore()
-const playerStore = usePlayerStore()
 const stringJobStore = useStringJobStore()
 const authStore = useAuthStore()
 const router = useRouter()
@@ -37,19 +36,15 @@ const formErrors = ref({
   headSize: ''
 })
 
-// Check if user has permissions to manage racquets
 const canManageRacquets = computed(() => {
   return authStore.isAdmin || authStore.isStringer
 })
 
-// Load racquet data
 onMounted(async () => {
   if (racquetId.value) {
     try {
-      // Load racquet data
       await racquetStore.fetchRacquetById(racquetId.value)
 
-      // Load racquet's string jobs
       jobsLoading.value = true
       if (racquet.value?.playerId) {
         await stringJobStore.fetchJobsByPlayer(racquet.value.playerId)
@@ -65,7 +60,6 @@ onMounted(async () => {
   }
 })
 
-// Watch for racquet changes to reload related data
 watch(() => racquetId.value, async (newRacquetId) => {
   if (newRacquetId) {
     loading.value = true
@@ -85,27 +79,23 @@ watch(() => racquetId.value, async (newRacquetId) => {
   }
 })
 
-// Get related string jobs (filter to only those for this racquet)
 const relatedJobs = computed(() => {
   if (!racquetId.value) return []
   return stringJobStore.stringJobs.filter(job => job.racquetId === racquetId.value)
 })
 
-// Sort string jobs by date (most recent first)
 const sortedJobs = computed(() => {
   return [...relatedJobs.value].sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 })
 
-// Format date
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
   return date.toLocaleString()
 }
 
-// Get status color
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Pending': return 'warning'
@@ -116,7 +106,6 @@ const getStatusColor = (status: string) => {
   }
 }
 
-// Navigation functions
 const goBack = () => {
   router.back()
 }
@@ -125,7 +114,6 @@ const returnToRacquetsList = () => {
   router.push('/racquets')
 }
 
-// Open edit racquet dialog
 const openEditRacquetDialog = () => {
   if (!racquet.value) return
 
@@ -138,7 +126,6 @@ const openEditRacquetDialog = () => {
     notes: racquet.value.notes || ''
   }
 
-  // Reset errors
   formErrors.value = {
     brand: '',
     model: '',
@@ -149,16 +136,13 @@ const openEditRacquetDialog = () => {
   showEditRacquetDialog.value = true
 }
 
-// Open delete confirmation dialog
 const openDeleteDialog = () => {
   showDeleteConfirmation.value = true
 }
 
-// Validate racquet form
 const validateRacquetForm = () => {
   let isValid = true
 
-  // Validate brand
   if (!racquetForm.value.brand.trim()) {
     formErrors.value.brand = 'Brand is required'
     isValid = false
@@ -166,7 +150,6 @@ const validateRacquetForm = () => {
     formErrors.value.brand = ''
   }
 
-  // Validate model
   if (!racquetForm.value.model.trim()) {
     formErrors.value.model = 'Model is required'
     isValid = false
@@ -174,7 +157,6 @@ const validateRacquetForm = () => {
     formErrors.value.model = ''
   }
 
-  // Validate headSize if provided
   if (racquetForm.value.headSize !== null &&
     (racquetForm.value.headSize <= 0 || racquetForm.value.headSize > 200)) {
     formErrors.value.headSize = 'Head size must be between 1 and 200 sq in'
@@ -186,7 +168,6 @@ const validateRacquetForm = () => {
   return isValid
 }
 
-// Submit racquet edit
 const submitEditRacquet = async () => {
   if (!validateRacquetForm() || !racquetForm.value.id) return
 
@@ -205,7 +186,6 @@ const submitEditRacquet = async () => {
   }
 }
 
-// Delete racquet
 const deleteRacquet = async () => {
   if (!racquet.value) return
 
@@ -220,19 +200,16 @@ const deleteRacquet = async () => {
   }
 }
 
-// Navigate to view player details
 const viewPlayerDetails = () => {
   if (!racquet.value?.playerId) return
   router.push(`/players/${racquet.value.playerId}`)
 }
 
-// Navigate to create new string job for this racquet
 const createNewStringJob = () => {
   if (!racquet.value) return
   router.push(`/jobs/new?playerId=${racquet.value.playerId}&racquetId=${racquet.value.id}`)
 }
 
-// View string job details
 const viewStringJob = (jobId: number) => {
   router.push(`/jobs/${jobId}`)
 }
@@ -544,7 +521,6 @@ const viewStringJob = (jobId: number) => {
   }
 }
 
-// Status colors
 :deep(.v-chip) {
   &.v-theme--light {
     &.bg-warning {

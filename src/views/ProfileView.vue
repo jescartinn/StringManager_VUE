@@ -3,11 +3,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores'
 
-// Import store and router
 const authStore = useAuthStore()
 const router = useRouter()
 
-// UI State
 const loading = ref(false)
 const showChangePasswordDialog = ref(false)
 const passwordChanged = ref(false)
@@ -15,20 +13,17 @@ const success = ref(false)
 const successMessage = ref('')
 const formValid = ref(true)
 
-// Form data
 const profileForm = ref({
   username: '',
   email: ''
 })
 
-// Password form data
 const passwordForm = ref({
   currentPassword: '',
   newPassword: '',
   confirmPassword: ''
 })
 
-// Form errors
 const profileErrors = ref({
   username: '',
   email: ''
@@ -40,29 +35,23 @@ const passwordErrors = ref({
   confirmPassword: ''
 })
 
-// Password strength computation
 const passwordStrength = computed(() => {
   const password = passwordForm.value.newPassword
   if (!password) return 0
 
   let strength = 0
 
-  // Length check
   if (password.length >= 8) strength++
 
-  // Contains uppercase
   if (/[A-Z]/.test(password)) strength++
 
-  // Contains lowercase
   if (/[a-z]/.test(password)) strength++
 
-  // Contains numbers
   if (/\d/.test(password)) strength++
 
-  // Contains special characters
   if (/[^A-Za-z0-9]/.test(password)) strength++
 
-  return Math.min(strength, 4) // Normalize to max 4
+  return Math.min(strength, 4)
 })
 
 const passwordStrengthColor = computed(() => {
@@ -83,25 +72,20 @@ const passwordStrengthText = computed(() => {
   return 'Very Strong'
 })
 
-// Password visibility
 const showCurrentPassword = ref(false)
 const showNewPassword = ref(false)
 const showConfirmPassword = ref(false)
 
-// Initialize component
 onMounted(() => {
-  // Populate form with current user data
   if (authStore.user) {
     profileForm.value.username = authStore.user.username || ''
     profileForm.value.email = authStore.user.email || ''
   }
 })
 
-// Validation functions
 const validateProfileForm = () => {
   let isValid = true
 
-  // Validate username
   if (!profileForm.value.username.trim()) {
     profileErrors.value.username = 'Username is required'
     isValid = false
@@ -112,7 +96,6 @@ const validateProfileForm = () => {
     profileErrors.value.username = ''
   }
 
-  // Validate email
   if (!profileForm.value.email.trim()) {
     profileErrors.value.email = 'Email is required'
     isValid = false
@@ -132,7 +115,6 @@ const validateProfileForm = () => {
 const validatePasswordForm = () => {
   let isValid = true
 
-  // Validate current password
   if (!passwordForm.value.currentPassword) {
     passwordErrors.value.currentPassword = 'Current password is required'
     isValid = false
@@ -140,7 +122,6 @@ const validatePasswordForm = () => {
     passwordErrors.value.currentPassword = ''
   }
 
-  // Validate new password
   if (!passwordForm.value.newPassword) {
     passwordErrors.value.newPassword = 'New password is required'
     isValid = false
@@ -151,7 +132,6 @@ const validatePasswordForm = () => {
     passwordErrors.value.newPassword = ''
   }
 
-  // Validate confirm password
   if (!passwordForm.value.confirmPassword) {
     passwordErrors.value.confirmPassword = 'Please confirm your new password'
     isValid = false
@@ -165,7 +145,6 @@ const validatePasswordForm = () => {
   return isValid
 }
 
-// Update profile handler
 const updateProfile = async () => {
   if (!validateProfileForm()) return
 
@@ -173,12 +152,10 @@ const updateProfile = async () => {
   success.value = false
 
   try {
-    // Check if the user exists and has an ID
     if (!authStore.user || !authStore.user.id) {
       throw new Error('User information is missing')
     }
 
-    // Proceed with the update
     const updated = await authStore.updateProfile({
       username: profileForm.value.username,
       email: profileForm.value.email
@@ -190,14 +167,12 @@ const updateProfile = async () => {
     }
   } catch (error) {
     console.error('Error updating profile:', error)
-    // Handle specific errors
     if (error instanceof Error) {
       if (error.message.includes('username')) {
         profileErrors.value.username = 'Username is already taken'
       } else if (error.message.includes('email')) {
         profileErrors.value.email = 'Email is already registered'
       } else {
-        // Generic error
         alert('Error updating profile: ' + error.message)
       }
     }
@@ -206,16 +181,13 @@ const updateProfile = async () => {
   }
 }
 
-// Open change password dialog
 const openChangePasswordDialog = () => {
-  // Reset form
   passwordForm.value = {
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
   }
 
-  // Reset errors
   passwordErrors.value = {
     currentPassword: '',
     newPassword: '',
@@ -226,7 +198,6 @@ const openChangePasswordDialog = () => {
   showChangePasswordDialog.value = true
 }
 
-// Change password handler
 const changePassword = async () => {
   if (!validatePasswordForm()) return
 
@@ -241,7 +212,6 @@ const changePassword = async () => {
 
     if (success) {
       passwordChanged.value = true
-      // Reset form after success
       passwordForm.value = {
         currentPassword: '',
         newPassword: '',
@@ -250,12 +220,10 @@ const changePassword = async () => {
     }
   } catch (error) {
     console.error('Error changing password:', error)
-    // Handle specific errors
     if (error instanceof Error) {
       if (error.message.includes('current password')) {
         passwordErrors.value.currentPassword = 'Current password is incorrect'
       } else {
-        // Generic error
         alert('Error changing password: ' + error.message)
       }
     }
@@ -268,6 +236,7 @@ const changePassword = async () => {
 <template>
   <div class="profile-view">
     <v-container class="profile-view__container">
+
       <!-- Page header -->
       <v-row>
         <v-col cols="12">
@@ -296,6 +265,7 @@ const changePassword = async () => {
       <!-- Main content -->
       <v-row>
         <v-col cols="12">
+
           <!-- Profile information card -->
           <v-card class="profile-view__card mb-6">
             <v-card-title class="profile-view__section-title">
@@ -305,6 +275,7 @@ const changePassword = async () => {
 
             <v-card-text class="pt-4">
               <v-form @submit.prevent="updateProfile" v-model="formValid">
+
                 <!-- User Avatar -->
                 <div class="d-flex justify-center mb-6">
                   <v-avatar color="primary" size="120">
@@ -363,6 +334,7 @@ const changePassword = async () => {
             </v-card-title>
 
             <v-card-text class="pa-3">
+
               <!-- Settings can be added here in the future -->
               <p class="text-center py-4 text-grey">Additional settings will be available in future updates.</p>
             </v-card-text>
@@ -380,12 +352,14 @@ const changePassword = async () => {
         </v-card-title>
 
         <v-card-text class="pt-4">
+
           <!-- Success message -->
           <v-alert v-if="passwordChanged" type="success" variant="tonal" class="mb-4">
             Password changed successfully.
           </v-alert>
 
           <v-form @submit.prevent="changePassword">
+            
             <!-- Current password -->
             <v-text-field v-model="passwordForm.currentPassword" label="Current Password"
               prepend-inner-icon="mdi-lock-outline" :type="showCurrentPassword ? 'text' : 'password'" variant="outlined"

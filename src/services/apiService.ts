@@ -1,4 +1,3 @@
-// API service to handle all API requests with TypeScript types
 const API_URL = import.meta.env.VITE_API_URL || 'https://localhost:7299/api';
 
 // Interfaces - Auth
@@ -297,7 +296,6 @@ export interface DistributionStats {
   }>
 }
 
-// RequestInit with generic type for request options
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: any
 }
@@ -332,7 +330,6 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     }
 
     if (response.status === 401 && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
-      // Clear auth data and redirect to login
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/';

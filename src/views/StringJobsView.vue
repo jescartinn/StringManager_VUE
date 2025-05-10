@@ -3,7 +3,6 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStringJobStore, usePlayerStore, useStringerStore, useTournamentStore } from '../stores'
 
-// Import stores and router
 const stringJobStore = useStringJobStore()
 const playerStore = usePlayerStore()
 const stringerStore = useStringerStore()
@@ -11,7 +10,6 @@ const tournamentStore = useTournamentStore()
 const router = useRouter()
 const route = useRoute()
 
-// Reactive state
 const loading = ref(true)
 const search = ref('')
 const statusFilter = ref<string | null>(null)
@@ -30,51 +28,41 @@ const jobToAction = ref<number | null>(null)
 const cancelReason = ref('')
 const completeNotes = ref('')
 
-// Initialize based on query params
 onMounted(async () => {
     loadFiltersFromQuery()
 
-    // Load initial data
     await loadData()
 
-    // Load reference data for filters
     await Promise.all([
         playerStore.fetchPlayers(),
         stringerStore.fetchAllStringers(),
         tournamentStore.fetchAllTournaments()
     ])
 
-    // End loading state
     loading.value = false
 })
 
-// Custom filter function for player autocomplete
 const customPlayerFilter = (item: any, queryText: string) => {
     if (queryText.trim() === '') return true
 
     const playerName = item.text.toLowerCase()
     const query = queryText.toLowerCase()
 
-    // Search in player full name
     return playerName.includes(query)
 }
 
-// Load filters from URL query parameters
 const loadFiltersFromQuery = () => {
-    // Extract query parameters
     const queryStatus = route.query.status as string
     const queryPlayer = route.query.player ? parseInt(route.query.player as string) : null
     const queryStringer = route.query.stringer ? parseInt(route.query.stringer as string) : null
     const queryTournament = route.query.tournament ? parseInt(route.query.tournament as string) : null
     const queryPriority = route.query.priority as string
 
-    // Set filters based on query parameters
     statusFilter.value = queryStatus || null
     playerFilter.value = queryPlayer
     stringerFilter.value = queryStringer
     tournamentFilter.value = queryTournament
 
-    // Set priority filter
     if (queryPriority === 'high') {
         priorityFilter.value = 1
     } else if (queryPriority === 'medium') {
@@ -86,18 +74,15 @@ const loadFiltersFromQuery = () => {
     }
 }
 
-// Watch for route query changes to reload data when URL changes externally
 watch(() => route.query, (newQuery) => {
     loadFiltersFromQuery()
     loadData()
 }, { deep: true })
 
-// Watch for filter changes to update URL
 watch([statusFilter, playerFilter, stringerFilter, tournamentFilter, priorityFilter], () => {
     updateQueryParams()
 })
 
-// Update URL query parameters based on current filters
 const updateQueryParams = () => {
     const query: Record<string, string> = {}
 
@@ -114,14 +99,11 @@ const updateQueryParams = () => {
         query.priority = 'low'
     }
 
-    // Replace URL without reloading the page
     router.replace({ query })
 
-    // Load data based on new filters
     loadData()
 }
 
-// Function to load data based on filters
 const loadData = async () => {
     loading.value = true
 
@@ -129,16 +111,10 @@ const loadData = async () => {
         if (statusFilter.value) {
             await stringJobStore.fetchJobsByStatus(statusFilter.value)
         } else if (playerFilter.value) {
-            // Check if player exists first
             const player = await playerStore.fetchPlayerById(playerFilter.value)
             if (!player) {
-                // Player not found, clear jobs and show error
                 stringJobStore.stringJobs = []
                 stringJobStore.error = `El jugador con ID ${playerFilter.value} no existe.`
-
-                // Optionally reset the playerFilter
-                // playerFilter.value = null
-                // updateQueryParams()
             } else {
                 await stringJobStore.fetchJobsByPlayer(playerFilter.value)
             }
@@ -156,7 +132,6 @@ const loadData = async () => {
     }
 }
 
-// Function to clear all filters
 const clearFilters = () => {
     statusFilter.value = null
     playerFilter.value = null
@@ -167,28 +142,21 @@ const clearFilters = () => {
     loadData()
 }
 
-// Reset filters and reload data
 const resetAndReload = async () => {
     clearFilters()
-    router.replace({ query: {} }) // Clear URL query params
+    router.replace({ query: {} })
 }
 
-// Filter jobs based on search text
 const filteredJobs = computed(() => {
     let filtered = [...stringJobStore.stringJobs]
 
-    // Apply search filter if search text exists
     if (search.value) {
         const searchLower = search.value.toLowerCase()
         filtered = filtered.filter(job => {
-            // Search in player name
             const playerName = job.player ? `${job.player.name} ${job.player.lastName}`.toLowerCase() : ''
-            // Search in racquet info
             const racquetInfo = job.racquet ? `${job.racquet.brand} ${job.racquet.model}`.toLowerCase() : ''
-            // Search in strings
             const mainString = job.mainString ? `${job.mainString.brand} ${job.mainString.model}`.toLowerCase() : ''
             const crossString = job.crossString ? `${job.crossString.brand} ${job.crossString.model}`.toLowerCase() : ''
-            // Search in notes
             const notes = job.notes ? job.notes.toLowerCase() : ''
 
             return playerName.includes(searchLower) ||
@@ -199,17 +167,14 @@ const filteredJobs = computed(() => {
         })
     }
 
-    // Apply priority filter if set
     if (priorityFilter.value !== null) {
         filtered = filtered.filter(job => job.priority === priorityFilter.value)
     }
 
-    // Sort the filtered jobs
     filtered.sort((a, b) => {
         let aValue: any, bValue: any;
 
         if (sortBy.value === 'createdAt' || sortBy.value === 'completedAt') {
-            // Handle date fields safely
             aValue = a[sortBy.value as keyof typeof a] ? new Date(a[sortBy.value as keyof typeof a] as string).getTime() : 0;
             bValue = b[sortBy.value as keyof typeof b] ? new Date(b[sortBy.value as keyof typeof b] as string).getTime() : 0;
         } else if (sortBy.value === 'player') {
@@ -222,7 +187,6 @@ const filteredJobs = computed(() => {
             aValue = a.stringer ? `${a.stringer.lastName} ${a.stringer.name}` : '';
             bValue = b.stringer ? `${b.stringer.lastName} ${b.stringer.name}` : '';
         } else {
-            // For other properties, access them safely
             aValue = a[sortBy.value as keyof typeof a];
             bValue = b[sortBy.value as keyof typeof b];
         }
@@ -240,7 +204,6 @@ const filteredJobs = computed(() => {
     return filtered
 })
 
-// Pagination
 const paginatedJobs = computed(() => {
     const start = (page.value - 1) * itemsPerPage.value
     const end = start + itemsPerPage.value
@@ -251,14 +214,12 @@ const totalPages = computed(() => {
     return Math.ceil(filteredJobs.value.length / itemsPerPage.value)
 })
 
-// Format date helper
 const formatDate = (dateString: string) => {
     if (!dateString) return 'N/A'
     const date = new Date(dateString)
     return date.toLocaleString()
 }
 
-// Helper to get status color
 const getStatusColor = (status: string) => {
     switch (status) {
         case 'Pending': return 'warning'
@@ -269,7 +230,6 @@ const getStatusColor = (status: string) => {
     }
 }
 
-// Helper to get priority text and color
 const getPriorityInfo = (priority: number | null | undefined) => {
     if (priority === 1) return { text: 'High', color: 'error' }
     if (priority === 2) return { text: 'Medium', color: 'warning' }
@@ -277,7 +237,6 @@ const getPriorityInfo = (priority: number | null | undefined) => {
     return { text: 'None', color: 'grey' }
 }
 
-// Helper to format tension
 const formatTension = (job: any) => {
     if (!job) return 'N/A'
 
@@ -292,17 +251,14 @@ const formatTension = (job: any) => {
     return `${mainTension} ${unit}`
 }
 
-// Navigation to create new job
 const createNewJob = () => {
     router.push('/jobs/new')
 }
 
-// Navigation to view job details
 const viewJob = (id: number) => {
     router.push(`/jobs/${id}`)
 }
 
-// Functions to handle job actions
 const startJob = async (id: number) => {
     try {
         await stringJobStore.startJob(id)
@@ -348,7 +304,6 @@ const completeJob = async () => {
     }
 }
 
-// Table headers
 const headers = [
     { title: 'ID', key: 'id', sortable: true },
     { title: 'Player', key: 'player', sortable: true },
@@ -362,7 +317,6 @@ const headers = [
     { title: 'Actions', key: 'actions', sortable: false }
 ]
 
-// Handle sort change
 const handleSort = (column: string) => {
     if (sortBy.value === column) {
         sortDesc.value = !sortDesc.value
@@ -376,6 +330,7 @@ const handleSort = (column: string) => {
 <template>
     <div class="string-jobs">
         <v-container class="string-jobs__container">
+
             <!-- Page Header -->
             <v-row class="mb-3">
                 <v-col cols="12" sm="8">
@@ -671,7 +626,6 @@ const handleSort = (column: string) => {
     }
 }
 
-// Status label styling (custom colors defined in variables.scss)
 :deep(.v-chip) {
     &.v-theme--light {
         &.bg-warning {

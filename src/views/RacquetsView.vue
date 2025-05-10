@@ -3,14 +3,12 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useRacquetStore, usePlayerStore, useAuthStore } from '../stores'
 
-// Import stores and router
 const racquetStore = useRacquetStore()
 const playerStore = usePlayerStore()
 const authStore = useAuthStore()
 const router = useRouter()
 const route = useRoute()
 
-// Reactive state
 const loading = ref(true)
 const search = ref('')
 const playerFilter = ref<number | null>(null)
@@ -24,13 +22,11 @@ const showNewRacquetDialog = ref(false)
 const showEditRacquetDialog = ref(false)
 const showDeleteConfirmation = ref(false)
 
-// Get unique brands for filter
 const uniqueBrands = computed(() => {
   const brands = racquetStore.racquets.map(racquet => racquet.brand)
   return [...new Set(brands)].sort()
 })
 
-// Racquet form data
 const racquetForm = ref({
   id: null as number | null,
   playerId: null as number | null,
@@ -41,7 +37,6 @@ const racquetForm = ref({
   notes: ''
 })
 
-// Validation errors
 const formErrors = ref({
   playerId: '',
   brand: '',
@@ -50,9 +45,7 @@ const formErrors = ref({
   headSize: ''
 })
 
-// Initialize component
 onMounted(async () => {
-  // Get any query parameters
   const queryPlayerId = route.query.playerId ? parseInt(route.query.playerId as string) : null
 
   if (queryPlayerId) {
@@ -60,10 +53,8 @@ onMounted(async () => {
   }
 
   try {
-    // Load initial data
     await loadData()
 
-    // Load players for filters and form dropdowns
     await playerStore.fetchPlayers()
   } catch (error) {
     console.error('Error initializing racquet view:', error)
@@ -72,7 +63,6 @@ onMounted(async () => {
   }
 })
 
-// Watch for query param changes
 watch(() => route.query, (newQuery) => {
   const queryPlayerId = newQuery.playerId ? parseInt(newQuery.playerId as string) : null
 
@@ -82,32 +72,26 @@ watch(() => route.query, (newQuery) => {
   }
 }, { deep: true })
 
-// Watch for filter changes to update URL
 watch([playerFilter, brandFilter], () => {
   updateQueryParams()
 })
 
-// Update URL query parameters based on current filters
 const updateQueryParams = () => {
   const query: Record<string, string> = {}
 
   if (playerFilter.value) query.playerId = playerFilter.value.toString()
   if (brandFilter.value) query.brand = brandFilter.value
 
-  // Replace URL without reloading the page
   router.replace({ query })
 }
 
-// Function to load data based on filters
 const loadData = async () => {
   loading.value = true
 
   try {
     if (playerFilter.value) {
-      // Load racquets for specific player
       await racquetStore.fetchRacquetsByPlayer(playerFilter.value)
     } else {
-      // Load all racquets
       await racquetStore.fetchAllRacquets()
     }
   } catch (error) {
@@ -117,22 +101,19 @@ const loadData = async () => {
   }
 }
 
-// Reset filters and reload data
 const resetAndReload = async () => {
   search.value = ''
   playerFilter.value = null
   brandFilter.value = null
 
-  router.replace({ query: {} }) // Clear URL query params
+  router.replace({ query: {} })
 
-  await racquetStore.fetchAllRacquets() // Force refresh
+  await racquetStore.fetchAllRacquets()
 }
 
-// Computed property to filter and sort racquets
 const filteredRacquets = computed(() => {
   let filtered = [...racquetStore.racquets]
 
-  // Apply search filter if search text exists
   if (search.value) {
     const searchLower = search.value.toLowerCase()
     filtered = filtered.filter(racquet => {
@@ -148,17 +129,14 @@ const filteredRacquets = computed(() => {
     })
   }
 
-  // Apply player filter if set (should already be filtered from API, but just in case)
   if (playerFilter.value) {
     filtered = filtered.filter(racquet => racquet.playerId === playerFilter.value)
   }
 
-  // Apply brand filter if set
   if (brandFilter.value) {
     filtered = filtered.filter(racquet => racquet.brand === brandFilter.value)
   }
 
-  // Sort the filtered racquets
   filtered.sort((a, b) => {
     let aValue: any, bValue: any;
 
@@ -178,7 +156,6 @@ const filteredRacquets = computed(() => {
       aValue = a.player ? `${a.player.lastName}, ${a.player.name}` : ''
       bValue = b.player ? `${b.player.lastName}, ${b.player.name}` : ''
     } else {
-      // For other properties, access them safely
       aValue = a[sortBy.value as keyof typeof a]
       bValue = b[sortBy.value as keyof typeof b]
     }
@@ -196,7 +173,6 @@ const filteredRacquets = computed(() => {
   return filtered
 })
 
-// Pagination
 const paginatedRacquets = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
@@ -207,7 +183,6 @@ const totalPages = computed(() => {
   return Math.ceil(filteredRacquets.value.length / itemsPerPage.value)
 })
 
-// Handle sort change
 const handleSort = (column: string) => {
   if (sortBy.value === column) {
     sortDesc.value = !sortDesc.value
@@ -217,12 +192,10 @@ const handleSort = (column: string) => {
   }
 }
 
-// Open dialog to add new racquet
 const openNewRacquetDialog = () => {
-  // Reset form
   racquetForm.value = {
     id: null,
-    playerId: playerFilter.value, // Pre-select player if filtered
+    playerId: playerFilter.value,
     brand: '',
     model: '',
     serialNumber: '',
@@ -230,7 +203,6 @@ const openNewRacquetDialog = () => {
     notes: ''
   }
 
-  // Reset errors
   formErrors.value = {
     playerId: '',
     brand: '',
@@ -242,7 +214,6 @@ const openNewRacquetDialog = () => {
   showNewRacquetDialog.value = true
 }
 
-// Open dialog to edit racquet
 const openEditRacquetDialog = (racquet: any) => {
   racquetForm.value = {
     id: racquet.id,
@@ -254,7 +225,6 @@ const openEditRacquetDialog = (racquet: any) => {
     notes: racquet.notes || ''
   }
 
-  // Reset errors
   formErrors.value = {
     playerId: '',
     brand: '',
@@ -266,7 +236,6 @@ const openEditRacquetDialog = (racquet: any) => {
   showEditRacquetDialog.value = true
 }
 
-// Open dialog to confirm racquet deletion
 const openDeleteDialog = (racquet: any) => {
   racquetForm.value = {
     id: racquet.id,
@@ -281,11 +250,9 @@ const openDeleteDialog = (racquet: any) => {
   showDeleteConfirmation.value = true
 }
 
-// Validate racquet form
 const validateRacquetForm = () => {
   let isValid = true
 
-  // Validate player
   if (!racquetForm.value.playerId) {
     formErrors.value.playerId = 'Player is required'
     isValid = false
@@ -293,7 +260,6 @@ const validateRacquetForm = () => {
     formErrors.value.playerId = ''
   }
 
-  // Validate brand
   if (!racquetForm.value.brand.trim()) {
     formErrors.value.brand = 'Brand is required'
     isValid = false
@@ -301,7 +267,6 @@ const validateRacquetForm = () => {
     formErrors.value.brand = ''
   }
 
-  // Validate model
   if (!racquetForm.value.model.trim()) {
     formErrors.value.model = 'Model is required'
     isValid = false
@@ -309,7 +274,6 @@ const validateRacquetForm = () => {
     formErrors.value.model = ''
   }
 
-  // Validate headSize if provided
   if (racquetForm.value.headSize !== null &&
     (racquetForm.value.headSize <= 0 || racquetForm.value.headSize > 200)) {
     formErrors.value.headSize = 'Head size must be between 1 and 200 sq in'
@@ -321,7 +285,6 @@ const validateRacquetForm = () => {
   return isValid
 }
 
-// Submit new racquet
 const submitNewRacquet = async () => {
   if (!validateRacquetForm()) return
 
@@ -341,7 +304,6 @@ const submitNewRacquet = async () => {
   }
 }
 
-// Submit racquet edit
 const submitEditRacquet = async () => {
   if (!validateRacquetForm() || !racquetForm.value.id) return
 
@@ -360,7 +322,6 @@ const submitEditRacquet = async () => {
   }
 }
 
-// Delete racquet
 const deleteRacquet = async () => {
   if (!racquetForm.value.id) return
 
@@ -372,38 +333,31 @@ const deleteRacquet = async () => {
   }
 }
 
-// Check if user has permissions to manage racquets
 const canManageRacquets = computed(() => {
   return authStore.isAdmin || authStore.isStringer
 })
 
-// View racquet details
 const viewRacquetDetails = (racquetId: number) => {
   router.push(`/racquets/${racquetId}`)
 }
 
-// Create new string job for racquet
 const createStringJob = (racquet: any) => {
   router.push(`/jobs/new?playerId=${racquet.playerId}&racquetId=${racquet.id}`)
 }
 
-// View player details
 const viewPlayerDetails = (playerId: number) => {
   router.push(`/players/${playerId}`)
 }
 
-// Custom filter function for player autocomplete
 const customPlayerFilter = (item: any, queryText: string) => {
   if (queryText.trim() === '') return true
 
   const playerName = item.text.toLowerCase()
   const query = queryText.toLowerCase()
 
-  // Search in player full name
   return playerName.includes(query)
 }
 
-// Table headers
 const headers = [
   { title: 'ID', key: 'id', sortable: true },
   { title: 'Brand', key: 'brand', sortable: true },
@@ -418,6 +372,7 @@ const headers = [
 <template>
   <div class="racquets-view">
     <v-container class="racquets-view__container">
+
       <!-- Page Header -->
       <v-row class="mb-3">
         <v-col cols="12" sm="8">
@@ -652,7 +607,6 @@ const headers = [
         <v-card-title class="text-h5 bg-primary text-white">Edit Racquet</v-card-title>
         <v-card-text class="pt-4">
           <v-form @submit.prevent="submitEditRacquet">
-            <!-- Player can't be changed in edit mode -->
             <div class="mb-3 px-3 py-2 bg-grey-lighten-5 rounded">
               <p class="text-subtitle-1 font-weight-medium mb-1">Player:</p>
               <p class="text-body-1">

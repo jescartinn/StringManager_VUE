@@ -42,18 +42,15 @@ const canManagePlayers = computed(() => {
   return authStore.isAdmin || authStore.isStringer
 })
 
-// Load player data
 onMounted(async () => {
   if (playerId.value) {
     try {
       await playerStore.fetchPlayerById(playerId.value)
 
-      // Load player's racquets
       racquetsLoading.value = true
       await racquetStore.fetchRacquetsByPlayer(playerId.value)
       racquetsLoading.value = false
 
-      // Load player's string jobs
       jobsLoading.value = true
       await stringJobStore.fetchJobsByPlayer(playerId.value)
       jobsLoading.value = false
@@ -67,7 +64,6 @@ onMounted(async () => {
   }
 })
 
-// Watch for player changes to reload racquets and jobs
 watch(() => playerId.value, async (newPlayerId) => {
   if (newPlayerId) {
     loading.value = true
@@ -88,18 +84,15 @@ watch(() => playerId.value, async (newPlayerId) => {
   }
 })
 
-// Get player racquets
 const racquets = computed(() => {
   if (!playerId.value) return []
   return racquetStore.playerRacquets[playerId.value] || []
 })
 
-// Get player string jobs
 const stringJobs = computed(() => {
   return stringJobStore.stringJobs
 })
 
-// Sort racquets by brand and model
 const sortedRacquets = computed(() => {
   return [...racquets.value].sort((a, b) => {
     const brandCompare = a.brand.localeCompare(b.brand)
@@ -108,21 +101,18 @@ const sortedRacquets = computed(() => {
   })
 })
 
-// Sort string jobs by date (most recent first)
 const sortedJobs = computed(() => {
   return [...stringJobs.value].sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
 })
 
-// Format date
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
   return date.toLocaleString()
 }
 
-// Get status color
 const getStatusColor = (status: string) => {
   switch (status) {
     case 'Pending': return 'warning'
@@ -133,7 +123,6 @@ const getStatusColor = (status: string) => {
   }
 }
 
-// Navigation functions
 const goBack = () => {
   router.back()
 }
@@ -142,7 +131,6 @@ const returnToPlayersList = () => {
   router.push('/players')
 }
 
-// Open edit player dialog
 const openEditPlayerDialog = () => {
   if (!player.value) return
 
@@ -153,7 +141,6 @@ const openEditPlayerDialog = () => {
     countryCode: player.value.countryCode || ''
   }
 
-  // Reset errors
   formErrors.value = {
     name: '',
     lastName: '',
@@ -163,16 +150,13 @@ const openEditPlayerDialog = () => {
   showEditPlayerDialog.value = true
 }
 
-// Open delete confirmation dialog
 const openDeleteDialog = () => {
   showDeleteConfirmation.value = true
 }
 
-// Validate player form
 const validatePlayerForm = () => {
   let isValid = true
 
-  // Validate name
   if (!playerForm.value.name.trim()) {
     formErrors.value.name = 'Name is required'
     isValid = false
@@ -180,7 +164,6 @@ const validatePlayerForm = () => {
     formErrors.value.name = ''
   }
 
-  // Validate last name
   if (!playerForm.value.lastName.trim()) {
     formErrors.value.lastName = 'Last name is required'
     isValid = false
@@ -191,7 +174,6 @@ const validatePlayerForm = () => {
   return isValid
 }
 
-// Submit player edit
 const submitEditPlayer = async () => {
   if (!validatePlayerForm() || !playerForm.value.id) return
 
@@ -208,7 +190,6 @@ const submitEditPlayer = async () => {
   }
 }
 
-// Delete player
 const deletePlayer = async () => {
   if (!player.value) return
 
@@ -223,24 +204,20 @@ const deletePlayer = async () => {
   }
 }
 
-// Navigate to create new racquet for this player
 const createNewRacquet = () => {
   if (!player.value) return
   router.push(`/racquets/new?playerId=${player.value.id}`)
 }
 
-// Navigate to create new string job for this player
 const createNewStringJob = () => {
   if (!player.value) return
   router.push(`/jobs/new?playerId=${player.value.id}`)
 }
 
-// View racquet details
 const viewRacquet = (racquetId: number) => {
   router.push(`/racquets/${racquetId}`)
 }
 
-// View string job details
 const viewStringJob = (jobId: number) => {
   router.push(`/jobs/${jobId}`)
 }
@@ -534,7 +511,6 @@ const viewStringJob = (jobId: number) => {
   }
 }
 
-// Status colors
 :deep(.v-chip) {
   &.v-theme--light {
     &.bg-warning {

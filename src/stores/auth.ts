@@ -12,12 +12,6 @@ interface User {
     lastLoginAt: string | null
 }
 
-interface AuthResponse {
-    token: string
-    user: User
-    expiration: string
-}
-
 export const useAuthStore = defineStore('auth', () => {
     const router = useRouter()
 
@@ -35,29 +29,23 @@ export const useAuthStore = defineStore('auth', () => {
         console.error('Failed to parse stored user data', e)
     }
 
-    // Getters
     const isAuthenticated = computed(() => !!token.value)
     const isAdmin = computed(() => user.value?.role === 'Admin')
     const isStringer = computed(() => user.value?.role === 'Stringer' || user.value?.role === 'Admin')
 
-    // Actions
     async function login(username: string, password: string) {
         loading.value = true
         error.value = null
 
         try {
-            // Make API request to login endpoint
             const data = await api.auth.login(username, password)
 
-            // Save auth data
             token.value = data.token
             user.value = data.user
 
-            // Save to localStorage
             localStorage.setItem('token', data.token)
             localStorage.setItem('user', JSON.stringify(data.user))
 
-            // Navigate to dashboard
             router.push('/dashboard')
             return true
         } catch (e) {
@@ -79,18 +67,14 @@ export const useAuthStore = defineStore('auth', () => {
         error.value = null
 
         try {
-            // Make API request to register endpoint
             const data = await api.auth.register(registerData)
 
-            // Save auth data
             token.value = data.token
             user.value = data.user
 
-            // Save to localStorage
             localStorage.setItem('token', data.token)
             localStorage.setItem('user', JSON.stringify(data.user))
 
-            // Navigate to dashboard
             router.push('/dashboard')
             return true
         } catch (e) {
@@ -108,7 +92,6 @@ export const useAuthStore = defineStore('auth', () => {
         loading.value = true
 
         try {
-            // Verify token by fetching current user
             const userData = await api.auth.getCurrentUser()
             user.value = userData
             localStorage.setItem('user', JSON.stringify(userData))
@@ -123,15 +106,12 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     function logout() {
-        // Clear state
         token.value = null
         user.value = null
 
-        // Clear localStorage
         localStorage.removeItem('token')
         localStorage.removeItem('user')
 
-        // Navigate to landing page
         router.push('/')
     }
 
@@ -155,18 +135,15 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
-    // Method for updating profile
     async function updateProfile(profileData: { username: string, email: string }) {
         loading.value = true
         error.value = null
 
         try {
-            // Check if user exists and has an ID
             if (!user.value || !user.value.id) {
                 throw new Error('User information is missing')
             }
 
-            // Create a user DTO that includes the current user's data
             const userDto = {
                 id: user.value.id,
                 username: profileData.username,
@@ -174,15 +151,12 @@ export const useAuthStore = defineStore('auth', () => {
                 role: user.value.role
             }
 
-            // Update the user profile using the API
             await api.users.update(user.value.id, userDto)
 
-            // Update the local user object
             if (user.value) {
                 user.value.username = profileData.username
                 user.value.email = profileData.email
 
-                // Save updated user to localStorage
                 localStorage.setItem('user', JSON.stringify(user.value))
             }
 
@@ -197,18 +171,15 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     return {
-        // State
         token,
         user,
         loading,
         error,
 
-        // Getters
         isAuthenticated,
         isAdmin,
         isStringer,
 
-        // Actions
         login,
         register,
         logout,

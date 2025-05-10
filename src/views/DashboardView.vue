@@ -8,10 +8,8 @@ const stringJobStore = useStringJobStore()
 const tournamentStore = useTournamentStore()
 const router = useRouter()
 
-// Tracking component loading state (different from store loading)
 const isInitialLoad = ref(true)
 
-// Recent jobs transformed from string jobs
 const recentJobs = ref<Array<{
   id: number
   playerName: string
@@ -22,7 +20,6 @@ const recentJobs = ref<Array<{
   createdAt: string
 }>>([])
 
-// Computed properties for dashboard stats
 const pendingJobs = computed(() => dashboardStore.dashboardStats?.pendingJobs || 0)
 const inProgressJobs = computed(() => dashboardStore.dashboardStats?.inProgressJobs || 0)
 const completedJobsToday = computed(() => dashboardStore.dashboardStats?.completedJobsToday || 0)
@@ -33,37 +30,28 @@ const topStringers = computed(() => dashboardStore.dashboardStats?.topStringers 
 const topPlayers = computed(() => dashboardStore.dashboardStats?.topPlayers || [])
 const topStrings = computed(() => dashboardStore.dashboardStats?.topStrings || [])
 
-// Computed state
 const isLoading = computed(() => dashboardStore.loading || stringJobStore.loading || isInitialLoad.value)
 const error = computed(() => dashboardStore.error)
 
-// Fetch all dashboard data
 const fetchDashboardData = async () => {
   try {
-    // Fetch dashboard stats from store
     await dashboardStore.fetchDashboardStats(true)
 
-    // Fetch jobs data for recent jobs
     await stringJobStore.fetchAllJobs()
 
-    // Process recent jobs data
     processRecentJobs()
   } catch (e) {
     console.error('Error in dashboard data fetching:', e)
   } finally {
-    // Set initial load to false after first fetch
     isInitialLoad.value = false
   }
 }
 
-// Process string jobs into the format needed for recent jobs display
 const processRecentJobs = () => {
-  // Get 5 most recent jobs
   const jobsToProcess = [...stringJobStore.stringJobs]
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 5)
 
-  // Transform into the format needed for display
   recentJobs.value = jobsToProcess.map(job => ({
     id: job.id,
     playerName: job.player ? `${job.player.name} ${job.player.lastName}` : 'Unknown',
@@ -75,19 +63,16 @@ const processRecentJobs = () => {
   }))
 }
 
-// Watch for changes in stringJobs and update recentJobs
 watch(() => stringJobStore.stringJobs, () => {
   if (!isLoading.value) {
     processRecentJobs()
   }
 })
 
-// Fetch data on component mount
 onMounted(() => {
   fetchDashboardData()
 })
 
-// Function to get status color
 const getStatusColor = (status: string): string => {
   switch (status) {
     case 'Pending': return 'warning'
@@ -98,25 +83,21 @@ const getStatusColor = (status: string): string => {
   }
 }
 
-// Format date function
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString)
   return date.toLocaleString()
 }
 
-// Completion percentage calculation
 const completionPercentage = computed((): number => {
   const total = pendingJobs.value + inProgressJobs.value + completedJobsToday.value
   if (total === 0) return 0
   return Math.round((completedJobsToday.value / total) * 100)
 })
 
-// Handler for retry button
 const handleRetry = (): void => {
   fetchDashboardData()
 }
 
-// Navigation functions
 const navigateToJobs = (): void => {
   router.push('/jobs')
 }
@@ -125,7 +106,6 @@ const navigateToTournament = (id: number): void => {
   router.push(`/tournaments/${id}`)
 }
 
-// Create new job handler
 const createNewJob = (): void => {
   router.push('/jobs/new')
 }
@@ -174,6 +154,7 @@ const createNewJob = (): void => {
 
       <!-- Dashboard content -->
       <template v-else>
+
         <!-- Stats cards -->
         <v-row class="home__stats">
           <v-col cols="12" sm="6" md="3">
@@ -248,6 +229,7 @@ const createNewJob = (): void => {
         </v-row>
 
         <v-row v-else>
+
           <!-- Left column: Recent jobs and completion % -->
           <v-col cols="12" md="8">
             <v-card class="home__card" v-if="recentJobs.length">
@@ -328,6 +310,7 @@ const createNewJob = (): void => {
 
           <!-- Right column: Tournament and top lists -->
           <v-col cols="12" md="4">
+
             <!-- Current Tournament Card - Always shown -->
             <v-card class="home__card">
               <v-card-title class="home__card-title">
@@ -336,6 +319,7 @@ const createNewJob = (): void => {
               </v-card-title>
 
               <v-card-text class="pt-4">
+
                 <!-- Content when there is an active tournament -->
                 <template v-if="currentTournament">
                   <h3 class="home__tournament-name">{{ currentTournament.name }}</h3>
@@ -567,7 +551,6 @@ const createNewJob = (): void => {
   }
 }
 
-// Apply status colors
 :deep(.v-chip) {
   &.v-theme--light {
     &.bg-warning {

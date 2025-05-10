@@ -4,13 +4,11 @@ import { useRouter } from 'vue-router'
 import { usePlayerStore, useAuthStore, useRacquetStore } from '../stores'
 import { getCountryOptions, getCountryName, getCountryFlag } from '../utils/countryUtils'
 
-// Import stores and router
 const playerStore = usePlayerStore()
 const authStore = useAuthStore()
 const racquetStore = useRacquetStore()
 const router = useRouter()
 
-// Reactive state
 const loading = ref(true)
 const search = ref('')
 const countryFilter = ref<string | null>(null)
@@ -23,7 +21,6 @@ const showNewPlayerDialog = ref(false)
 const showEditPlayerDialog = ref(false)
 const showDeleteConfirmation = ref(false)
 
-// Player form data
 const playerForm = ref({
   id: null as number | null,
   name: '',
@@ -31,20 +28,16 @@ const playerForm = ref({
   countryCode: ''
 })
 
-// Validation errors
 const formErrors = ref({
   name: '',
   lastName: '',
   countryCode: ''
 })
 
-// Countries options for the filter/form - using the utility function
 const countryOptions = computed(() => getCountryOptions())
 
-// Initialize component
 onMounted(async () => {
   try {
-    // Load players data
     await playerStore.fetchPlayers()
   } catch (error) {
     console.error('Error initializing player view:', error)
@@ -53,11 +46,9 @@ onMounted(async () => {
   }
 })
 
-// Computed property to filter and sort players
 const filteredPlayers = computed(() => {
   let filtered = [...playerStore.players]
 
-  // Apply search filter if search text exists
   if (search.value) {
     const searchLower = search.value.toLowerCase()
     filtered = filtered.filter(player => {
@@ -66,12 +57,10 @@ const filteredPlayers = computed(() => {
     })
   }
 
-  // Apply country filter if set
   if (countryFilter.value) {
     filtered = filtered.filter(player => player.countryCode === countryFilter.value)
   }
 
-  // Sort the filtered players
   filtered.sort((a, b) => {
     let aValue: any, bValue: any;
 
@@ -88,7 +77,6 @@ const filteredPlayers = computed(() => {
       aValue = a.countryCode || ''
       bValue = b.countryCode || ''
     } else {
-      // For other properties, access them safely
       aValue = a[sortBy.value as keyof typeof a]
       bValue = b[sortBy.value as keyof typeof b]
     }
@@ -106,7 +94,6 @@ const filteredPlayers = computed(() => {
   return filtered
 })
 
-// Pagination
 const paginatedPlayers = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
@@ -117,14 +104,12 @@ const totalPages = computed(() => {
   return Math.ceil(filteredPlayers.value.length / itemsPerPage.value)
 })
 
-// Reset filters and reload data
 const resetAndReload = async () => {
   search.value = ''
   countryFilter.value = null
-  await playerStore.fetchPlayers() // Force refresh
+  await playerStore.fetchPlayers()
 }
 
-// Handle sort change
 const handleSort = (column: string) => {
   if (sortBy.value === column) {
     sortDesc.value = !sortDesc.value
@@ -134,9 +119,7 @@ const handleSort = (column: string) => {
   }
 }
 
-// Open dialog to add new player
 const openNewPlayerDialog = () => {
-  // Reset form
   playerForm.value = {
     id: null,
     name: '',
@@ -144,7 +127,6 @@ const openNewPlayerDialog = () => {
     countryCode: ''
   }
 
-  // Reset errors
   formErrors.value = {
     name: '',
     lastName: '',
@@ -154,7 +136,6 @@ const openNewPlayerDialog = () => {
   showNewPlayerDialog.value = true
 }
 
-// Open dialog to edit player
 const openEditPlayerDialog = (player: any) => {
   playerForm.value = {
     id: player.id,
@@ -163,7 +144,6 @@ const openEditPlayerDialog = (player: any) => {
     countryCode: player.countryCode || ''
   }
 
-  // Reset errors
   formErrors.value = {
     name: '',
     lastName: '',
@@ -173,7 +153,6 @@ const openEditPlayerDialog = (player: any) => {
   showEditPlayerDialog.value = true
 }
 
-// Open dialog to confirm player deletion
 const openDeleteDialog = (player: any) => {
   playerForm.value = {
     id: player.id,
@@ -185,11 +164,9 @@ const openDeleteDialog = (player: any) => {
   showDeleteConfirmation.value = true
 }
 
-// Validate player form
 const validatePlayerForm = () => {
   let isValid = true
 
-  // Validate name
   if (!playerForm.value.name.trim()) {
     formErrors.value.name = 'Name is required'
     isValid = false
@@ -197,7 +174,6 @@ const validatePlayerForm = () => {
     formErrors.value.name = ''
   }
 
-  // Validate last name
   if (!playerForm.value.lastName.trim()) {
     formErrors.value.lastName = 'Last name is required'
     isValid = false
@@ -205,12 +181,9 @@ const validatePlayerForm = () => {
     formErrors.value.lastName = ''
   }
 
-  // Country code is optional, so no validation needed
-
   return isValid
 }
 
-// Submit new player
 const submitNewPlayer = async () => {
   if (!validatePlayerForm()) return
 
@@ -227,7 +200,6 @@ const submitNewPlayer = async () => {
   }
 }
 
-// Submit player edit
 const submitEditPlayer = async () => {
   if (!validatePlayerForm() || !playerForm.value.id) return
 
@@ -244,7 +216,6 @@ const submitEditPlayer = async () => {
   }
 }
 
-// Delete player
 const deletePlayer = async () => {
   if (!playerForm.value.id) return
 
@@ -256,17 +227,14 @@ const deletePlayer = async () => {
   }
 }
 
-// Check if user has permissions to add/edit players
 const canManagePlayers = computed(() => {
   return authStore.isAdmin || authStore.isStringer
 })
 
-// View player details
 const viewPlayerDetails = (playerId: number) => {
   router.push(`/players/${playerId}`)
 }
 
-// View player's racquets
 const viewPlayerRacquets = async (playerId: number) => {
   try {
     await racquetStore.fetchRacquetsByPlayer(playerId)
@@ -276,12 +244,10 @@ const viewPlayerRacquets = async (playerId: number) => {
   }
 }
 
-// View player's string jobs
 const viewPlayerJobs = (playerId: number) => {
   router.push({ path: '/jobs', query: { player: playerId.toString() } })
 }
 
-// Table headers
 const headers = [
   { title: 'ID', key: 'id', sortable: true },
   { title: 'Last Name', key: 'lastName', sortable: true },
@@ -294,6 +260,7 @@ const headers = [
 <template>
   <div class="players-view">
     <v-container class="players-view__container">
+      
       <!-- Page Header -->
       <v-row class="mb-3">
         <v-col cols="12" sm="8">

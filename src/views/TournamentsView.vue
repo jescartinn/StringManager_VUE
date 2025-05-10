@@ -1,16 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useTournamentStore, useAuthStore, useStringJobStore } from '../stores'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useTournamentStore, useAuthStore } from '../stores'
 
-// Import stores and router
 const tournamentStore = useTournamentStore()
 const authStore = useAuthStore()
-const stringJobStore = useStringJobStore()
 const router = useRouter()
-const route = useRoute()
 
-// Reactive state
 const loading = ref(true)
 const search = ref('')
 const categoryFilter = ref<string | null>(null)
@@ -24,7 +20,6 @@ const showNewTournamentDialog = ref(false)
 const showEditTournamentDialog = ref(false)
 const showDeleteConfirmation = ref(false)
 
-// Tournament form data
 const tournamentForm = ref({
   id: null as number | null,
   name: '',
@@ -34,7 +29,6 @@ const tournamentForm = ref({
   category: ''
 })
 
-// Validation errors
 const formErrors = ref({
   name: '',
   startDate: '',
@@ -43,7 +37,6 @@ const formErrors = ref({
   category: ''
 })
 
-// Tournament categories for filtering
 const tournamentCategories = ref([
   'Grand Slam',
   'ATP 1000',
@@ -64,23 +57,18 @@ const tournamentCategories = ref([
   'Other'
 ])
 
-// Check if user has permissions to manage tournaments
 const canManageTournaments = computed(() => {
   return authStore.isAdmin
 })
 
-// Initialize component
 onMounted(async () => {
   try {
-    // Load tournaments data
     await tournamentStore.fetchAllTournaments()
 
     try {
-      // Get current tournament, even if we already have it in the store
       await tournamentStore.fetchCurrentTournament()
     } catch (currentTournamentError) {
       console.error('Error fetching current tournament:', currentTournamentError)
-      // Allow the component to continue loading even if this fails
     }
   } catch (error) {
     console.error('Error initializing tournament view:', error)
@@ -89,12 +77,10 @@ onMounted(async () => {
   }
 })
 
-// Computed properties for filtering and sorting tournaments
 const filteredTournaments = computed(() => {
   let filtered = [...tournamentStore.tournaments]
   const today = new Date().toISOString().split('T')[0]
 
-  // Apply search filter if search text exists
   if (search.value) {
     const searchLower = search.value.toLowerCase()
     filtered = filtered.filter(tournament => {
@@ -104,12 +90,10 @@ const filteredTournaments = computed(() => {
     })
   }
 
-  // Apply category filter if set
   if (categoryFilter.value) {
     filtered = filtered.filter(tournament => tournament.category === categoryFilter.value)
   }
 
-  // Apply active/upcoming/past filter if set
   if (activeFilter.value) {
     if (activeFilter.value === 'active') {
       filtered = filtered.filter(tournament =>
@@ -122,7 +106,6 @@ const filteredTournaments = computed(() => {
     }
   }
 
-  // Sort the filtered tournaments
   filtered.sort((a, b) => {
     let aValue: any, bValue: any;
 
@@ -139,7 +122,6 @@ const filteredTournaments = computed(() => {
       aValue = a.category || ''
       bValue = b.category || ''
     } else {
-      // For other properties, access them safely
       aValue = a[sortBy.value as keyof typeof a]
       bValue = b[sortBy.value as keyof typeof b]
     }
@@ -157,7 +139,6 @@ const filteredTournaments = computed(() => {
   return filtered
 })
 
-// Pagination
 const paginatedTournaments = computed(() => {
   const start = (page.value - 1) * itemsPerPage.value
   const end = start + itemsPerPage.value
@@ -168,20 +149,17 @@ const totalPages = computed(() => {
   return Math.ceil(filteredTournaments.value.length / itemsPerPage.value)
 })
 
-// Highlight current tournament
 const isCurrentTournament = (tournament: any) => {
   if (!tournamentStore.activeTournament) return false
   return tournament.id === tournamentStore.activeTournament.id
 }
 
-// Format date helper
 const formatDate = (dateString: string) => {
   if (!dateString) return 'N/A'
   const date = new Date(dateString)
   return date.toLocaleDateString()
 }
 
-// Get tournament status
 const getTournamentStatus = (tournament: any) => {
   const today = new Date()
   const startDate = new Date(tournament.startDate)
@@ -196,7 +174,6 @@ const getTournamentStatus = (tournament: any) => {
   }
 }
 
-// Handle sort change
 const handleSort = (column: string) => {
   if (sortBy.value === column) {
     sortDesc.value = !sortDesc.value
@@ -206,27 +183,22 @@ const handleSort = (column: string) => {
   }
 }
 
-// Reset filters and reload data
 const resetAndReload = async () => {
   search.value = ''
   categoryFilter.value = null
   activeFilter.value = null
-  await tournamentStore.fetchAllTournaments() // Force refresh
+  await tournamentStore.fetchAllTournaments()
 }
 
-// Open dialog to add new tournament
 const openNewTournamentDialog = () => {
-  // Initialize with today and a week from now
   const today = new Date()
   const nextWeek = new Date(today)
   nextWeek.setDate(today.getDate() + 7)
 
-  // Format dates for input field (YYYY-MM-DD)
   const formatDateForInput = (date: Date) => {
     return date.toISOString().split('T')[0]
   }
 
-  // Reset form
   tournamentForm.value = {
     id: null,
     name: '',
@@ -236,7 +208,6 @@ const openNewTournamentDialog = () => {
     category: ''
   }
 
-  // Reset errors
   formErrors.value = {
     name: '',
     startDate: '',
@@ -248,7 +219,6 @@ const openNewTournamentDialog = () => {
   showNewTournamentDialog.value = true
 }
 
-// Open dialog to edit tournament
 const openEditTournamentDialog = (tournament: any) => {
   tournamentForm.value = {
     id: tournament.id,
@@ -259,7 +229,6 @@ const openEditTournamentDialog = (tournament: any) => {
     category: tournament.category || ''
   }
 
-  // Reset errors
   formErrors.value = {
     name: '',
     startDate: '',
@@ -271,7 +240,6 @@ const openEditTournamentDialog = (tournament: any) => {
   showEditTournamentDialog.value = true
 }
 
-// Open dialog to confirm tournament deletion
 const openDeleteDialog = (tournament: any) => {
   tournamentForm.value = {
     id: tournament.id,
@@ -285,11 +253,9 @@ const openDeleteDialog = (tournament: any) => {
   showDeleteConfirmation.value = true
 }
 
-// Validate tournament form
 const validateTournamentForm = () => {
   let isValid = true
 
-  // Validate name
   if (!tournamentForm.value.name.trim()) {
     formErrors.value.name = 'Tournament name is required'
     isValid = false
@@ -297,7 +263,6 @@ const validateTournamentForm = () => {
     formErrors.value.name = ''
   }
 
-  // Validate startDate
   if (!tournamentForm.value.startDate) {
     formErrors.value.startDate = 'Start date is required'
     isValid = false
@@ -305,12 +270,10 @@ const validateTournamentForm = () => {
     formErrors.value.startDate = ''
   }
 
-  // Validate endDate
   if (!tournamentForm.value.endDate) {
     formErrors.value.endDate = 'End date is required'
     isValid = false
   } else {
-    // Check if end date is after start date
     const startDate = new Date(tournamentForm.value.startDate)
     const endDate = new Date(tournamentForm.value.endDate)
 
@@ -322,7 +285,6 @@ const validateTournamentForm = () => {
     }
   }
 
-  // Check for conflicting tournament dates if adding new or changing dates
   if (isValid && (!tournamentForm.value.id || (tournamentForm.value.id && showEditTournamentDialog.value))) {
     const hasConflict = tournamentStore.hasDateConflict(
       tournamentForm.value.startDate,
@@ -340,7 +302,6 @@ const validateTournamentForm = () => {
   return isValid
 }
 
-// Submit new tournament
 const submitNewTournament = async () => {
   if (!validateTournamentForm()) return
 
@@ -355,14 +316,12 @@ const submitNewTournament = async () => {
 
     showNewTournamentDialog.value = false
 
-    // Re-fetch current tournament in case the new one is current
     await tournamentStore.fetchCurrentTournament()
   } catch (error) {
     console.error('Error creating tournament:', error)
   }
 }
 
-// Submit tournament edit
 const submitEditTournament = async () => {
   if (!validateTournamentForm() || !tournamentForm.value.id) return
 
@@ -377,14 +336,12 @@ const submitEditTournament = async () => {
 
     showEditTournamentDialog.value = false
 
-    // Re-fetch current tournament in case the edited one is current
     await tournamentStore.fetchCurrentTournament()
   } catch (error) {
     console.error('Error updating tournament:', error)
   }
 }
 
-// Delete tournament
 const deleteTournament = async () => {
   if (!tournamentForm.value.id) return
 
@@ -392,24 +349,20 @@ const deleteTournament = async () => {
     await tournamentStore.deleteTournament(tournamentForm.value.id)
     showDeleteConfirmation.value = false
 
-    // Re-fetch current tournament in case the deleted one was current
     await tournamentStore.fetchCurrentTournament()
   } catch (error) {
     console.error('Error deleting tournament:', error)
   }
 }
 
-// View tournament details
 const viewTournamentDetails = (tournamentId: number) => {
   router.push(`/tournaments/${tournamentId}`)
 }
 
-// View tournament string jobs
 const viewTournamentJobs = (tournamentId: number) => {
   router.push({ path: '/jobs', query: { tournament: tournamentId.toString() } })
 }
 
-// Calculate days until tournament starts
 const daysUntilStart = (startDate: string) => {
   const today = new Date()
   const start = new Date(startDate)
@@ -418,12 +371,10 @@ const daysUntilStart = (startDate: string) => {
   return diffDays > 0 ? diffDays : 0
 }
 
-// Calculate remaining days of tournament
 const daysRemaining = (endDate: string) => {
   const today = new Date()
   const end = new Date(endDate)
 
-  // Set time to end of day for more accurate calculation
   end.setHours(23, 59, 59, 999)
 
   const diffTime = end.getTime() - today.getTime()
@@ -431,7 +382,6 @@ const daysRemaining = (endDate: string) => {
   return diffDays > 0 ? diffDays : 0
 }
 
-// Table headers
 const headers = [
   { title: 'ID', key: 'id', sortable: true },
   { title: 'Name', key: 'name', sortable: true },
@@ -447,6 +397,7 @@ const headers = [
 <template>
   <div class="tournaments-view">
     <v-container class="tournaments-view__container">
+
       <!-- Page Header -->
       <v-row class="mb-3">
         <v-col cols="12" sm="8">
@@ -797,7 +748,6 @@ const headers = [
   }
 }
 
-// Status colors
 :deep(.v-chip) {
   &.v-theme--light {
     &.bg-warning {
