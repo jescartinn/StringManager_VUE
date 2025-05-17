@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stringmanager-frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stringmanager
+  template:
+    metadata:
+      labels:
+        app: stringmanager
+    spec:
+      containers:
+      - name: stringmanager
+        image: stringmanager-vue:latest
+        ports:
+        - containerPort: 80
+        env:
+        - name: VITE_API_URL
+          value: "https://localhost:7299/api"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: stringmanager-service
+spec:
+  selector:
+    app: stringmanager
+  ports:
+  - port: 80
+    targetPort: 80
+  type: LoadBalancer
