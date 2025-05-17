@@ -45,6 +45,13 @@ const tournamentCategories = ref([
   'WTA 1000',
   'WTA 500',
   'WTA 250',
+  'ATP 1000/WTA 1000',
+  'ATP 500/WTA 500',
+  'ATP 250/WTA 250',
+  'Challenger 125',
+  'Challenger 100',
+  'Challenger 75',
+  'Challenger 50',
   'ITF',
   'Exhibition',
   'Other'
