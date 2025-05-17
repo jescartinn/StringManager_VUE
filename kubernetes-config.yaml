@@ -6,14 +6,14 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: stringmanager
+      app: stringmanager-frontend
   template:
     metadata:
       labels:
-        app: stringmanager
+        app: stringmanager-frontend
     spec:
       containers:
-      - name: stringmanager
+      - name: stringmanager-frontend
         image: stringmanager-vue:latest
         ports:
         - containerPort: 80
@@ -24,10 +24,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: stringmanager-service
+  name: stringmanager-service-frontend
 spec:
   selector:
-    app: stringmanager
+    app: stringmanager-frontend
   ports:
   - port: 80
     targetPort: 80
