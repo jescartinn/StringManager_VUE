@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useStringTypeStore, useAuthStore } from '../stores'
 
@@ -296,12 +296,20 @@ const headers = [
   { title: 'Color', key: 'color', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false }
 ]
+
+const showErrorAlert = ref(true)
+
+watch(() => stringTypeStore.error, (newError) => {
+  if (newError) {
+    showErrorAlert.value = true
+  }
+})
 </script>
 
 <template>
   <div class="strings-view">
     <v-container class="strings-view__container">
-      
+
       <!-- Page Header -->
       <v-row class="mb-3">
         <v-col cols="12" sm="8">
@@ -316,9 +324,9 @@ const headers = [
       </v-row>
 
       <!-- Error Alert -->
-      <v-row class="mb-3" v-if="stringTypeStore.error">
+      <v-row class="mb-3" v-if="stringTypeStore.error && showErrorAlert">
         <v-col cols="12">
-          <v-alert type="error" variant="tonal" closable>
+          <v-alert type="error" variant="tonal" closable v-model="showErrorAlert">
             {{ stringTypeStore.error }}
           </v-alert>
         </v-col>

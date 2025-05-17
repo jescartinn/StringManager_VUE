@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTournamentStore, useAuthStore } from '../stores'
 
@@ -392,6 +392,14 @@ const headers = [
   { title: 'Status', key: 'status', sortable: false },
   { title: 'Actions', key: 'actions', sortable: false }
 ]
+
+const showErrorAlert = ref(true)
+
+watch(() => tournamentStore.error, (newError) => {
+  if (newError) {
+    showErrorAlert.value = true
+  }
+})
 </script>
 
 <template>
@@ -412,9 +420,9 @@ const headers = [
       </v-row>
 
       <!-- Error Alert -->
-      <v-row class="mb-3" v-if="tournamentStore.error">
+      <v-row class="mb-3" v-if="tournamentStore.error && showErrorAlert">
         <v-col cols="12">
-          <v-alert type="error" variant="tonal" closable>
+          <v-alert type="error" variant="tonal" closable v-model="showErrorAlert">
             {{ tournamentStore.error }}
           </v-alert>
         </v-col>

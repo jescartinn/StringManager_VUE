@@ -104,10 +104,10 @@ const filteredJobs = computed(() => {
         const stringInfo = job.mainString ? `${job.mainString.brand} ${job.mainString.model}`.toLowerCase() : ''
         const jobId = job.id.toString()
         const completedDate = job.completedAt ? formatDate(job.completedAt).toLowerCase() : ''
-        return racquetInfo.includes(searchLower) || 
-               stringInfo.includes(searchLower) || 
-               jobId.includes(searchLower) ||
-               completedDate.includes(searchLower)
+        return racquetInfo.includes(searchLower) ||
+            stringInfo.includes(searchLower) ||
+            jobId.includes(searchLower) ||
+            completedDate.includes(searchLower)
     })
 })
 
@@ -171,7 +171,7 @@ const allPageJobsSelected = computed(() => {
 
 const toggleSelectAllPageJobs = () => {
     if (allPageJobsSelected.value) {
-        selectedJobs.value = selectedJobs.value.filter(id => 
+        selectedJobs.value = selectedJobs.value.filter(id =>
             !paginatedJobs.value.some(job => job.id === id)
         )
     } else {
@@ -193,11 +193,11 @@ const toggleJobSelection = (jobId: number) => {
 
 const prepareInvoiceItems = () => {
     invoiceItems.value = unpaidJobs.value.filter(job => selectedJobs.value.includes(job.id))
-    
+
     if (invoiceItems.value.length === 0) {
         console.warn('No invoice items found for the selected jobs')
     }
-    
+
     console.log('Prepared invoice items:', invoiceItems.value)
 }
 
@@ -207,7 +207,7 @@ const openPaymentModal = (jobId?: number) => {
     } else if (selectedJobs.value.length === 0) {
         selectedJobs.value = filteredJobs.value.map(job => job.id)
     }
-    
+
     paymentMethod.value = 'cash'
     paymentNote.value = ''
     showPaymentModal.value = true
@@ -218,13 +218,13 @@ const confirmPayment = async () => {
 
     try {
         processingPayment.value = true
-        
+
         prepareInvoiceItems()
-        
+
         for (const jobId of selectedJobs.value) {
             await stringJobStore.markJobAsPaid(jobId)
         }
-        
+
         showPaymentModal.value = false
 
         showPaymentSuccessAlert.value = true
@@ -233,7 +233,7 @@ const confirmPayment = async () => {
         }, 3000)
 
         showInvoiceModal.value = true
-        
+
         if (selectedPlayerId.value) {
             await loadPlayerPayments(selectedPlayerId.value)
         }
@@ -253,7 +253,7 @@ const downloadInvoice = async () => {
             scale: 2,
             backgroundColor: '#ffffff'
         })
-        
+
         const dataUrl = canvas.toDataURL('image/png')
         const link = document.createElement('a')
         link.href = dataUrl
@@ -283,6 +283,14 @@ const getTodayDate = () => {
     const today = new Date()
     return today.toLocaleDateString()
 }
+
+const showErrorAlert = ref(true)
+
+watch(() => stringJobStore.error, (newError) => {
+    if (newError) {
+        showErrorAlert.value = true
+    }
+})
 </script>
 
 <template>
@@ -295,13 +303,8 @@ const getTodayDate = () => {
                     <h1 class="payments-view__title">Player Payments</h1>
                 </v-col>
                 <v-col cols="12" sm="4" class="d-flex justify-end align-center">
-                    <v-btn 
-                        v-if="selectedJobs.length > 0"
-                        color="success" 
-                        prepend-icon="mdi-cash-register" 
-                        class="ml-2"
-                        @click="openPaymentModal()"
-                    >
+                    <v-btn v-if="selectedJobs.length > 0" color="success" prepend-icon="mdi-cash-register" class="ml-2"
+                        @click="openPaymentModal()">
                         Pay Selected ({{ selectedJobsCount }})
                     </v-btn>
                 </v-col>
@@ -313,9 +316,9 @@ const getTodayDate = () => {
             </v-alert>
 
             <!-- Error Alert -->
-            <v-row class="mb-3" v-if="stringJobStore.error">
+            <v-row class="mb-3" v-if="stringJobStore.error && showErrorAlert">
                 <v-col cols="12">
-                    <v-alert type="error" variant="tonal" closable>
+                    <v-alert type="error" variant="tonal" closable v-model="showErrorAlert">
                         {{ stringJobStore.error }}
                     </v-alert>
                 </v-col>
@@ -328,18 +331,9 @@ const getTodayDate = () => {
                     Select Player
                 </v-card-title>
                 <v-card-text class="pt-4">
-                    <v-autocomplete 
-                        v-model="selectedPlayerId" 
-                        :items="playerStore.playerOptions" 
-                        item-title="text"
-                        item-value="value" 
-                        label="Select a player to view unpaid string jobs" 
-                        variant="outlined"
-                        density="comfortable" 
-                        hide-details 
-                        :loading="playerStore.loading" 
-                        clearable
-                    >
+                    <v-autocomplete v-model="selectedPlayerId" :items="playerStore.playerOptions" item-title="text"
+                        item-value="value" label="Select a player to view unpaid string jobs" variant="outlined"
+                        density="comfortable" hide-details :loading="playerStore.loading" clearable>
                         <template v-slot:no-data>
                             <div class="pa-4 text-center">
                                 <v-icon icon="mdi-account-search" size="36" color="grey-lighten-1"
@@ -395,22 +389,17 @@ const getTodayDate = () => {
                                     </div>
                                 </div>
                             </v-col>
-                            
+
                             <v-col cols="12" md="4" v-if="selectedJobs.length > 0">
                                 <v-card variant="outlined" class="pa-3 selected-amount-card">
                                     <div class="text-subtitle-1">Selected Jobs: {{ selectedJobs.length }}</div>
                                     <div class="text-h5 text-success">{{ formatCurrency(selectedAmount) }}</div>
                                 </v-card>
                             </v-col>
-                            
+
                             <v-col cols="12" md="4" class="text-center text-md-right">
-                                <v-btn 
-                                    color="success"
-                                    size="large" 
-                                    prepend-icon="mdi-cash-multiple" 
-                                    @click="openPaymentModal()" 
-                                    :loading="loading"
-                                    :disabled="unpaidJobs.length === 0">
+                                <v-btn color="success" size="large" prepend-icon="mdi-cash-multiple"
+                                    @click="openPaymentModal()" :loading="loading" :disabled="unpaidJobs.length === 0">
                                     Pay All ({{ formatCurrency(totalAmount) }})
                                 </v-btn>
                             </v-col>
@@ -423,15 +412,9 @@ const getTodayDate = () => {
                     <v-card-text>
                         <v-row>
                             <v-col cols="12" md="6">
-                                <v-text-field 
-                                    v-model="search" 
-                                    label="Search unpaid jobs" 
-                                    prepend-inner-icon="mdi-magnify"
-                                    variant="outlined" 
-                                    density="comfortable" 
-                                    hide-details
-                                    clearable
-                                ></v-text-field>
+                                <v-text-field v-model="search" label="Search unpaid jobs"
+                                    prepend-inner-icon="mdi-magnify" variant="outlined" density="comfortable"
+                                    hide-details clearable></v-text-field>
                             </v-col>
                             <v-col cols="12" md="6" class="d-flex align-center">
                                 <span class="text-body-2 text-grey mr-2">Sort by:</span>
@@ -440,12 +423,8 @@ const getTodayDate = () => {
                                     <v-btn value="completedAt" @click="handleSort('completedAt')">Date</v-btn>
                                     <v-btn value="price" @click="handleSort('price')">Price</v-btn>
                                 </v-btn-toggle>
-                                <v-btn 
-                                    icon 
-                                    @click="sortDesc = !sortDesc" 
-                                    :title="sortDesc ? 'Sort ascending' : 'Sort descending'" 
-                                    class="ml-2"
-                                >
+                                <v-btn icon @click="sortDesc = !sortDesc"
+                                    :title="sortDesc ? 'Sort ascending' : 'Sort descending'" class="ml-2">
                                     <v-icon>{{ sortDesc ? 'mdi-sort-descending' : 'mdi-sort-ascending' }}</v-icon>
                                 </v-btn>
                             </v-col>
@@ -455,41 +434,25 @@ const getTodayDate = () => {
 
                 <!-- Jobs Table -->
                 <v-card v-if="paginatedJobs.length > 0" class="mb-6">
-                    <v-data-table-virtual 
-                        :headers="[
-                            { title: '', key: 'select', sortable: false, width: '48px' },
-                            { title: 'ID', key: 'id', sortable: true },
-                            { title: 'Racquet', key: 'racquet', sortable: true },
-                            { title: 'Strings', key: 'strings', sortable: true },
-                            { title: 'Completed Date', key: 'completedAt', sortable: true },
-                            { title: 'Price', key: 'price', sortable: true },
-                            { title: 'Actions', key: 'actions', sortable: false, align: 'end' }
-                        ]" 
-                        :items="paginatedJobs" 
-                        :items-per-page="itemsPerPage" 
-                        :page="page" 
-                        :loading="loading"
-                        class="payments-view__table" 
-                        hover
-                        @update:options="(options) => page = options.page"
-                    >
+                    <v-data-table-virtual :headers="[
+                        { title: '', key: 'select', sortable: false, width: '48px' },
+                        { title: 'ID', key: 'id', sortable: true },
+                        { title: 'Racquet', key: 'racquet', sortable: true },
+                        { title: 'Strings', key: 'strings', sortable: true },
+                        { title: 'Completed Date', key: 'completedAt', sortable: true },
+                        { title: 'Price', key: 'price', sortable: true },
+                        { title: 'Actions', key: 'actions', sortable: false, align: 'end' }
+                    ]" :items="paginatedJobs" :items-per-page="itemsPerPage" :page="page" :loading="loading"
+                        class="payments-view__table" hover @update:options="(options) => page = options.page">
                         <!-- Selection column -->
                         <template v-slot:header.select>
-                            <v-checkbox 
-                                v-model="allPageJobsSelected" 
-                                @click="toggleSelectAllPageJobs"
-                                hide-details
-                                density="compact"
-                            ></v-checkbox>
+                            <v-checkbox v-model="allPageJobsSelected" @click="toggleSelectAllPageJobs" hide-details
+                                density="compact"></v-checkbox>
                         </template>
-                        
+
                         <template v-slot:item.select="{ item }">
-                            <v-checkbox 
-                                :model-value="selectedJobs.includes(item.id)" 
-                                @click.stop="toggleJobSelection(item.id)"
-                                hide-details
-                                density="compact"
-                            ></v-checkbox>
+                            <v-checkbox :model-value="selectedJobs.includes(item.id)"
+                                @click.stop="toggleJobSelection(item.id)" hide-details density="compact"></v-checkbox>
                         </template>
 
                         <!-- Custom columns -->
@@ -539,7 +502,7 @@ const getTodayDate = () => {
                             class="ms-4" style="max-width: 120px;" hide-details></v-select>
                     </div>
                 </v-card>
-                
+
                 <!-- Empty state after filtering -->
                 <v-card v-else class="text-center pa-8 mb-4">
                     <v-icon icon="mdi-file-search" size="64" color="grey-lighten-1" class="mb-4"></v-icon>
@@ -558,36 +521,23 @@ const getTodayDate = () => {
                     <p class="text-h6 mb-4">
                         Payment for {{ selectedJobs.length }} string job{{ selectedJobs.length !== 1 ? 's' : '' }}
                     </p>
-                    
+
                     <p class="text-h5 text-success font-weight-bold mb-4">
                         Total Amount: {{ formatCurrency(selectedAmount) }}
                     </p>
-                    
+
                     <v-divider class="mb-4"></v-divider>
-                    
-                    <v-select
-                        v-model="paymentMethod"
-                        label="Payment Method"
-                        :items="[
-                            { title: 'Cash', value: 'cash' },
-                            { title: 'Credit Card', value: 'card' },
-                            { title: 'Bank Transfer', value: 'transfer' },
-                            { title: 'Other', value: 'other' }
-                        ]"
-                        item-title="title"
-                        item-value="value"
-                        variant="outlined"
-                        class="mb-4"
-                    ></v-select>
-                    
-                    <v-textarea
-                        v-model="paymentNote"
-                        label="Payment Notes (optional)"
-                        variant="outlined"
-                        rows="3"
-                        placeholder="Add any additional notes about this payment..."
-                    ></v-textarea>
-                    
+
+                    <v-select v-model="paymentMethod" label="Payment Method" :items="[
+                        { title: 'Cash', value: 'cash' },
+                        { title: 'Credit Card', value: 'card' },
+                        { title: 'Bank Transfer', value: 'transfer' },
+                        { title: 'Other', value: 'other' }
+                    ]" item-title="title" item-value="value" variant="outlined" class="mb-4"></v-select>
+
+                    <v-textarea v-model="paymentNote" label="Payment Notes (optional)" variant="outlined" rows="3"
+                        placeholder="Add any additional notes about this payment..."></v-textarea>
+
                     <p class="text-caption text-grey mt-4">
                         This action will mark the job(s) as paid and remove them from the unpaid jobs list.
                         A payment receipt will be generated after confirmation.
@@ -596,18 +546,14 @@ const getTodayDate = () => {
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn color="grey" variant="text" @click="showPaymentModal = false">Cancel</v-btn>
-                    <v-btn 
-                        color="success" 
-                        @click="confirmPayment" 
-                        :loading="processingPayment"
-                        :disabled="selectedJobs.length === 0"
-                    >
+                    <v-btn color="success" @click="confirmPayment" :loading="processingPayment"
+                        :disabled="selectedJobs.length === 0">
                         Confirm Payment
                     </v-btn>
                 </v-card-actions>
             </v-card>
         </v-dialog>
-        
+
         <!-- Invoice/Receipt Modal -->
         <v-dialog v-model="showInvoiceModal" max-width="800px">
             <v-card>
@@ -625,7 +571,7 @@ const getTodayDate = () => {
                                 <p class="invoice-date">Date: {{ getTodayDate() }}</p>
                             </div>
                         </div>
-                        
+
                         <div class="customer-section">
                             <div class="customer-details">
                                 <h4>Customer:</h4>
@@ -636,7 +582,7 @@ const getTodayDate = () => {
                                 <p>{{ paymentMethod.charAt(0).toUpperCase() + paymentMethod.slice(1) }}</p>
                             </div>
                         </div>
-                        
+
                         <table class="invoice-items">
                             <thead>
                                 <tr>
@@ -650,8 +596,9 @@ const getTodayDate = () => {
                                 <tr v-for="job in invoiceItems" :key="job.id">
                                     <td>#{{ job.id }}</td>
                                     <td>
-                                        {{ job.racquet ? `${job.racquet.brand} ${job.racquet.model}` : 'Racquet' }} - 
-                                        {{ job.mainString ? `${job.mainString.brand} ${job.mainString.model}` : 'String' }}
+                                        {{ job.racquet ? `${job.racquet.brand} ${job.racquet.model}` : 'Racquet' }} -
+                                        {{ job.mainString ? `${job.mainString.brand} ${job.mainString.model}` : 'String'
+                                        }}
                                     </td>
                                     <td>{{ formatDate(job.completedAt) }}</td>
                                     <td>{{ formatCurrency(job.price || 0) }}</td>
@@ -660,16 +607,17 @@ const getTodayDate = () => {
                             <tfoot>
                                 <tr>
                                     <td colspan="3" class="text-right font-weight-bold">Total</td>
-                                    <td>{{ formatCurrency(invoiceItems.reduce((sum, job) => sum + (job.price || 0), 0)) }}</td>
+                                    <td>{{formatCurrency(invoiceItems.reduce((sum, job) => sum + (job.price || 0), 0))
+                                        }}</td>
                                 </tr>
                             </tfoot>
                         </table>
-                        
+
                         <div class="invoice-notes" v-if="paymentNote">
                             <h4>Notes:</h4>
                             <p>{{ paymentNote }}</p>
                         </div>
-                        
+
                         <div class="invoice-footer">
                             <p>Thank you for your business!</p>
                         </div>
@@ -678,11 +626,7 @@ const getTodayDate = () => {
                 <v-card-actions>
                     <v-spacer></v-spacer>
                     <v-btn color="grey" variant="text" @click="showInvoiceModal = false">Close</v-btn>
-                    <v-btn 
-                        color="primary" 
-                        prepend-icon="mdi-download" 
-                        @click="downloadInvoice"
-                    >
+                    <v-btn color="primary" prepend-icon="mdi-download" @click="downloadInvoice">
                         Download Receipt
                     </v-btn>
                 </v-card-actions>
@@ -693,161 +637,163 @@ const getTodayDate = () => {
 
 <style lang="scss" scoped>
 .payments-view {
-  &__container {
-    padding: $spacing-lg;
-    max-width: 100%;
-  }
-
-  &__title {
-    @include heading-1;
-    color: $primary;
-    margin-bottom: $spacing-lg;
-  }
-
-  &__section-title {
-    @include heading-3;
-    padding: $spacing-md $spacing-lg;
-    background-color: rgba($primary, 0.05);
-    border-bottom: 1px solid rgba($primary, 0.1);
-  }
-
-  &__table {
-    :deep(tr:hover) {
-      background-color: rgba($primary, 0.05) !important;
+    &__container {
+        padding: $spacing-lg;
+        max-width: 100%;
     }
-    
-    :deep(th) {
-      font-weight: $font-weight-bold !important;
+
+    &__title {
+        @include heading-1;
+        color: $primary;
+        margin-bottom: $spacing-lg;
     }
-  }
+
+    &__section-title {
+        @include heading-3;
+        padding: $spacing-md $spacing-lg;
+        background-color: rgba($primary, 0.05);
+        border-bottom: 1px solid rgba($primary, 0.1);
+    }
+
+    &__table {
+        :deep(tr:hover) {
+            background-color: rgba($primary, 0.05) !important;
+        }
+
+        :deep(th) {
+            font-weight: $font-weight-bold !important;
+        }
+    }
 }
 
 .selected-amount-card {
-  background-color: rgba($success, 0.05);
-  border: 1px solid rgba($success, 0.2);
-  border-radius: $border-radius-md;
-  transition: all 0.3s ease;
-  
-  &:hover {
-    background-color: rgba($success, 0.1);
-  }
+    background-color: rgba($success, 0.05);
+    border: 1px solid rgba($success, 0.2);
+    border-radius: $border-radius-md;
+    transition: all 0.3s ease;
+
+    &:hover {
+        background-color: rgba($success, 0.1);
+    }
 }
 
 .payment-invoice {
-  background-color: white;
-  padding: $spacing-lg;
-  border: 1px solid #ddd;
-  border-radius: $border-radius-md;
-  font-family: Arial, sans-serif;
-  color: #333;
-  max-width: 100%;
-  
-  .invoice-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: $spacing-lg;
-    padding-bottom: $spacing-md;
-    border-bottom: 2px solid $primary;
-    
-    .logo-section {
-      display: flex;
-      align-items: center;
-      gap: $spacing-sm;
-      
-      .company-name {
-        font-size: 24px;
-        font-weight: bold;
-        color: $primary;
-        margin: 0;
-      }
+    background-color: white;
+    padding: $spacing-lg;
+    border: 1px solid #ddd;
+    border-radius: $border-radius-md;
+    font-family: Arial, sans-serif;
+    color: #333;
+    max-width: 100%;
+
+    .invoice-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: $spacing-lg;
+        padding-bottom: $spacing-md;
+        border-bottom: 2px solid $primary;
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: $spacing-sm;
+
+            .company-name {
+                font-size: 24px;
+                font-weight: bold;
+                color: $primary;
+                margin: 0;
+            }
+        }
+
+        .invoice-details {
+            text-align: right;
+
+            .invoice-title {
+                font-size: 24px;
+                font-weight: bold;
+                color: $primary;
+                margin: 0 0 $spacing-sm 0;
+            }
+
+            .invoice-number,
+            .invoice-date {
+                margin: $spacing-xs 0;
+                font-size: 14px;
+            }
+        }
     }
-    
-    .invoice-details {
-      text-align: right;
-      
-      .invoice-title {
-        font-size: 24px;
-        font-weight: bold;
-        color: $primary;
-        margin: 0 0 $spacing-sm 0;
-      }
-      
-      .invoice-number, .invoice-date {
-        margin: $spacing-xs 0;
-        font-size: 14px;
-      }
+
+    .customer-section {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: $spacing-lg;
+
+        h4 {
+            color: $text-secondary;
+            margin-bottom: $spacing-xs;
+            font-size: 14px;
+        }
+
+        .customer-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
     }
-  }
-  
-  .customer-section {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: $spacing-lg;
-    
-    h4 {
-      color: $text-secondary;
-      margin-bottom: $spacing-xs;
-      font-size: 14px;
+
+    .invoice-items {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: $spacing-lg;
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: $spacing-sm $spacing-md;
+            text-align: left;
+        }
+
+        th {
+            background-color: rgba($primary, 0.05);
+            font-weight: bold;
+        }
+
+        tfoot {
+            font-weight: bold;
+
+            td {
+                border-top: 2px solid $primary;
+            }
+
+            .text-right {
+                text-align: right;
+            }
+        }
     }
-    
-    .customer-name {
-      font-weight: bold;
-      font-size: 16px;
+
+    .invoice-notes {
+        background-color: rgba($primary, 0.05);
+        padding: $spacing-md;
+        border-radius: $border-radius-sm;
+        margin-bottom: $spacing-lg;
+
+        h4 {
+            color: $text-secondary;
+            margin-bottom: $spacing-xs;
+            font-size: 14px;
+        }
+
+        p {
+            margin: 0;
+        }
     }
-  }
-  
-  .invoice-items {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: $spacing-lg;
-    
-    th, td {
-      border: 1px solid #ddd;
-      padding: $spacing-sm $spacing-md;
-      text-align: left;
+
+    .invoice-footer {
+        text-align: center;
+        padding-top: $spacing-md;
+        border-top: 1px solid #ddd;
+        color: $text-secondary;
+        font-style: italic;
     }
-    
-    th {
-      background-color: rgba($primary, 0.05);
-      font-weight: bold;
-    }
-    
-    tfoot {
-      font-weight: bold;
-      
-      td {
-        border-top: 2px solid $primary;
-      }
-      
-      .text-right {
-        text-align: right;
-      }
-    }
-  }
-  
-  .invoice-notes {
-    background-color: rgba($primary, 0.05);
-    padding: $spacing-md;
-    border-radius: $border-radius-sm;
-    margin-bottom: $spacing-lg;
-    
-    h4 {
-      color: $text-secondary;
-      margin-bottom: $spacing-xs;
-      font-size: 14px;
-    }
-    
-    p {
-      margin: 0;
-    }
-  }
-  
-  .invoice-footer {
-    text-align: center;
-    padding-top: $spacing-md;
-    border-top: 1px solid #ddd;
-    color: $text-secondary;
-    font-style: italic;
-  }
 }
 </style>

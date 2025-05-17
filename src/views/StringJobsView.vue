@@ -325,6 +325,14 @@ const handleSort = (column: string) => {
         sortDesc.value = true
     }
 }
+
+const showErrorAlert = ref(true)
+
+watch(() => stringJobStore.error, (newError) => {
+    if (newError) {
+        showErrorAlert.value = true
+    }
+})
 </script>
 
 <template>
@@ -344,9 +352,9 @@ const handleSort = (column: string) => {
             </v-row>
 
             <!-- Error Alert -->
-            <v-row class="mb-3" v-if="stringJobStore.error">
+            <v-row class="mb-3" v-if="stringJobStore.error && showErrorAlert">
                 <v-col cols="12">
-                    <v-alert type="error" variant="tonal" closable>
+                    <v-alert type="error" variant="tonal" closable v-model="showErrorAlert">
                         {{ stringJobStore.error }}
                     </v-alert>
                 </v-col>

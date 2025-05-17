@@ -367,6 +367,14 @@ const headers = [
   { title: 'Player', key: 'player', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false }
 ]
+
+const showErrorAlert = ref(true)
+
+watch(() => racquetStore.error, (newError) => {
+  if (newError) {
+    showErrorAlert.value = true
+  }
+})
 </script>
 
 <template>
@@ -395,9 +403,9 @@ const headers = [
       </v-row>
 
       <!-- Error Alert -->
-      <v-row class="mb-3" v-if="racquetStore.error">
+      <v-row class="mb-3" v-if="racquetStore.error && showErrorAlert">
         <v-col cols="12">
-          <v-alert type="error" variant="tonal" closable>
+          <v-alert type="error" variant="tonal" closable v-model="showErrorAlert">
             {{ racquetStore.error }}
           </v-alert>
         </v-col>

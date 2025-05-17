@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useStringerStore, useAuthStore } from '../stores'
 
@@ -51,7 +51,7 @@ const filteredStringers = computed(() => {
       const fullName = `${stringer.name} ${stringer.lastName}`.toLowerCase()
       const email = stringer.email ? stringer.email.toLowerCase() : ''
       const phone = stringer.phoneNumber ? stringer.phoneNumber.toLowerCase() : ''
-      
+
       return fullName.includes(searchLower) || email.includes(searchLower) || phone.includes(searchLower)
     })
   }
@@ -119,14 +119,14 @@ const openNewStringerDialog = () => {
     email: '',
     phoneNumber: ''
   }
-  
+
   formErrors.value = {
     name: '',
     lastName: '',
     email: '',
     phoneNumber: ''
   }
-  
+
   showNewStringerDialog.value = true
 }
 
@@ -138,14 +138,14 @@ const openEditStringerDialog = (stringer: any) => {
     email: stringer.email || '',
     phoneNumber: stringer.phoneNumber || ''
   }
-  
+
   formErrors.value = {
     name: '',
     lastName: '',
     email: '',
     phoneNumber: ''
   }
-  
+
   showEditStringerDialog.value = true
 }
 
@@ -157,27 +157,27 @@ const openDeleteDialog = (stringer: any) => {
     email: stringer.email || '',
     phoneNumber: stringer.phoneNumber || ''
   }
-  
+
   showDeleteConfirmation.value = true
 }
 
 const validateStringerForm = () => {
   let isValid = true
-  
+
   if (!stringerForm.value.name.trim()) {
     formErrors.value.name = 'Name is required'
     isValid = false
   } else {
     formErrors.value.name = ''
   }
-  
+
   if (!stringerForm.value.lastName.trim()) {
     formErrors.value.lastName = 'Last name is required'
     isValid = false
   } else {
     formErrors.value.lastName = ''
   }
-  
+
   if (stringerForm.value.email.trim()) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (!emailRegex.test(stringerForm.value.email)) {
@@ -189,7 +189,7 @@ const validateStringerForm = () => {
   } else {
     formErrors.value.email = ''
   }
-  
+
   if (stringerForm.value.phoneNumber.trim()) {
     const phoneRegex = /^[+]?[\d\s()-]{7,}$/
     if (!phoneRegex.test(stringerForm.value.phoneNumber)) {
@@ -201,13 +201,13 @@ const validateStringerForm = () => {
   } else {
     formErrors.value.phoneNumber = ''
   }
-  
+
   return isValid
 }
 
 const submitNewStringer = async () => {
   if (!validateStringerForm()) return
-  
+
   try {
     await stringerStore.createStringer({
       name: stringerForm.value.name,
@@ -215,7 +215,7 @@ const submitNewStringer = async () => {
       email: stringerForm.value.email || undefined,
       phoneNumber: stringerForm.value.phoneNumber || undefined
     })
-    
+
     showNewStringerDialog.value = false
   } catch (error) {
     console.error('Error creating stringer:', error)
@@ -224,7 +224,7 @@ const submitNewStringer = async () => {
 
 const submitEditStringer = async () => {
   if (!validateStringerForm() || !stringerForm.value.id) return
-  
+
   try {
     await stringerStore.updateStringer(stringerForm.value.id, {
       name: stringerForm.value.name,
@@ -232,7 +232,7 @@ const submitEditStringer = async () => {
       email: stringerForm.value.email || undefined,
       phoneNumber: stringerForm.value.phoneNumber || undefined
     })
-    
+
     showEditStringerDialog.value = false
   } catch (error) {
     console.error('Error updating stringer:', error)
@@ -241,7 +241,7 @@ const submitEditStringer = async () => {
 
 const deleteStringer = async () => {
   if (!stringerForm.value.id) return
-  
+
   try {
     await stringerStore.deleteStringer(stringerForm.value.id)
     showDeleteConfirmation.value = false
@@ -270,28 +270,37 @@ const headers = [
   { title: 'Phone', key: 'phoneNumber', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false }
 ]
+
+const showErrorAlert = ref(true)
+
+watch(() => stringerStore.error, (newError) => {
+  if (newError) {
+    showErrorAlert.value = true
+  }
+})
 </script>
 
 <template>
   <div class="stringers-view">
     <v-container class="stringers-view__container">
-      
+
       <!-- Page Header -->
       <v-row class="mb-3">
         <v-col cols="12" sm="8">
           <h1 class="stringers-view__title">Stringers</h1>
         </v-col>
         <v-col cols="12" sm="4" class="d-flex justify-end align-center">
-          <v-btn v-if="canManageStringers" class="mb-3" color="primary" prepend-icon="mdi-plus" @click="openNewStringerDialog">
+          <v-btn v-if="canManageStringers" class="mb-3" color="primary" prepend-icon="mdi-plus"
+            @click="openNewStringerDialog">
             New Stringer
           </v-btn>
         </v-col>
       </v-row>
 
       <!-- Error Alert -->
-      <v-row class="mb-3" v-if="stringerStore.error">
+      <v-row class="mb-3" v-if="stringerStore.error && showErrorAlert">
         <v-col cols="12">
-          <v-alert type="error" variant="tonal" closable>
+          <v-alert type="error" variant="tonal" closable v-model="showErrorAlert">
             {{ stringerStore.error }}
           </v-alert>
         </v-col>
@@ -314,23 +323,22 @@ const headers = [
         <v-icon icon="mdi-account-question" size="64" color="grey-lighten-1" class="mb-4"></v-icon>
         <h3 class="text-h5 mb-2">No stringers found</h3>
         <p class="text-body-1 mb-6 text-grey">Try adjusting your search or add a new stringer.</p>
-        <v-btn v-if="canManageStringers" color="primary" prepend-icon="mdi-plus" @click="openNewStringerDialog">Add New Stringer</v-btn>
+        <v-btn v-if="canManageStringers" color="primary" prepend-icon="mdi-plus" @click="openNewStringerDialog">Add New
+          Stringer</v-btn>
       </v-card>
 
       <!-- Stringer List Table -->
       <v-card v-else class="mb-6">
-        <v-data-table-virtual :headers="headers" :items="paginatedStringers" :items-per-page="itemsPerPage"
-          :page="page" :loading="loading" class="stringers-view__table" hover
-          @update:options="(options: any) => page = options.page"
+        <v-data-table-virtual :headers="headers" :items="paginatedStringers" :items-per-page="itemsPerPage" :page="page"
+          :loading="loading" class="stringers-view__table" hover @update:options="(options: any) => page = options.page"
           @click:row="(event: any, { item }: any) => viewStringerDetails(item.id)">
 
           <!-- Custom Header -->
           <template v-slot:header.column="{ column }">
             <div class="d-flex align-center">
               {{ column.title }}
-              <v-btn v-if="column.key && column.key !== 'actions' && column.sortable"
-                icon="mdi-arrow-up-down" size="small" variant="text"
-                @click.stop="handleSort(column.key)"></v-btn>
+              <v-btn v-if="column.key && column.key !== 'actions' && column.sortable" icon="mdi-arrow-up-down"
+                size="small" variant="text" @click.stop="handleSort(column.key)"></v-btn>
             </div>
           </template>
 
@@ -389,11 +397,10 @@ const headers = [
 
         <!-- Pagination Controls -->
         <div class="d-flex justify-center align-center pa-4">
-          <v-pagination v-model="page" :length="totalPages" :total-visible="7"
-            density="comfortable"></v-pagination>
+          <v-pagination v-model="page" :length="totalPages" :total-visible="7" density="comfortable"></v-pagination>
 
-          <v-select v-model="itemsPerPage" :items="[10, 25, 50, 100]" label="Per page" density="compact"
-            class="ms-4" style="max-width: 120px;" hide-details></v-select>
+          <v-select v-model="itemsPerPage" :items="[10, 25, 50, 100]" label="Per page" density="compact" class="ms-4"
+            style="max-width: 120px;" hide-details></v-select>
         </div>
       </v-card>
     </v-container>
@@ -406,56 +413,27 @@ const headers = [
           <v-form @submit.prevent="submitNewStringer">
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.name"
-                  label="First Name"
-                  :error-messages="formErrors.name"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.name" label="First Name" :error-messages="formErrors.name" required
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
-              
+
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.lastName"
-                  label="Last Name"
-                  :error-messages="formErrors.lastName"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.lastName" label="Last Name" :error-messages="formErrors.lastName"
+                  required variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
             </v-row>
 
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.email"
-                  label="Email"
-                  :error-messages="formErrors.email"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  hint="Optional"
-                  persistent-hint
-                  type="email"
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.email" label="Email" :error-messages="formErrors.email"
+                  variant="outlined" density="comfortable" class="mb-3" hint="Optional" persistent-hint
+                  type="email"></v-text-field>
               </v-col>
-              
+
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.phoneNumber"
-                  label="Phone Number"
-                  :error-messages="formErrors.phoneNumber"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  hint="Optional"
-                  persistent-hint
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.phoneNumber" label="Phone Number"
+                  :error-messages="formErrors.phoneNumber" variant="outlined" density="comfortable" class="mb-3"
+                  hint="Optional" persistent-hint></v-text-field>
               </v-col>
             </v-row>
           </v-form>
@@ -476,56 +454,27 @@ const headers = [
           <v-form @submit.prevent="submitEditStringer">
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.name"
-                  label="First Name"
-                  :error-messages="formErrors.name"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.name" label="First Name" :error-messages="formErrors.name" required
+                  variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
-              
+
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.lastName"
-                  label="Last Name"
-                  :error-messages="formErrors.lastName"
-                  required
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.lastName" label="Last Name" :error-messages="formErrors.lastName"
+                  required variant="outlined" density="comfortable" class="mb-3"></v-text-field>
               </v-col>
             </v-row>
 
             <v-row>
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.email"
-                  label="Email"
-                  :error-messages="formErrors.email"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  hint="Optional"
-                  persistent-hint
-                  type="email"
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.email" label="Email" :error-messages="formErrors.email"
+                  variant="outlined" density="comfortable" class="mb-3" hint="Optional" persistent-hint
+                  type="email"></v-text-field>
               </v-col>
-              
+
               <v-col cols="12" sm="6">
-                <v-text-field
-                  v-model="stringerForm.phoneNumber"
-                  label="Phone Number"
-                  :error-messages="formErrors.phoneNumber"
-                  variant="outlined"
-                  density="comfortable"
-                  class="mb-3"
-                  hint="Optional"
-                  persistent-hint
-                ></v-text-field>
+                <v-text-field v-model="stringerForm.phoneNumber" label="Phone Number"
+                  :error-messages="formErrors.phoneNumber" variant="outlined" density="comfortable" class="mb-3"
+                  hint="Optional" persistent-hint></v-text-field>
               </v-col>
             </v-row>
           </v-form>
@@ -547,7 +496,7 @@ const headers = [
           <p class="font-weight-bold">{{ stringerForm.name }} {{ stringerForm.lastName }}</p>
           <p v-if="stringerForm.email" class="text-body-2">{{ stringerForm.email }}</p>
           <p class="text-caption text-grey mt-4">
-            Note: Stringers with associated string jobs cannot be deleted. 
+            Note: Stringers with associated string jobs cannot be deleted.
             You must delete or reassign their string jobs first.
           </p>
         </v-card-text>

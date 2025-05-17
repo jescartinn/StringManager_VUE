@@ -551,6 +551,14 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+const showErrorAlert = ref(true)
+
+watch(() => dashboardStore.error, (newError) => {
+  if (newError) {
+    showErrorAlert.value = true
+  }
+})
 </script>
 
 <template>
@@ -565,9 +573,9 @@ onMounted(async () => {
       </v-row>
 
       <!-- Error Alert -->
-      <v-row class="mb-3" v-if="dashboardStore.error">
+      <v-row class="mb-3" v-if="dashboardStore.error && showErrorAlert">
         <v-col cols="12">
-          <v-alert type="error" variant="tonal" closable>
+          <v-alert type="error" variant="tonal" closable v-model="showErrorAlert">
             {{ dashboardStore.error }}
           </v-alert>
         </v-col>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { usePlayerStore, useAuthStore, useRacquetStore } from '../stores'
 import { getCountryOptions, getCountryName, getCountryFlag } from '../utils/countryUtils'
@@ -255,12 +255,20 @@ const headers = [
   { title: 'Country', key: 'countryCode', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false }
 ]
+
+const showErrorAlert = ref(true)
+
+watch(() => playerStore.error, (newError) => {
+  if (newError) {
+    showErrorAlert.value = true
+  }
+})
 </script>
 
 <template>
   <div class="players-view">
     <v-container class="players-view__container">
-      
+
       <!-- Page Header -->
       <v-row class="mb-3">
         <v-col cols="12" sm="8">
@@ -275,9 +283,9 @@ const headers = [
       </v-row>
 
       <!-- Error Alert -->
-      <v-row class="mb-3" v-if="playerStore.error">
+      <v-row class="mb-3" v-if="playerStore.error && showErrorAlert">
         <v-col cols="12">
-          <v-alert type="error" variant="tonal" closable>
+          <v-alert type="error" variant="tonal" closable v-model="showErrorAlert">
             {{ playerStore.error }}
           </v-alert>
         </v-col>
