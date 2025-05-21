@@ -15,6 +15,7 @@ spec:
       containers:
       - name: stringmanager-frontend
         image: jaimeescartinsv/tfg:stringmanager-frontend
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
         env:
