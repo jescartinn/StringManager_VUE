@@ -1019,12 +1019,40 @@ watch(() => dashboardStore.error, (newError) => {
       margin-bottom: $spacing-md;
       overflow: hidden;
       height: 100%;
+      min-height: 400px;
+
+      @include respond-to(xs) {
+        margin-bottom: $spacing-sm;
+        min-height: 350px;
+
+        :deep(.v-card-text) {
+          padding: $spacing-xs !important;
+        }
+      }
+
+      @include respond-to(sm) {
+        min-height: 380px;
+
+        :deep(.v-card-text) {
+          padding: $spacing-sm !important;
+        }
+      }
     }
 
     &-container {
       padding: $spacing-md;
       height: 300px;
       position: relative;
+
+      @include respond-to(xs) {
+        height: 200px;
+        padding: $spacing-sm;
+      }
+
+      @include respond-to(sm) {
+        height: 220px;
+        padding: $spacing-sm;
+      }
     }
 
     &-legend {
