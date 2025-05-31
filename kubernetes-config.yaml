@@ -20,7 +20,7 @@ spec:
         - containerPort: 80
         env:
         - name: VITE_API_URL
-          value: "https://api.stringmanager.work.gd/api"
+          value: "https://stringmanagerapi.retocsv.es/api"
 ---
 apiVersion: v1
 kind: Service
