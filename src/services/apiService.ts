@@ -28,6 +28,13 @@ export interface User {
   lastLoginAt: string | null
 }
 
+export interface CreateUserDTO {
+  username: string
+  email: string
+  password: string
+  role: string
+}
+
 export interface AuthResponse {
   token: string
   user: User
@@ -618,6 +625,12 @@ const users = {
   getById: (id: number): Promise<User> =>
     request<User>(`/users/${id}`),
 
+  create: (userData: CreateUserDTO): Promise<User> =>
+    request<User>('/users', {
+      method: 'POST',
+      body: userData
+    }),
+
   update: (id: number, userData: Partial<User>): Promise<void> =>
     request<void>(`/users/${id}`, {
       method: 'PUT',
@@ -627,6 +640,18 @@ const users = {
   delete: (id: number): Promise<void> =>
     request<void>(`/users/${id}`, {
       method: 'DELETE'
+    }),
+
+  changeUserPassword: (id: number, newPassword: string): Promise<void> =>
+    request<void>(`/users/${id}/password`, {
+      method: 'PATCH',
+      body: { newPassword }
+    }),
+
+  changeUserRole: (id: number, role: string): Promise<void> =>
+    request<void>(`/users/${id}/role`, {
+      method: 'PATCH',
+      body: { role }
     })
 };
 

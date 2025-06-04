@@ -43,6 +43,7 @@ const navigationItems = computed(() => {
     { title: 'Tournaments', icon: 'mdi-trophy', route: '/tournaments' },
     { title: 'Payments', icon: 'mdi-cash-multiple', route: '/payments' },
     { title: 'Reports', icon: 'mdi-chart-bar', route: '/reports' },
+    { title: 'Users', icon: 'mdi-account', route: '/users' },
   ]
 
   return authStore.isAdmin

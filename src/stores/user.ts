@@ -18,6 +18,13 @@ interface UpdateUserDTO {
   role: string
 }
 
+export interface CreateUserDTO {
+  username: string
+  email: string
+  password: string
+  role: string
+}
+
 export const useUserStore = defineStore('user', () => {
   const authStore = useAuthStore()
 
@@ -186,6 +193,80 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  async function createUser(userData: CreateUserDTO) {
+    if (!canManageUsers.value) {
+      error.value = 'Unauthorized: Only administrators can create users'
+      return null
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      const newUser = await api.users.create(userData)
+      users.value.push(newUser)
+      return newUser
+    } catch (e) {
+      console.error('Error creating user:', e)
+      error.value = e instanceof Error ? e.message : 'Failed to create user'
+      return null
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function changeUserPassword(id: number, newPassword: string) {
+    if (!canManageUsers.value) {
+      error.value = 'Unauthorized: Only administrators can change user passwords'
+      return false
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.users.changeUserPassword(id, newPassword)
+      return true
+    } catch (e) {
+      console.error(`Error changing password for user ${id}:`, e)
+      error.value = e instanceof Error ? e.message : `Failed to change password for user #${id}`
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
+  async function changeUserRole(id: number, role: string) {
+    if (!canManageUsers.value) {
+      error.value = 'Unauthorized: Only administrators can change user roles'
+      return false
+    }
+
+    loading.value = true
+    error.value = null
+
+    try {
+      await api.users.changeUserRole(id, role)
+
+      const index = users.value.findIndex(user => user.id === id)
+      if (index !== -1) {
+        users.value[index] = { ...users.value[index], role }
+      }
+
+      if (currentUser.value && currentUser.value.id === id) {
+        currentUser.value = { ...currentUser.value, role }
+      }
+
+      return true
+    } catch (e) {
+      console.error(`Error changing role for user ${id}:`, e)
+      error.value = e instanceof Error ? e.message : `Failed to change role for user #${id}`
+      return false
+    } finally {
+      loading.value = false
+    }
+  }
+
   function clearCurrentUser() {
     currentUser.value = null
   }
@@ -209,13 +290,16 @@ export const useUserStore = defineStore('user', () => {
     stringerUsers,
     regularUsers,
     canManageUsers,
-    
+
     getUserById,
     fetchAllUsers,
     fetchUserById,
     updateUser,
     deleteUser,
     clearCurrentUser,
+    createUser,
+    changeUserPassword,
+    changeUserRole,
     reset
   }
 })
