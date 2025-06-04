@@ -205,42 +205,6 @@ const openDeleteDialog = (user: any) => {
     showDeleteConfirmation.value = true
 }
 
-const validateUserForm = () => {
-    let isValid = true
-
-    if (!userForm.value.username.trim()) {
-        formErrors.value.username = 'Username is required'
-        isValid = false
-    } else if (userForm.value.username.trim().length < 3) {
-        formErrors.value.username = 'Username must be at least 3 characters'
-        isValid = false
-    } else {
-        formErrors.value.username = ''
-    }
-
-    if (!userForm.value.email.trim()) {
-        formErrors.value.email = 'Email is required'
-        isValid = false
-    } else {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-        if (!emailRegex.test(userForm.value.email)) {
-            formErrors.value.email = 'Please enter a valid email address'
-            isValid = false
-        } else {
-            formErrors.value.email = ''
-        }
-    }
-
-    if (!userForm.value.role) {
-        formErrors.value.role = 'Role is required'
-        isValid = false
-    } else {
-        formErrors.value.role = ''
-    }
-
-    return isValid
-}
-
 const validatePasswordForm = () => {
     let isValid = true
 
@@ -271,10 +235,18 @@ const submitNewUser = async () => {
     if (!validateUserForm()) return
 
     try {
-        // This would need to be implemented in the backend
-        console.log('Creating new user:', userForm.value)
-        // await userStore.createUser(userForm.value)
-        showNewUserDialog.value = false
+        const userData = {
+            username: userForm.value.username,
+            email: userForm.value.email,
+            password: userForm.value.newPassword,
+            role: userForm.value.role
+        }
+
+        const result = await userStore.createUser(userData)
+        if (result) {
+            showNewUserDialog.value = false
+            await userStore.fetchAllUsers()
+        }
     } catch (error) {
         console.error('Error creating user:', error)
     }
@@ -300,9 +272,10 @@ const submitChangePassword = async () => {
     if (!validatePasswordForm() || !userForm.value.id) return
 
     try {
-        // This would need to be implemented in the backend
-        console.log('Changing password for user:', userForm.value.id)
-        showChangePasswordDialog.value = false
+        const result = await userStore.changeUserPassword(userForm.value.id, userForm.value.newPassword)
+        if (result) {
+            showChangePasswordDialog.value = false
+        }
     } catch (error) {
         console.error('Error changing password:', error)
     }
@@ -336,6 +309,64 @@ const getRoleColor = (role: string) => {
         case 'User': return 'success'
         default: return 'grey'
     }
+}
+
+const validateUserForm = () => {
+    let isValid = true
+
+    if (!userForm.value.username.trim()) {
+        formErrors.value.username = 'Username is required'
+        isValid = false
+    } else if (userForm.value.username.trim().length < 3) {
+        formErrors.value.username = 'Username must be at least 3 characters'
+        isValid = false
+    } else {
+        formErrors.value.username = ''
+    }
+
+    if (!userForm.value.email.trim()) {
+        formErrors.value.email = 'Email is required'
+        isValid = false
+    } else {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+        if (!emailRegex.test(userForm.value.email)) {
+            formErrors.value.email = 'Please enter a valid email address'
+            isValid = false
+        } else {
+            formErrors.value.email = ''
+        }
+    }
+
+    if (!userForm.value.role) {
+        formErrors.value.role = 'Role is required'
+        isValid = false
+    } else {
+        formErrors.value.role = ''
+    }
+
+    if (showNewUserDialog.value) {
+        if (!userForm.value.newPassword) {
+            formErrors.value.newPassword = 'Password is required'
+            isValid = false
+        } else if (userForm.value.newPassword.length < 8) {
+            formErrors.value.newPassword = 'Password must be at least 8 characters'
+            isValid = false
+        } else {
+            formErrors.value.newPassword = ''
+        }
+
+        if (!userForm.value.confirmPassword) {
+            formErrors.value.confirmPassword = 'Please confirm the password'
+            isValid = false
+        } else if (userForm.value.confirmPassword !== userForm.value.newPassword) {
+            formErrors.value.confirmPassword = 'Passwords do not match'
+            isValid = false
+        } else {
+            formErrors.value.confirmPassword = ''
+        }
+    }
+
+    return isValid
 }
 
 const headers = [
