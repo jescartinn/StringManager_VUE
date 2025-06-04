@@ -135,7 +135,14 @@ export const useUserStore = defineStore('user', () => {
     error.value = null
 
     try {
-      await api.users.update(id, userData)
+      const completeUserData = {
+        id: id,
+        username: userData.username,
+        email: userData.email,
+        role: userData.role
+      }
+
+      await api.users.update(id, completeUserData)
 
       const index = users.value.findIndex(user => user.id === id)
       if (index !== -1) {
