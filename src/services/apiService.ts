@@ -643,8 +643,8 @@ const users = {
     }),
 
   changeUserPassword: (id: number, newPassword: string): Promise<void> =>
-    request<void>(`/users/${id}/password`, {
-      method: 'PATCH',
+    request<void>(`/users/${id}/change-password`, {
+      method: 'POST',
       body: { newPassword }
     }),
 
