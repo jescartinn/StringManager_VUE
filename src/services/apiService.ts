@@ -406,6 +406,11 @@ const auth = {
     request<void>('/auth/change-password', {
       method: 'POST',
       body: changePasswordData
+    }),
+
+  refreshUserData: (): Promise<AuthResponse> =>
+    request<AuthResponse>('/auth/refresh-user-data', {
+      method: 'POST'
     })
 };
 

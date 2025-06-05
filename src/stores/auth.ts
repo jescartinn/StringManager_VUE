@@ -170,6 +170,47 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    async function refreshUserData() {
+        if (!isAuthenticated.value) return false;
+
+        loading.value = true;
+        error.value = null;
+
+        try {
+            const response = await api.auth.refreshUserData();
+
+            token.value = response.token;
+            user.value = response.user;
+
+            localStorage.setItem('token', response.token);
+            localStorage.setItem('user', JSON.stringify(response.user));
+
+            return true;
+        } catch (e) {
+            console.error('Error refreshing user data:', e);
+            error.value = e instanceof Error ? e.message : 'Failed to refresh user data';
+            return false;
+        } finally {
+            loading.value = false;
+        }
+    }
+
+    async function checkForRoleChanges() {
+        try {
+            const currentUser = await api.auth.getCurrentUser();
+
+            if (user.value && currentUser.role !== user.value.role) {
+                await refreshUserData();
+                return true;
+            }
+
+            return false;
+        } catch (error) {
+            console.error('Error checking role changes:', error);
+            return false;
+        }
+    }
+
     return {
         token,
         user,
@@ -185,6 +226,8 @@ export const useAuthStore = defineStore('auth', () => {
         logout,
         checkAuth,
         changePassword,
-        updateProfile
+        updateProfile,
+        refreshUserData,
+        checkForRoleChanges
     }
 })

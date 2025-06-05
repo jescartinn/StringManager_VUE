@@ -157,6 +157,10 @@ export const useUserStore = defineStore('user', () => {
         await authStore.checkAuth()
       }
 
+      if (authStore.user && authStore.user.id === id) {
+        await authStore.refreshUserData();
+      }
+
       return true
     } catch (e) {
       console.error(`Error updating user ${id}:`, e)
