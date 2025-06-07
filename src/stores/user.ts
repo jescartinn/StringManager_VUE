@@ -269,11 +269,10 @@ export const useUserStore = defineStore('user', () => {
       if (response && response.requiresTokenRefresh) {
         const authStore = useAuthStore()
         await authStore.refreshUserData()
-        console.log('Token refreshed due to role change')
-      }
 
-      if (currentUser.value && currentUser.value.id === id) {
-        currentUser.value = { ...currentUser.value, role }
+        window.dispatchEvent(new CustomEvent('userRoleChanged', {
+          detail: { userId: id, newRole: role }
+        }))
       }
 
       return true
