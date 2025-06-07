@@ -121,6 +121,9 @@ onMounted(async () => {
     const roleCheckInterval = setInterval(async () => {
       if (authStore.isAuthenticated) {
         const hasRoleChanged = await authStore.checkForRoleChanges()
+        if (hasRoleChanged) {
+          console.log('Role updated automatically')
+        }
       }
     }, 10000)
 
