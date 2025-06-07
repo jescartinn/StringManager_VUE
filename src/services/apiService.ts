@@ -303,6 +303,10 @@ export interface DistributionStats {
   }>
 }
 
+export interface ChangeRoleResponse {
+  requiresTokenRefresh?: boolean;
+}
+
 interface RequestOptions extends Omit<RequestInit, 'body'> {
   body?: any
 }
@@ -351,7 +355,6 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     // Special handling for 404 Not Found responses for player-related requests
     if (response.status === 404) {
       if (endpoint.includes('/player/')) {
-        // For player-specific endpoints, return an empty array instead of throwing an error
         if (Array.isArray([] as unknown as T)) {
           return [] as unknown as T;
         }
@@ -376,6 +379,10 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
       return await response.json() as T;
+    }
+
+    if (response.status === 200) {
+      return {} as T;
     }
 
     return await response.text() as unknown as T;
@@ -653,8 +660,8 @@ const users = {
       body: { newPassword }
     }),
 
-  changeUserRole: (id: number, role: string): Promise<void> =>
-    request<void>(`/users/${id}/role`, {
+  changeUserRole: (id: number, role: string): Promise<ChangeRoleResponse> =>
+    request<ChangeRoleResponse>(`/users/${id}/role`, {
       method: 'PATCH',
       body: { role }
     })

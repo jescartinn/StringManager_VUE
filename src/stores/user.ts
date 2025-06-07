@@ -259,11 +259,17 @@ export const useUserStore = defineStore('user', () => {
     error.value = null
 
     try {
-      await api.users.changeUserRole(id, role)
+      const response = await api.users.changeUserRole(id, role)
 
       const index = users.value.findIndex(user => user.id === id)
       if (index !== -1) {
         users.value[index] = { ...users.value[index], role }
+      }
+
+      if (response && response.requiresTokenRefresh) {
+        const authStore = useAuthStore()
+        await authStore.refreshUserData()
+        console.log('Token refreshed due to role change')
       }
 
       if (currentUser.value && currentUser.value.id === id) {
