@@ -390,11 +390,6 @@ const checkForUpdates = async () => {
     }
 }
 
-onMounted(() => {
-    const interval = setInterval(checkForUpdates, 5000)
-    onUnmounted(() => clearInterval(interval))
-})
-
 watch(() => userStore.error, (newError) => {
     if (newError) {
         showErrorAlert.value = true

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { RouterView, useRoute, useRouter } from 'vue-router'
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import {
   useAuthStore,
   useDashboardStore,
@@ -111,6 +111,25 @@ const prefetchData = async () => {
 onMounted(async () => {
   if (authStore.isAuthenticated) {
     await prefetchData()
+  }
+})
+
+onMounted(async () => {
+  if (authStore.isAuthenticated) {
+    await prefetchData()
+
+    const roleCheckInterval = setInterval(async () => {
+      if (authStore.isAuthenticated) {
+        const hasRoleChanged = await authStore.checkForRoleChanges()
+        if (hasRoleChanged) {
+          console.log('Role updated automatically')
+        }
+      }
+    }, 10000)
+
+    onUnmounted(() => {
+      clearInterval(roleCheckInterval)
+    })
   }
 })
 
