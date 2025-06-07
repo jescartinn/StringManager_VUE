@@ -381,6 +381,20 @@ const headers = [
 
 const showErrorAlert = ref(true)
 
+const checkForUpdates = async () => {
+    if (authStore.user) {
+        const hasRoleChanged = await authStore.checkForRoleChanges()
+        if (hasRoleChanged) {
+            await userStore.fetchAllUsers()
+        }
+    }
+}
+
+onMounted(() => {
+    const interval = setInterval(checkForUpdates, 5000)
+    onUnmounted(() => clearInterval(interval))
+})
+
 watch(() => userStore.error, (newError) => {
     if (newError) {
         showErrorAlert.value = true
