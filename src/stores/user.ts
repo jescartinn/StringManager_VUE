@@ -154,11 +154,13 @@ export const useUserStore = defineStore('user', () => {
       }
 
       if (authStore.user && authStore.user.id === id) {
-        await authStore.checkAuth()
-      }
+        const originalRole = authStore.user.role
 
-      if (authStore.user && authStore.user.id === id) {
-        await authStore.refreshUserData();
+        if (userData.role !== originalRole) {
+          await authStore.refreshUserData()
+        } else {
+          await authStore.checkAuth()
+        }
       }
 
       return true
