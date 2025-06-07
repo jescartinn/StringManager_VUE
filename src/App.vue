@@ -112,16 +112,25 @@ onMounted(async () => {
   if (authStore.isAuthenticated) {
     await prefetchData()
   }
+})
 
-  const handleRoleChange = (event: CustomEvent) => {
-    console.log('User role changed:', event.detail)
+onMounted(async () => {
+  if (authStore.isAuthenticated) {
+    await prefetchData()
+
+    const roleCheckInterval = setInterval(async () => {
+      if (authStore.isAuthenticated) {
+        const hasRoleChanged = await authStore.checkForRoleChanges()
+        if (hasRoleChanged) {
+          console.log('Role updated automatically')
+        }
+      }
+    }, 10000)
+
+    onUnmounted(() => {
+      clearInterval(roleCheckInterval)
+    })
   }
-
-  window.addEventListener('userRoleChanged', handleRoleChange)
-
-  onUnmounted(() => {
-    window.removeEventListener('userRoleChanged', handleRoleChange)
-  })
 })
 
 watch(() => route.path, () => {
