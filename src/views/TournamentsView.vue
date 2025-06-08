@@ -2,7 +2,6 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTournamentStore, useAuthStore } from '../stores'
-import { getTournamentDateInfo, formatDate as formatDateUtil } from '../utils/dateUtils'
 
 const tournamentStore = useTournamentStore()
 const authStore = useAuthStore()
@@ -62,12 +61,25 @@ const canManageTournaments = computed(() => {
   return authStore.isAdmin
 })
 
+const validActiveTournament = computed(() => {
+  const activeTournament = tournamentStore.activeTournament
+  if (!activeTournament) return null
+
+  const isActive = tournamentStore.isTournamentActive(activeTournament.id)
+  return isActive ? activeTournament : null
+})
+
 onMounted(async () => {
   try {
     await tournamentStore.fetchAllTournaments()
 
     try {
       await tournamentStore.fetchCurrentTournament()
+
+      if (tournamentStore.activeTournament && !tournamentStore.isTournamentActive(tournamentStore.activeTournament.id)) {
+        console.log('Clearing invalid active tournament:', tournamentStore.activeTournament.name)
+        tournamentStore.activeTournament = null
+      }
     } catch (currentTournamentError) {
       console.error('Error fetching current tournament:', currentTournamentError)
     }
@@ -151,19 +163,46 @@ const totalPages = computed(() => {
 })
 
 const isCurrentTournament = (tournament: any) => {
-  if (!tournamentStore.activeTournament) return false
-  return tournament.id === tournamentStore.activeTournament.id
+  if (!validActiveTournament.value) return false
+  return tournament.id === validActiveTournament.value.id
 }
 
 const formatDate = (dateString: string) => {
-  return formatDateUtil(dateString)
+  if (!dateString) return 'N/A'
+  const date = new Date(dateString)
+  return date.toLocaleDateString()
 }
 
 const getTournamentStatus = (tournament: any) => {
-  const dateInfo = getTournamentDateInfo(tournament.startDate, tournament.endDate)
+  const dateInfo = tournamentStore.getTournamentDateInfoById(tournament.id)
+  if (!dateInfo) {
+    const today = new Date()
+    const startDate = new Date(tournament.startDate)
+    const endDate = new Date(tournament.endDate)
+
+    if (today < startDate) {
+      return { text: 'Upcoming', color: 'info' }
+    } else if (today > endDate) {
+      return { text: 'Past', color: 'grey' }
+    } else {
+      return { text: 'Active', color: 'success' }
+    }
+  }
+
   return {
     text: dateInfo.statusText,
     color: dateInfo.statusColor
+  }
+}
+
+const getTournamentDaysInfo = (tournament: any) => {
+  const dateInfo = tournamentStore.getTournamentDateInfoById(tournament.id)
+  if (!dateInfo) return { text: '', days: 0, status: 'unknown' }
+
+  return {
+    text: dateInfo.daysText,
+    days: dateInfo.daysValue,
+    status: dateInfo.status
   }
 }
 
@@ -181,6 +220,7 @@ const resetAndReload = async () => {
   categoryFilter.value = null
   activeFilter.value = null
   await tournamentStore.fetchAllTournaments()
+  await tournamentStore.fetchCurrentTournament()
 }
 
 const openNewTournamentDialog = () => {
@@ -188,15 +228,11 @@ const openNewTournamentDialog = () => {
   const nextWeek = new Date(today)
   nextWeek.setDate(today.getDate() + 7)
 
-  const formatDateForInput = (date: Date) => {
-    return date.toISOString().split('T')[0]
-  }
-
   tournamentForm.value = {
     id: null,
     name: '',
-    startDate: formatDateForInput(today),
-    endDate: formatDateForInput(nextWeek),
+    startDate: today.toISOString().split('T')[0],
+    endDate: nextWeek.toISOString().split('T')[0],
     location: '',
     category: ''
   }
@@ -234,15 +270,7 @@ const openEditTournamentDialog = (tournament: any) => {
 }
 
 const openDeleteDialog = (tournament: any) => {
-  tournamentForm.value = {
-    id: tournament.id,
-    name: tournament.name,
-    startDate: tournament.startDate,
-    endDate: tournament.endDate,
-    location: tournament.location || '',
-    category: tournament.category || ''
-  }
-
+  tournamentForm.value = { ...tournament }
   showDeleteConfirmation.value = true
 }
 
@@ -356,13 +384,23 @@ const viewTournamentJobs = (tournamentId: number) => {
   router.push({ path: '/jobs', query: { tournament: tournamentId.toString() } })
 }
 
-const getTournamentDaysInfo = (tournament: any) => {
-  const dateInfo = getTournamentDateInfo(tournament.startDate, tournament.endDate)
-  return {
-    text: dateInfo.daysText,
-    days: dateInfo.daysValue,
-    status: dateInfo.status
-  }
+const daysUntilStart = (startDate: string) => {
+  const today = new Date()
+  const start = new Date(startDate)
+  const diffTime = start.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays > 0 ? diffDays : 0
+}
+
+const daysRemaining = (endDate: string) => {
+  const today = new Date()
+  const end = new Date(endDate)
+
+  end.setHours(23, 59, 59, 999)
+
+  const diffTime = end.getTime() - today.getTime()
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return diffDays > 0 ? diffDays : 0
 }
 
 const headers = [
@@ -412,23 +450,23 @@ watch(() => tournamentStore.error, (newError) => {
       </v-row>
 
       <!-- Current Tournament Alert -->
-      <v-row class="mb-3" v-if="tournamentStore.activeTournament">
+      <v-row class="mb-3" v-if="validActiveTournament">
         <v-col cols="12">
           <v-alert type="success" variant="tonal" icon="mdi-calendar-check">
             <div class="d-flex justify-space-between align-center flex-wrap">
               <div>
-                <strong>Active Tournament:</strong> {{ tournamentStore.activeTournament.name }}
+                <strong>Active Tournament:</strong> {{ validActiveTournament.name }}
                 <div class="text-caption">
-                  {{ formatDate(tournamentStore.activeTournament.startDate) }} -
-                  {{ formatDate(tournamentStore.activeTournament.endDate) }}
-                  <template v-if="getTournamentDaysInfo(tournamentStore.activeTournament).status === 'active'">
-                    ({{ getTournamentDaysInfo(tournamentStore.activeTournament).days }} {{
-                      getTournamentDaysInfo(tournamentStore.activeTournament).text.toLowerCase() }})
+                  {{ formatDate(validActiveTournament.startDate) }} -
+                  {{ formatDate(validActiveTournament.endDate) }}
+                  <template v-if="getTournamentDaysInfo(validActiveTournament).status === 'active'">
+                    ({{ getTournamentDaysInfo(validActiveTournament).days }} {{
+                      getTournamentDaysInfo(validActiveTournament).text.toLowerCase() }})
                   </template>
                 </div>
               </div>
               <v-btn color="success" variant="text" size="small"
-                @click="viewTournamentDetails(tournamentStore.activeTournament.id)">
+                @click="viewTournamentDetails(validActiveTournament.id)">
                 View Details
               </v-btn>
             </div>
@@ -445,9 +483,12 @@ watch(() => tournamentStore.error, (newError) => {
                 <strong>No Active Tournament</strong>
                 <div class="text-caption">
                   There is no tournament currently active.
-                  <span v-if="canManageTournaments">You can create a new one using the button above.</span>
                 </div>
               </div>
+              <v-btn color="info" variant="text" size="small" @click="openNewTournamentDialog"
+                v-if="canManageTournaments">
+                Create Tournament
+              </v-btn>
             </div>
           </v-alert>
         </v-col>

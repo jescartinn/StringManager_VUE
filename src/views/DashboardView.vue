@@ -25,7 +25,6 @@ const inProgressJobs = computed(() => dashboardStore.dashboardStats?.inProgressJ
 const completedJobsToday = computed(() => dashboardStore.dashboardStats?.completedJobsToday || 0)
 const highPriorityJobs = computed(() => dashboardStore.dashboardStats?.highPriorityJobs || 0)
 
-const currentTournament = computed(() => dashboardStore.dashboardStats?.currentTournament || null)
 const topStringers = computed(() => dashboardStore.dashboardStats?.topStringers || [])
 const topPlayers = computed(() => dashboardStore.dashboardStats?.topPlayers || [])
 const topStrings = computed(() => dashboardStore.dashboardStats?.topStrings || [])
@@ -33,9 +32,33 @@ const topStrings = computed(() => dashboardStore.dashboardStats?.topStrings || [
 const isLoading = computed(() => dashboardStore.loading || stringJobStore.loading || isInitialLoad.value)
 const error = computed(() => dashboardStore.error)
 
+const currentTournament = computed(() => {
+  const activeTournament = tournamentStore.activeTournament
+  if (!activeTournament) return null
+
+  const isActive = tournamentStore.isTournamentActive(activeTournament.id)
+  return isActive ? activeTournament : null
+})
+
+const currentTournamentDays = computed(() => {
+  if (!currentTournament.value) return null
+
+  const dateInfo = tournamentStore.getTournamentDateInfoById(currentTournament.value.id)
+  if (!dateInfo || dateInfo.status !== 'active') return null
+
+  return `${dateInfo.daysValue} ${dateInfo.daysText.toLowerCase()}`
+})
+
 const fetchDashboardData = async () => {
   try {
     await dashboardStore.fetchDashboardStats(true)
+
+    await tournamentStore.fetchCurrentTournament()
+
+    if (tournamentStore.activeTournament && !tournamentStore.isTournamentActive(tournamentStore.activeTournament.id)) {
+      console.log('Clearing invalid active tournament in dashboard:', tournamentStore.activeTournament.name)
+      tournamentStore.activeTournament = null
+    }
 
     await stringJobStore.fetchAllJobs()
 
@@ -321,11 +344,11 @@ const createNewJob = (): void => {
               <v-card-text class="pt-4">
 
                 <!-- Content when there is an active tournament -->
-                <template v-if="currentTournament">
+                <template v-if="currentTournament && currentTournamentDays">
                   <h3 class="home__tournament-name">{{ currentTournament.name }}</h3>
                   <p class="home__tournament-days">
                     <v-icon start color="warning" icon="mdi-calendar-clock"></v-icon>
-                    {{ tournamentStore.getRemainingDays(currentTournament.id) }} days remaining
+                    {{ currentTournamentDays }}
                   </p>
                   <v-btn block color="primary" class="mt-4" prepend-icon="mdi-tennis"
                     @click="navigateToTournament(currentTournament.id)">
