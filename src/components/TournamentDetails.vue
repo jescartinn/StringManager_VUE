@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useTournamentStore, useStringJobStore, useAuthStore } from '../stores'
+import { getTournamentDateInfo, formatDate as formatDateUtil } from '../utils/dateUtils'
 
 const tournamentStore = useTournamentStore()
 const stringJobStore = useStringJobStore()
@@ -107,9 +108,7 @@ const sortedJobs = computed(() => {
 })
 
 const formatDate = (dateString: string) => {
-  if (!dateString) return 'N/A'
-  const date = new Date(dateString)
-  return date.toLocaleDateString()
+  return formatDateUtil(dateString)
 }
 
 const getStatusColor = (status: string) => {
@@ -125,49 +124,20 @@ const getStatusColor = (status: string) => {
 const getTournamentStatus = () => {
   if (!tournament.value) return { text: 'Unknown', color: 'grey' }
 
-  const today = new Date()
-  const startDate = new Date(tournament.value.startDate)
-  const endDate = new Date(tournament.value.endDate)
-
-  startDate.setHours(0, 0, 0, 0)
-  endDate.setHours(23, 59, 59, 999)
-  today.setHours(12, 0, 0, 0)
-
-  if (today < startDate) {
-    return { text: 'Upcoming', color: 'info' }
-  } else if (today > endDate) {
-    return { text: 'Past', color: 'grey' }
-  } else {
-    return { text: 'Active', color: 'success' }
+  const dateInfo = getTournamentDateInfo(tournament.value.startDate, tournament.value.endDate)
+  return {
+    text: dateInfo.statusText,
+    color: dateInfo.statusColor
   }
 }
 
 const getDateInfo = () => {
   if (!tournament.value) return { text: '', days: 0 }
 
-  const today = new Date()
-  const startDate = new Date(tournament.value.startDate)
-  const endDate = new Date(tournament.value.endDate)
-
-  startDate.setHours(0, 0, 0, 0)
-  endDate.setHours(23, 59, 59, 999)
-  today.setHours(12, 0, 0, 0)
-
-  if (today < startDate) {
-    // Tournament hasn't started
-    const diffTime = startDate.getTime() - today.getTime()
-    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return { text: 'Days until start', days }
-  } else if (today <= endDate) {
-    // Tournament is ongoing
-    const diffTime = endDate.getTime() - today.getTime()
-    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return { text: 'Days remaining', days }
-  } else {
-    // Tournament is over
-    const diffTime = today.getTime() - endDate.getTime()
-    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    return { text: 'Days since ended', days }
+  const dateInfo = getTournamentDateInfo(tournament.value.startDate, tournament.value.endDate)
+  return {
+    text: dateInfo.daysText,
+    days: dateInfo.daysValue
   }
 }
 

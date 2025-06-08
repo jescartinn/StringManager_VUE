@@ -27,6 +27,59 @@ interface UpdateTournamentDTO {
   category?: string
 }
 
+interface TournamentDateInfo {
+  status: 'upcoming' | 'active' | 'past'
+  statusColor: 'info' | 'success' | 'grey'
+  statusText: string
+  daysText: string
+  daysValue: number
+}
+
+function getTournamentDateInfo(startDate: string, endDate: string): TournamentDateInfo {
+  const today = new Date()
+  const start = new Date(startDate)
+  const end = new Date(endDate)
+
+  start.setHours(0, 0, 0, 0)
+  end.setHours(23, 59, 59, 999)
+  today.setHours(12, 0, 0, 0)
+
+  if (today < start) {
+    // Torneo próximo
+    const diffTime = start.getTime() - today.getTime()
+    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return {
+      status: 'upcoming',
+      statusColor: 'info',
+      statusText: 'Upcoming',
+      daysText: 'Days until start',
+      daysValue: days
+    }
+  } else if (today <= end) {
+    // Torneo activo
+    const diffTime = end.getTime() - today.getTime()
+    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return {
+      status: 'active',
+      statusColor: 'success',
+      statusText: 'Active',
+      daysText: 'Days remaining',
+      daysValue: days
+    }
+  } else {
+    // Torneo terminado
+    const diffTime = today.getTime() - end.getTime()
+    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    return {
+      status: 'past',
+      statusColor: 'grey',
+      statusText: 'Past',
+      daysText: 'Days since ended',
+      daysValue: days
+    }
+  }
+}
+
 export const useTournamentStore = defineStore('tournament', () => {
   const tournaments = ref<Tournament[]>([])
   const currentTournament = ref<Tournament | null>(null)
@@ -265,6 +318,32 @@ export const useTournamentStore = defineStore('tournament', () => {
     return Math.max(0, diffDays)
   }
 
+  function getTournamentDateInfoById(tournamentId: number): TournamentDateInfo | null {
+    const tournament = getTournamentById(tournamentId)
+    if (!tournament) return null
+    return getTournamentDateInfo(tournament.startDate, tournament.endDate)
+  }
+
+  function isTournamentActive(tournamentId: number): boolean {
+    const dateInfo = getTournamentDateInfoById(tournamentId)
+    return dateInfo?.status === 'active'
+  }
+
+  function isTournamentPast(tournamentId: number): boolean {
+    const dateInfo = getTournamentDateInfoById(tournamentId)
+    return dateInfo?.status === 'past'
+  }
+
+  function getTournamentDaysText(tournamentId: number): string {
+    const dateInfo = getTournamentDateInfoById(tournamentId)
+    if (!dateInfo) return ''
+
+    const daysText = dateInfo.daysText.toLowerCase()
+    const days = dateInfo.daysValue
+
+    return `${days} ${daysText}`
+  }
+
   function clearCurrentTournament() {
     currentTournament.value = null
   }
@@ -289,7 +368,7 @@ export const useTournamentStore = defineStore('tournament', () => {
     upcomingTournaments,
     pastTournaments,
     tournamentOptions,
-    
+
     getTournamentById,
     fetchAllTournaments,
     fetchCurrentTournament,
@@ -299,6 +378,10 @@ export const useTournamentStore = defineStore('tournament', () => {
     deleteTournament,
     hasDateConflict,
     getRemainingDays,
+    getTournamentDateInfoById,
+    isTournamentActive,
+    isTournamentPast,
+    getTournamentDaysText,
     clearCurrentTournament,
     reset
   }

@@ -2,6 +2,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTournamentStore, useAuthStore } from '../stores'
+import { getTournamentDateInfo, formatDate as formatDateUtil } from '../utils/dateUtils'
 
 const tournamentStore = useTournamentStore()
 const authStore = useAuthStore()
@@ -155,22 +156,14 @@ const isCurrentTournament = (tournament: any) => {
 }
 
 const formatDate = (dateString: string) => {
-  if (!dateString) return 'N/A'
-  const date = new Date(dateString)
-  return date.toLocaleDateString()
+  return formatDateUtil(dateString)
 }
 
 const getTournamentStatus = (tournament: any) => {
-  const today = new Date()
-  const startDate = new Date(tournament.startDate)
-  const endDate = new Date(tournament.endDate)
-
-  if (today < startDate) {
-    return { text: 'Upcoming', color: 'info' }
-  } else if (today > endDate) {
-    return { text: 'Past', color: 'grey' }
-  } else {
-    return { text: 'Active', color: 'success' }
+  const dateInfo = getTournamentDateInfo(tournament.startDate, tournament.endDate)
+  return {
+    text: dateInfo.statusText,
+    color: dateInfo.statusColor
   }
 }
 
@@ -363,23 +356,13 @@ const viewTournamentJobs = (tournamentId: number) => {
   router.push({ path: '/jobs', query: { tournament: tournamentId.toString() } })
 }
 
-const daysUntilStart = (startDate: string) => {
-  const today = new Date()
-  const start = new Date(startDate)
-  const diffTime = start.getTime() - today.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays > 0 ? diffDays : 0
-}
-
-const daysRemaining = (endDate: string) => {
-  const today = new Date()
-  const end = new Date(endDate)
-
-  end.setHours(23, 59, 59, 999)
-
-  const diffTime = end.getTime() - today.getTime()
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-  return diffDays > 0 ? diffDays : 0
+const getTournamentDaysInfo = (tournament: any) => {
+  const dateInfo = getTournamentDateInfo(tournament.startDate, tournament.endDate)
+  return {
+    text: dateInfo.daysText,
+    days: dateInfo.daysValue,
+    status: dateInfo.status
+  }
 }
 
 const headers = [
@@ -438,7 +421,10 @@ watch(() => tournamentStore.error, (newError) => {
                 <div class="text-caption">
                   {{ formatDate(tournamentStore.activeTournament.startDate) }} -
                   {{ formatDate(tournamentStore.activeTournament.endDate) }}
-                  ({{ tournamentStore.getRemainingDays(tournamentStore.activeTournament.id) }} days remaining)
+                  <template v-if="getTournamentDaysInfo(tournamentStore.activeTournament).status === 'active'">
+                    ({{ getTournamentDaysInfo(tournamentStore.activeTournament).days }} {{
+                      getTournamentDaysInfo(tournamentStore.activeTournament).text.toLowerCase() }})
+                  </template>
                 </div>
               </div>
               <v-btn color="success" variant="text" size="small"
@@ -556,23 +542,19 @@ watch(() => tournamentStore.error, (newError) => {
           </template>
 
           <template v-slot:item.status="{ item }">
-            <div class="d-flex flex-column">
-              <div class="d-flex align-center">
-                <v-chip class="mr-2" :color="getTournamentStatus(item).color" size="small" text-color="white">
-                  {{ getTournamentStatus(item).text }}
-                </v-chip>
-
-                <div class="text-caption" v-if="getTournamentStatus(item).text === 'Upcoming'">
-                  In {{ daysUntilStart(item.startDate) }} days
-                </div>
-
-                <div class="text-caption" v-if="getTournamentStatus(item).text === 'Active'">
-                  {{ daysRemaining(item.endDate) }} days remaining
-                </div>
-
-                <v-icon v-if="isCurrentTournament(item)" color="success" size="small" class="ml-2"
-                  icon="mdi-star"></v-icon>
-              </div>
+            <v-chip :color="getTournamentStatus(item).color" size="small">
+              {{ getTournamentStatus(item).text }}
+            </v-chip>
+            <div class="text-caption text-grey">
+              <template v-if="getTournamentDaysInfo(item).status === 'upcoming'">
+                In {{ getTournamentDaysInfo(item).days }} days
+              </template>
+              <template v-else-if="getTournamentDaysInfo(item).status === 'past'">
+                {{ getTournamentDaysInfo(item).days }} days ago
+              </template>
+              <template v-else>
+                {{ getTournamentDaysInfo(item).days }} days left
+              </template>
             </div>
           </template>
 
