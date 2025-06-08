@@ -9,6 +9,7 @@ import {
   useTournamentStore,
   useStringJobStore
 } from './stores'
+import { getTournamentDateInfo } from './utils/dateUtils'
 
 const authStore = useAuthStore()
 const dashboardStore = useDashboardStore()
@@ -83,6 +84,21 @@ const notificationCount = computed(() => {
 })
 
 const currentTournament = computed(() => tournamentStore.activeTournament)
+
+const currentTournamentDays = computed(() => {
+  if (!currentTournament.value) return null
+
+  const dateInfo = getTournamentDateInfo(
+    currentTournament.value.startDate,
+    currentTournament.value.endDate
+  )
+
+  if (dateInfo.status === 'active') {
+    return `${dateInfo.daysValue} ${dateInfo.daysText.toLowerCase()}`
+  }
+
+  return null
+})
 
 watch(() => authStore.isAuthenticated, (isAuthenticated, wasAuthenticated) => {
   if (isAuthenticated && !wasAuthenticated) {
@@ -241,12 +257,12 @@ const viewNotifications = () => {
       <v-divider></v-divider>
 
       <!-- Current Tournament Banner (if exists) -->
-      <v-alert v-if="currentTournament" color="primary" variant="tonal" border="start" class="mt-2 mx-2"
-        density="compact">
+      <v-alert v-if="currentTournament && currentTournamentDays" color="primary" variant="tonal" border="start"
+        class="mt-2 mx-2" density="compact">
         <div class="text-subtitle-2">{{ currentTournament.name }}</div>
         <div class="text-caption">
           <v-icon size="small" start>mdi-calendar-clock</v-icon>
-          {{ tournamentStore.getRemainingDays(currentTournament.id) }} days remaining
+          {{ currentTournamentDays }}
         </div>
       </v-alert>
 

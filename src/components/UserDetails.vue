@@ -326,7 +326,7 @@ const deleteUser = async () => {
                                     <div class="user-details__info-item">
                                         <span class="user-details__info-label">Role:</span>
                                         <v-chip :color="getRoleColor(user.role)" size="small" text-color="white"
-                                            class="ml-2">
+                                            class="ml-0">
                                             {{ user.role }}
                                         </v-chip>
                                     </div>
