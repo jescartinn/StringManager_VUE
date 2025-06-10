@@ -45,7 +45,8 @@ const formData = ref({
     status: 'Pending' as string,
     notes: '' as string,
     priority: 2 as number | null, // Default to medium priority
-    price: 25 as number
+    price: 25 as number,
+    dueDate: '' as string
 })
 
 const errors = ref({
@@ -54,7 +55,8 @@ const errors = ref({
     mainStringId: '',
     mainTension: '',
     crossTension: '',
-    stringerId: ''
+    stringerId: '',
+    dueDate: ''
 })
 
 const loadingReferences = ref(true)
@@ -101,6 +103,7 @@ const loadJobForEdit = async (id: number) => {
             formData.value.notes = job.notes || ''
             formData.value.priority = job.priority || 2
             formData.value.price = job.price
+            formData.value.dueDate = job.dueDate ? new Date(job.dueDate).toISOString().slice(0, 16) : ''
 
             if (job.playerId) {
                 playerSelected.value = true
@@ -177,7 +180,8 @@ const createJob = async () => {
         logo: formData.value.logo || undefined,
         notes: formData.value.notes || undefined,
         priority: formData.value.priority || undefined,
-        price: formData.value.price
+        price: formData.value.price,
+        dueDate: formData.value.dueDate || undefined
     }
 
     await stringJobStore.createJob(jobData)
@@ -197,7 +201,8 @@ const updateJob = async () => {
         status: formData.value.status,
         notes: formData.value.notes || undefined,
         priority: formData.value.priority || undefined,
-        price: formData.value.price
+        price: formData.value.price,
+        dueDate: formData.value.dueDate || undefined
     }
 
     await stringJobStore.updateJob(jobId.value, jobData)
@@ -239,6 +244,16 @@ const validateForm = () => {
         isValid = false
     }
 
+    if (formData.value.dueDate) {
+        const dueDate = new Date(formData.value.dueDate)
+        const now = new Date()
+
+        if (dueDate < now) {
+            errors.value.dueDate = 'Due date cannot be in the past'
+            isValid = false
+        }
+    }
+
     return isValid
 }
 
@@ -265,6 +280,20 @@ const customPlayerFilter = (item: any, queryText: string) => {
     const query = queryText.toLowerCase()
 
     return playerName.includes(query)
+}
+
+const formatDisplayDate = (dateString: string) => {
+    if (!dateString) return ''
+
+    const date = new Date(dateString)
+    return date.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    })
 }
 
 const goBack = () => {
@@ -368,6 +397,42 @@ const goBack = () => {
                                                 @click.stop="router.push(`/racquets/new?playerId=${formData.playerId}`)"></v-btn>
                                         </template>
                                     </v-select>
+                                </v-col>
+                            </v-row>
+                        </v-card-text>
+                    </v-card>
+
+                    <v-card class="mb-6">
+                        <v-card-title class="string-job-form__section-title">
+                            <v-icon start>mdi-calendar-clock</v-icon>
+                            Scheduling & Deadlines
+                        </v-card-title>
+
+                        <v-card-text class="pa-4">
+                            <v-row>
+                                <!-- Campo de fecha de entrega -->
+                                <v-col cols="12" md="6">
+                                    <v-text-field v-model="formData.dueDate" label="Due Date & Time"
+                                        type="datetime-local" variant="outlined" density="comfortable"
+                                        :error-messages="errors.dueDate" hint="When should the racquet be ready?"
+                                        persistent-hint clearable>
+                                        <template v-slot:prepend>
+                                            <v-icon color="primary">mdi-calendar-clock</v-icon>
+                                        </template>
+                                    </v-text-field>
+                                </v-col>
+
+                                <!-- Indicador visual si hay fecha establecida -->
+                                <v-col cols="12" md="6" v-if="formData.dueDate">
+                                    <div class="d-flex align-center pa-4 bg-blue-lighten-5 rounded">
+                                        <v-icon color="info" class="mr-2">mdi-information</v-icon>
+                                        <div>
+                                            <div class="text-subtitle-2 text-info">Due Date Set</div>
+                                            <div class="text-body-2">
+                                                {{ formatDisplayDate(formData.dueDate) }}
+                                            </div>
+                                        </div>
+                                    </div>
                                 </v-col>
                             </v-row>
                         </v-card-text>
@@ -601,6 +666,14 @@ const goBack = () => {
         background-color: rgba($primary, 0.02);
         border-radius: $border-radius-md;
     }
+}
+
+.bg-blue-lighten-5 {
+    background-color: rgba(33, 150, 243, 0.08) !important;
+}
+
+.text-info {
+    color: #1976d2 !important;
 }
 
 :deep(.v-chip) {

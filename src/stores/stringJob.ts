@@ -18,6 +18,7 @@ interface StringJob {
   tournament?: Tournament
   createdAt: string
   completedAt?: string
+  dueDate?: string
   mainTension: number
   crossTension?: number
   isTensionInKg: boolean
@@ -83,6 +84,7 @@ interface CreateStringJobDTO {
   crossTension?: number
   isTensionInKg: boolean
   logo?: string
+  dueDate?: string
   notes?: string
   price?: number
   priority?: number
@@ -96,6 +98,7 @@ interface UpdateStringJobDTO {
   crossTension?: number
   isTensionInKg: boolean
   logo?: string
+  dueDate?: string
   status: string
   notes?: string
   priority?: number
