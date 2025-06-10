@@ -29,11 +29,20 @@ const jobToAction = ref<number | null>(null)
 const cancelReason = ref('')
 const completeNotes = ref('')
 
-const formatDueDate = (dueDate?: string) => {
+const formatDueDate = (dueDate?: string, status?: string) => {
     if (!dueDate) return 'No deadline'
 
     const date = new Date(dueDate)
     const now = new Date()
+
+    if (status === 'Completed' || status === 'Cancelled') {
+        return date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    }
 
     if (date < now) {
         return `Overdue: ${date.toLocaleDateString('es-ES', {
@@ -52,9 +61,13 @@ const formatDueDate = (dueDate?: string) => {
     })
 }
 
-const getDueDateStatus = (dueDate?: string) => {
+const getDueDateStatus = (dueDate?: string, status?: string) => {
     if (!dueDate) {
         return { status: 'none', color: 'grey', text: 'No deadline', icon: 'mdi-calendar-blank' }
+    }
+
+    if (status === 'Completed' || status === 'Cancelled') {
+        return { status: 'completed', color: 'success', text: 'Completed', icon: 'mdi-calendar-check' }
     }
 
     const due = new Date(dueDate)
@@ -86,7 +99,7 @@ const getUrgencyWeight = (dueDate?: string) => {
 const urgentJobs = computed(() => {
     return stringJobStore.stringJobs.filter(job => {
         if (!job.dueDate) return false
-        const status = getDueDateStatus(job.dueDate).status
+        const status = getDueDateStatus(job.dueDate, job.status).status
         return status === 'overdue' || status === 'urgent'
     })
 })
@@ -245,7 +258,7 @@ const filteredJobs = computed(() => {
 
     if (urgencyFilter.value) {
         filtered = filtered.filter(job => {
-            const status = getDueDateStatus(job.dueDate).status
+            const status = getDueDateStatus(job.dueDate, job.status).status
             if (urgencyFilter.value === 'overdue') {
                 return status === 'overdue' || status === 'urgent'
             }
@@ -605,14 +618,15 @@ watch(() => stringJobStore.error, (newError) => {
 
                     <template v-slot:item.dueDate="{ item }">
                         <div class="d-flex align-center">
-                            <v-chip v-if="item.dueDate" :color="getDueDateStatus(item.dueDate).color" size="small"
-                                class="due-date-chip"
-                                :class="{ 'overdue': getDueDateStatus(item.dueDate).status === 'overdue' }">
-                                <v-icon start size="small" :icon="getDueDateStatus(item.dueDate).icon"></v-icon>
-                                {{ getDueDateStatus(item.dueDate).text }}
+                            <v-chip v-if="item.dueDate" :color="getDueDateStatus(item.dueDate, item.status).color"
+                                size="small" class="due-date-chip"
+                                :class="{ 'overdue': getDueDateStatus(item.dueDate, item.status).status === 'overdue' }">
+                                <v-icon start size="small"
+                                    :icon="getDueDateStatus(item.dueDate, item.status).icon"></v-icon>
+                                {{ getDueDateStatus(item.dueDate, item.status).text }}
                             </v-chip>
                             <div class="text-caption ml-2">
-                                {{ formatDueDate(item.dueDate) }}
+                                {{ formatDueDate(item.dueDate, item.status) }}
                             </div>
                         </div>
                     </template>

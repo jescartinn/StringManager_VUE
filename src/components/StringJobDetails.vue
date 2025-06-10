@@ -40,11 +40,20 @@ const formatDate = (dateString?: string) => {
     return date.toLocaleString()
 }
 
-const formatDueDate = (dueDate?: string) => {
+const formatDueDate = (dueDate?: string, status?: string) => {
     if (!dueDate) return 'No deadline set'
 
     const date = new Date(dueDate)
     const now = new Date()
+
+    if (status === 'Completed' || status === 'Cancelled') {
+        return date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    }
 
     if (date < now) {
         return `Overdue: ${date.toLocaleDateString('es-ES', {
@@ -66,9 +75,13 @@ const formatDueDate = (dueDate?: string) => {
     })
 }
 
-const getDueDateStatus = (dueDate?: string) => {
+const getDueDateStatus = (dueDate?: string, status?: string) => {
     if (!dueDate) {
         return { status: 'none', color: 'grey', text: 'No deadline', icon: 'mdi-calendar-blank' }
+    }
+
+    if (status === 'Completed' || status === 'Cancelled') {
+        return { status: 'completed', color: 'success', text: 'Completed', icon: 'mdi-calendar-check' }
     }
 
     const due = new Date(dueDate)
@@ -270,38 +283,42 @@ const cancelJob = async () => {
             <div v-else class="string-job-details__content">
 
                 <!-- Alerta de urgencia para fechas de entrega -->
-                <v-row v-if="job && job.dueDate && getDueDateStatus(job.dueDate).status === 'overdue'" class="mb-3">
+                <v-row v-if="job && job.dueDate && getDueDateStatus(job.dueDate, job.status).status === 'overdue'"
+                    class="mb-3">
                     <v-col cols="12">
                         <v-alert type="error" variant="tonal" prominent>
                             <template v-slot:prepend>
                                 <v-icon>mdi-calendar-alert</v-icon>
                             </template>
                             <v-alert-title>Job Overdue</v-alert-title>
-                            This job was due on {{ formatDueDate(job.dueDate) }}. Immediate attention required!
+                            This job was due on {{ formatDueDate(job.dueDate, job.status) }}. Immediate attention
+                            required!
                         </v-alert>
                     </v-col>
                 </v-row>
 
-                <v-row v-else-if="job && job.dueDate && getDueDateStatus(job.dueDate).status === 'urgent'" class="mb-3">
+                <v-row v-else-if="job && job.dueDate && getDueDateStatus(job.dueDate, job.status).status === 'urgent'"
+                    class="mb-3">
                     <v-col cols="12">
                         <v-alert type="warning" variant="tonal">
                             <template v-slot:prepend>
                                 <v-icon>mdi-calendar-today</v-icon>
                             </template>
                             <v-alert-title>Due Today</v-alert-title>
-                            This job is due today at {{ formatDueDate(job.dueDate) }}.
+                            This job is due today at {{ formatDueDate(job.dueDate, job.status) }}.
                         </v-alert>
                     </v-col>
                 </v-row>
 
-                <v-row v-else-if="job && job.dueDate && getDueDateStatus(job.dueDate).status === 'soon'" class="mb-3">
+                <v-row v-else-if="job && job.dueDate && getDueDateStatus(job.dueDate, job.status).status === 'soon'"
+                    class="mb-3">
                     <v-col cols="12">
                         <v-alert type="info" variant="tonal">
                             <template v-slot:prepend>
                                 <v-icon>mdi-calendar-clock</v-icon>
                             </template>
                             <v-alert-title>Due Soon</v-alert-title>
-                            This job is due on {{ formatDueDate(job.dueDate) }}.
+                            This job is due on {{ formatDueDate(job.dueDate, job.status) }}.
                         </v-alert>
                     </v-col>
                 </v-row>
@@ -343,10 +360,10 @@ const cancelJob = async () => {
                             <v-col cols="12" sm="6" md="3">
                                 <div
                                     class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
-                                    <v-chip :color="getDueDateStatus(job.dueDate).color" size="large" class="mb-2"
-                                        text-color="white">
-                                        <v-icon start>{{ getDueDateStatus(job.dueDate).icon }}</v-icon>
-                                        {{ getDueDateStatus(job.dueDate).text }}
+                                    <v-chip :color="getDueDateStatus(job.dueDate, job.status).color" size="large"
+                                        class="mb-2" text-color="white">
+                                        <v-icon start>{{ getDueDateStatus(job.dueDate, job.status).icon }}</v-icon>
+                                        {{ getDueDateStatus(job.dueDate, job.status).text }}
                                     </v-chip>
                                     <span class="text-caption">Due Date Status</span>
                                 </div>
@@ -368,7 +385,7 @@ const cancelJob = async () => {
                                 <div
                                     class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
                                     <div class="text-h6 font-weight-bold mb-2">
-                                        {{ job.dueDate ? formatDueDate(job.dueDate) : 'No deadline set' }}
+                                        {{ job.dueDate ? formatDueDate(job.dueDate, job.status) : 'No deadline set' }}
                                     </div>
                                     <span class="text-caption">Due Date & Time</span>
                                 </div>
@@ -405,16 +422,18 @@ const cancelJob = async () => {
                             </v-timeline-item>
 
                             <!-- Fecha de entrega (si existe) -->
-                            <v-timeline-item v-if="job.dueDate" :dot-color="getDueDateStatus(job.dueDate).color"
-                                size="small">
+                            <v-timeline-item v-if="job.dueDate"
+                                :dot-color="getDueDateStatus(job.dueDate, job.status).color" size="small">
                                 <div class="text-center">
                                     <div class="text-body-2 font-weight-bold">
-                                        <v-icon small class="mr-1">{{ getDueDateStatus(job.dueDate).icon }}</v-icon>
+                                        <v-icon small class="mr-1">{{ getDueDateStatus(job.dueDate, job.status).icon
+                                            }}</v-icon>
                                         Due Date
                                     </div>
-                                    <div class="text-caption">{{ formatDueDate(job.dueDate) }}</div>
-                                    <v-chip :color="getDueDateStatus(job.dueDate).color" size="x-small" class="mt-1">
-                                        {{ getDueDateStatus(job.dueDate).text }}
+                                    <div class="text-caption">{{ formatDueDate(job.dueDate, job.status) }}</div>
+                                    <v-chip :color="getDueDateStatus(job.dueDate, job.status).color" size="x-small"
+                                        class="mt-1">
+                                        {{ getDueDateStatus(job.dueDate, job.status).text }}
                                     </v-chip>
                                 </div>
                             </v-timeline-item>
@@ -465,7 +484,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-tennis-ball</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.racquet.brand }} {{ job.racquet.model
-                                        }}</v-list-item-title>
+                                            }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.racquet.serialNumber">
                                             Serial: {{ job.racquet.serialNumber }}
                                         </v-list-item-subtitle>
@@ -514,7 +533,7 @@ const cancelJob = async () => {
                                             <v-icon color="primary" size="32">mdi-account-wrench</v-icon>
                                         </template>
                                         <v-list-item-title>{{ job.stringer.name }} {{ job.stringer.lastName
-                                        }}</v-list-item-title>
+                                            }}</v-list-item-title>
                                         <v-list-item-subtitle v-if="job.stringer.email">
                                             Email: {{ job.stringer.email }}
                                         </v-list-item-subtitle>
