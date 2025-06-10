@@ -629,8 +629,6 @@ watch(() => stringJobStore.error, (newError) => {
                             <v-chip v-if="item.dueDate" :color="getDueDateStatus(item.dueDate, item.status).color"
                                 size="small" class="due-date-chip"
                                 :class="{ 'overdue': getDueDateStatus(item.dueDate, item.status).status === 'overdue' }">
-                                <v-icon start size="small"
-                                    :icon="getDueDateStatus(item.dueDate, item.status).icon"></v-icon>
                                 {{ getDueDateStatus(item.dueDate, item.status).text }}
                             </v-chip>
                             <div class="text-caption ml-2">
