@@ -72,12 +72,20 @@ const getDueDateStatus = (dueDate?: string, status?: string) => {
 
     const due = new Date(dueDate)
     const now = new Date()
+
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate())
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
     const hoursUntilDue = (due.getTime() - now.getTime()) / (1000 * 60 * 60)
 
     if (hoursUntilDue < 0) {
         return { status: 'overdue', color: 'error', text: 'Overdue', icon: 'mdi-calendar-alert' }
-    } else if (hoursUntilDue < 24) {
+    } else if (dueDay.getTime() === today.getTime()) {
         return { status: 'urgent', color: 'warning', text: 'Due today', icon: 'mdi-calendar-today' }
+    } else if (dueDay.getTime() === tomorrow.getTime()) {
+        return { status: 'tomorrow', color: 'orange', text: 'Due tomorrow', icon: 'mdi-calendar-clock' }
     } else if (hoursUntilDue < 72) {
         return { status: 'soon', color: 'info', text: 'Due soon', icon: 'mdi-calendar-clock' }
     } else {
