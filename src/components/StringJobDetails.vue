@@ -370,7 +370,6 @@ const cancelJob = async () => {
                                     class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
                                     <v-chip :color="getDueDateStatus(job.dueDate, job.status).color" size="large"
                                         class="mb-2" text-color="white">
-                                        <v-icon start>{{ getDueDateStatus(job.dueDate, job.status).icon }}</v-icon>
                                         {{ getDueDateStatus(job.dueDate, job.status).text }}
                                     </v-chip>
                                     <span class="text-caption">Due Date Status</span>
