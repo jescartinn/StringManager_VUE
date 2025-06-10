@@ -63,11 +63,11 @@ const formatDueDate = (dueDate?: string, status?: string) => {
 
 const getDueDateStatus = (dueDate?: string, status?: string) => {
     if (!dueDate) {
-        return { status: 'none', color: 'grey', text: 'No deadline' }
+        return { status: 'none', color: 'grey', text: 'No deadline', icon: 'mdi-calendar-blank' }
     }
 
     if (status === 'Completed' || status === 'Cancelled') {
-        return { status: 'completed', color: 'success', text: 'Completed' }
+        return { status: 'completed', color: 'success', text: 'Completed', icon: 'mdi-calendar-check' }
     }
 
     const due = new Date(dueDate)
@@ -81,15 +81,15 @@ const getDueDateStatus = (dueDate?: string, status?: string) => {
     const hoursUntilDue = (due.getTime() - now.getTime()) / (1000 * 60 * 60)
 
     if (hoursUntilDue < 0) {
-        return { status: 'overdue', color: 'error', text: 'Overdue' }
+        return { status: 'overdue', color: 'error', text: 'Overdue', icon: 'mdi-calendar-alert' }
     } else if (dueDay.getTime() === today.getTime()) {
-        return { status: 'urgent', color: 'warning', text: 'Due today' }
+        return { status: 'urgent', color: 'warning', text: 'Due today', icon: 'mdi-calendar-today' }
     } else if (dueDay.getTime() === tomorrow.getTime()) {
-        return { status: 'tomorrow', color: 'orange', text: 'Due tomorrow' }
+        return { status: 'tomorrow', color: 'orange', text: 'Due tomorrow', icon: 'mdi-calendar-clock' }
     } else if (hoursUntilDue < 72) {
-        return { status: 'soon', color: 'info', text: 'Due soon' }
+        return { status: 'soon', color: 'info', text: 'Due soon', icon: 'mdi-calendar-clock' }
     } else {
-        return { status: 'normal', color: 'success', text: 'On schedule' }
+        return { status: 'normal', color: 'success', text: 'On schedule', icon: 'mdi-calendar-check' }
     }
 }
 
@@ -629,6 +629,8 @@ watch(() => stringJobStore.error, (newError) => {
                             <v-chip v-if="item.dueDate" :color="getDueDateStatus(item.dueDate, item.status).color"
                                 size="small" class="due-date-chip"
                                 :class="{ 'overdue': getDueDateStatus(item.dueDate, item.status).status === 'overdue' }">
+                                <v-icon start size="small"
+                                    :icon="getDueDateStatus(item.dueDate, item.status).icon"></v-icon>
                                 {{ getDueDateStatus(item.dueDate, item.status).text }}
                             </v-chip>
                             <div class="text-caption ml-2">
