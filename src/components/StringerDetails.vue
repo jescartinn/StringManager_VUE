@@ -79,6 +79,9 @@ const stringJobs = computed(() => {
 })
 
 const sortedJobs = computed(() => {
+  if (!stringJobs.value || !Array.isArray(stringJobs.value)) {
+    return []
+  }
   return [...stringJobs.value].sort((a, b) => {
     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   })
