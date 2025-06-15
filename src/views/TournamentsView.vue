@@ -583,19 +583,21 @@ watch(() => tournamentStore.error, (newError) => {
           </template>
 
           <template v-slot:item.status="{ item }">
-            <v-chip :color="getTournamentStatus(item).color" size="small">
-              {{ getTournamentStatus(item).text }}
-            </v-chip>
-            <div class="text-caption text-grey">
-              <template v-if="getTournamentDaysInfo(item).status === 'upcoming'">
-                In {{ getTournamentDaysInfo(item).days }} days
-              </template>
-              <template v-else-if="getTournamentDaysInfo(item).status === 'past'">
-                {{ getTournamentDaysInfo(item).days }} days ago
-              </template>
-              <template v-else>
-                {{ getTournamentDaysInfo(item).days }} days left
-              </template>
+            <div class="d-flex align-center">
+              <v-chip :color="getTournamentStatus(item).color" size="small">
+                {{ getTournamentStatus(item).text }}
+              </v-chip>
+              <div class="text-caption text-grey ml-2">
+                <template v-if="getTournamentDaysInfo(item).status === 'upcoming'">
+                  In {{ getTournamentDaysInfo(item).days }} days
+                </template>
+                <template v-else-if="getTournamentDaysInfo(item).status === 'past'">
+                  {{ getTournamentDaysInfo(item).days }} days ago
+                </template>
+                <template v-else>
+                  {{ getTournamentDaysInfo(item).days }} days left
+                </template>
+              </div>
             </div>
           </template>
 

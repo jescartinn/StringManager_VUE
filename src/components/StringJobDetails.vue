@@ -40,6 +40,73 @@ const formatDate = (dateString?: string) => {
     return date.toLocaleString()
 }
 
+const formatDueDate = (dueDate?: string, status?: string) => {
+    if (!dueDate) return 'No deadline set'
+
+    const date = new Date(dueDate)
+    const now = new Date()
+
+    if (status === 'Completed' || status === 'Cancelled') {
+        return date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    }
+
+    if (date < now) {
+        return `Overdue: ${date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            year: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`
+    }
+
+    return date.toLocaleDateString('es-ES', {
+        weekday: 'short',
+        day: '2-digit',
+        month: '2-digit',
+        year: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    })
+}
+
+const getDueDateStatus = (dueDate?: string, status?: string) => {
+    if (!dueDate) {
+        return { status: 'none', color: 'grey', text: 'No deadline', icon: 'mdi-calendar-blank' }
+    }
+
+    if (status === 'Completed' || status === 'Cancelled') {
+        return { status: 'completed', color: 'success', text: 'Completed', icon: 'mdi-calendar-check' }
+    }
+
+    const due = new Date(dueDate)
+    const now = new Date()
+
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate())
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    const hoursUntilDue = (due.getTime() - now.getTime()) / (1000 * 60 * 60)
+
+    if (hoursUntilDue < 0) {
+        return { status: 'overdue', color: 'error', text: 'Overdue', icon: 'mdi-calendar-alert' }
+    } else if (dueDay.getTime() === today.getTime()) {
+        return { status: 'urgent', color: 'warning', text: 'Due today', icon: 'mdi-calendar-today' }
+    } else if (dueDay.getTime() === tomorrow.getTime()) {
+        return { status: 'tomorrow', color: 'orange', text: 'Due tomorrow', icon: 'mdi-calendar-clock' }
+    } else if (hoursUntilDue < 72) {
+        return { status: 'soon', color: 'info', text: 'Due soon', icon: 'mdi-calendar-clock' }
+    } else {
+        return { status: 'normal', color: 'success', text: 'On schedule', icon: 'mdi-calendar-check' }
+    }
+}
+
 const getStatusColor = (status?: string) => {
     if (!status) return 'grey'
 
@@ -223,6 +290,47 @@ const cancelJob = async () => {
             <!-- Job Details Content -->
             <div v-else class="string-job-details__content">
 
+                <!-- Alerta de urgencia para fechas de entrega -->
+                <v-row v-if="job && job.dueDate && getDueDateStatus(job.dueDate, job.status).status === 'overdue'"
+                    class="mb-3">
+                    <v-col cols="12">
+                        <v-alert type="error" variant="tonal" prominent>
+                            <template v-slot:prepend>
+                                <v-icon>mdi-calendar-alert</v-icon>
+                            </template>
+                            <v-alert-title>Job Overdue</v-alert-title>
+                            This job was due on {{ formatDueDate(job.dueDate, job.status) }}. Immediate attention
+                            required!
+                        </v-alert>
+                    </v-col>
+                </v-row>
+
+                <v-row v-else-if="job && job.dueDate && getDueDateStatus(job.dueDate, job.status).status === 'urgent'"
+                    class="mb-3">
+                    <v-col cols="12">
+                        <v-alert type="warning" variant="tonal">
+                            <template v-slot:prepend>
+                                <v-icon>mdi-calendar-today</v-icon>
+                            </template>
+                            <v-alert-title>Due Today</v-alert-title>
+                            This job is due today at {{ formatDueDate(job.dueDate, job.status) }}.
+                        </v-alert>
+                    </v-col>
+                </v-row>
+
+                <v-row v-else-if="job && job.dueDate && getDueDateStatus(job.dueDate, job.status).status === 'soon'"
+                    class="mb-3">
+                    <v-col cols="12">
+                        <v-alert type="info" variant="tonal">
+                            <template v-slot:prepend>
+                                <v-icon>mdi-calendar-clock</v-icon>
+                            </template>
+                            <v-alert-title>Due Soon</v-alert-title>
+                            This job is due on {{ formatDueDate(job.dueDate, job.status) }}.
+                        </v-alert>
+                    </v-col>
+                </v-row>
+
                 <!-- Status Banner -->
                 <v-card class="mb-6">
                     <v-card-title class="string-job-details__section-title">
@@ -260,13 +368,37 @@ const cancelJob = async () => {
                             <v-col cols="12" sm="6" md="3">
                                 <div
                                     class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
-                                    <div class="text-h6 font-weight-bold mb-2">{{
-                                        formatDate(job.createdAt) }}</div>
-                                    <span class="text-caption">Created Date</span>
+                                    <v-chip :color="getDueDateStatus(job.dueDate, job.status).color" size="large"
+                                        class="mb-2" text-color="white">
+                                        {{ getDueDateStatus(job.dueDate, job.status).text }}
+                                    </v-chip>
+                                    <span class="text-caption">Due Date Status</span>
                                 </div>
                             </v-col>
 
                             <v-col cols="12" sm="6" md="3">
+                                <div
+                                    class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
+                                    <div class="text-h6 font-weight-bold mb-2">
+                                        {{ formatDate(job.createdAt) }}
+                                    </div>
+                                    <span class="text-caption">Created Date</span>
+                                </div>
+                            </v-col>
+                        </v-row>
+
+                        <v-row class="mt-2">
+                            <v-col cols="12" sm="6" md="6">
+                                <div
+                                    class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
+                                    <div class="text-h6 font-weight-bold mb-2">
+                                        {{ job.dueDate ? formatDueDate(job.dueDate, job.status) : 'No deadline set' }}
+                                    </div>
+                                    <span class="text-caption">Due Date & Time</span>
+                                </div>
+                            </v-col>
+
+                            <v-col cols="12" sm="6" md="6">
                                 <div
                                     class="d-flex flex-column align-center text-center pa-2 rounded bg-grey-lighten-5 h-100">
                                     <div class="text-h6 font-weight-bold mb-2">
@@ -276,6 +408,51 @@ const cancelJob = async () => {
                                 </div>
                             </v-col>
                         </v-row>
+                    </v-card-text>
+                </v-card>
+
+                <!-- Timeline de fechas importantes -->
+                <v-card class="mb-6" v-if="job.dueDate || job.completedAt">
+                    <v-card-title class="string-job-details__section-title">
+                        <v-icon start>mdi-timeline-clock</v-icon>
+                        Important Dates & Timeline
+                    </v-card-title>
+
+                    <v-card-text class="pa-4">
+                        <v-timeline direction="horizontal" size="small">
+                            <!-- Fecha de creación -->
+                            <v-timeline-item dot-color="primary" size="small">
+                                <div class="text-center">
+                                    <div class="text-body-2 font-weight-bold">Created</div>
+                                    <div class="text-caption">{{ formatDate(job.createdAt) }}</div>
+                                </div>
+                            </v-timeline-item>
+
+                            <!-- Fecha de entrega (si existe) -->
+                            <v-timeline-item v-if="job.dueDate"
+                                :dot-color="getDueDateStatus(job.dueDate, job.status).color" size="small">
+                                <div class="text-center">
+                                    <div class="text-body-2 font-weight-bold">
+                                        <v-icon small class="mr-1">{{ getDueDateStatus(job.dueDate, job.status).icon
+                                            }}</v-icon>
+                                        Due Date
+                                    </div>
+                                    <div class="text-caption">{{ formatDueDate(job.dueDate, job.status) }}</div>
+                                    <v-chip :color="getDueDateStatus(job.dueDate, job.status).color" size="x-small"
+                                        class="mt-1">
+                                        {{ getDueDateStatus(job.dueDate, job.status).text }}
+                                    </v-chip>
+                                </div>
+                            </v-timeline-item>
+
+                            <!-- Fecha de finalización (si existe) -->
+                            <v-timeline-item v-if="job.completedAt" dot-color="success" size="small">
+                                <div class="text-center">
+                                    <div class="text-body-2 font-weight-bold">Completed</div>
+                                    <div class="text-caption">{{ formatDate(job.completedAt) }}</div>
+                                </div>
+                            </v-timeline-item>
+                        </v-timeline>
                     </v-card-text>
                 </v-card>
 
@@ -609,6 +786,16 @@ const cancelJob = async () => {
         &.bg-error {
             background-color: $stringing-cancelled !important;
         }
+    }
+}
+
+:deep(.v-timeline) {
+    .v-timeline-item {
+        padding-bottom: 0;
+    }
+
+    .v-timeline-item__body {
+        justify-self: center;
     }
 }
 </style>

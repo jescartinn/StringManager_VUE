@@ -17,6 +17,7 @@ const playerFilter = ref<number | null>(null)
 const stringerFilter = ref<number | null>(null)
 const tournamentFilter = ref<number | null>(null)
 const priorityFilter = ref<number | null>(null)
+const urgencyFilter = ref<string | null>(null)
 const page = ref(1)
 const itemsPerPage = ref(10)
 const sortBy = ref<string>('createdAt')
@@ -27,6 +28,94 @@ const showCompleteConfirmation = ref(false)
 const jobToAction = ref<number | null>(null)
 const cancelReason = ref('')
 const completeNotes = ref('')
+
+const formatDueDate = (dueDate?: string, status?: string) => {
+    if (!dueDate) return 'No deadline'
+
+    const date = new Date(dueDate)
+    const now = new Date()
+
+    if (status === 'Completed' || status === 'Cancelled') {
+        return date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })
+    }
+
+    if (date < now) {
+        return `Overdue: ${date.toLocaleDateString('es-ES', {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        })}`
+    }
+
+    return date.toLocaleDateString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+    })
+}
+
+const getDueDateStatus = (dueDate?: string, status?: string) => {
+    if (!dueDate) {
+        return { status: 'none', color: 'grey', text: 'No deadline', icon: 'mdi-calendar-blank' }
+    }
+
+    if (status === 'Completed' || status === 'Cancelled') {
+        return { status: 'completed', color: 'success', text: 'Completed', icon: 'mdi-calendar-check' }
+    }
+
+    const due = new Date(dueDate)
+    const now = new Date()
+
+    const dueDay = new Date(due.getFullYear(), due.getMonth(), due.getDate())
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+    const tomorrow = new Date(today)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    const hoursUntilDue = (due.getTime() - now.getTime()) / (1000 * 60 * 60)
+
+    if (hoursUntilDue < 0) {
+        return { status: 'overdue', color: 'error', text: 'Overdue', icon: 'mdi-calendar-alert' }
+    } else if (dueDay.getTime() === today.getTime()) {
+        return { status: 'urgent', color: 'warning', text: 'Due today', icon: 'mdi-calendar-today' }
+    } else if (dueDay.getTime() === tomorrow.getTime()) {
+        return { status: 'tomorrow', color: 'orange', text: 'Due tomorrow', icon: 'mdi-calendar-clock' }
+    } else if (hoursUntilDue < 72) {
+        return { status: 'soon', color: 'info', text: 'Due soon', icon: 'mdi-calendar-clock' }
+    } else {
+        return { status: 'normal', color: 'success', text: 'On schedule', icon: 'mdi-calendar-check' }
+    }
+}
+
+const getUrgencyWeight = (dueDate?: string) => {
+    if (!dueDate) return 999999
+
+    const due = new Date(dueDate)
+    const now = new Date()
+    const hoursUntilDue = (due.getTime() - now.getTime()) / (1000 * 60 * 60)
+
+    if (hoursUntilDue < 0) return -1
+    return hoursUntilDue
+}
+
+const urgentJobs = computed(() => {
+    return stringJobStore.stringJobs.filter(job => {
+        if (!job.dueDate) return false
+        const status = getDueDateStatus(job.dueDate, job.status).status
+        return status === 'overdue' || status === 'urgent'
+    })
+})
+
+const showUrgentOnly = () => {
+    urgencyFilter.value = 'overdue'
+    showFilters.value = true
+}
 
 onMounted(async () => {
     loadFiltersFromQuery()
@@ -57,11 +146,13 @@ const loadFiltersFromQuery = () => {
     const queryStringer = route.query.stringer ? parseInt(route.query.stringer as string) : null
     const queryTournament = route.query.tournament ? parseInt(route.query.tournament as string) : null
     const queryPriority = route.query.priority as string
+    const queryUrgency = route.query.urgency as string
 
     statusFilter.value = queryStatus || null
     playerFilter.value = queryPlayer
     stringerFilter.value = queryStringer
     tournamentFilter.value = queryTournament
+    urgencyFilter.value = queryUrgency || null
 
     if (queryPriority === 'high') {
         priorityFilter.value = 1
@@ -79,7 +170,7 @@ watch(() => route.query, (newQuery) => {
     loadData()
 }, { deep: true })
 
-watch([statusFilter, playerFilter, stringerFilter, tournamentFilter, priorityFilter], () => {
+watch([statusFilter, playerFilter, stringerFilter, tournamentFilter, priorityFilter, urgencyFilter], () => {
     updateQueryParams()
 })
 
@@ -90,6 +181,7 @@ const updateQueryParams = () => {
     if (playerFilter.value) query.player = playerFilter.value.toString()
     if (stringerFilter.value) query.stringer = stringerFilter.value.toString()
     if (tournamentFilter.value) query.tournament = tournamentFilter.value.toString()
+    if (urgencyFilter.value) query.urgency = urgencyFilter.value
 
     if (priorityFilter.value === 1) {
         query.priority = 'high'
@@ -138,6 +230,7 @@ const clearFilters = () => {
     stringerFilter.value = null
     tournamentFilter.value = null
     priorityFilter.value = null
+    urgencyFilter.value = null
     search.value = ''
     loadData()
 }
@@ -171,12 +264,25 @@ const filteredJobs = computed(() => {
         filtered = filtered.filter(job => job.priority === priorityFilter.value)
     }
 
+    if (urgencyFilter.value) {
+        filtered = filtered.filter(job => {
+            const status = getDueDateStatus(job.dueDate, job.status).status
+            if (urgencyFilter.value === 'overdue') {
+                return status === 'overdue' || status === 'urgent'
+            }
+            return status === urgencyFilter.value
+        })
+    }
+
     filtered.sort((a, b) => {
         let aValue: any, bValue: any;
 
         if (sortBy.value === 'createdAt' || sortBy.value === 'completedAt') {
             aValue = a[sortBy.value as keyof typeof a] ? new Date(a[sortBy.value as keyof typeof a] as string).getTime() : 0;
             bValue = b[sortBy.value as keyof typeof b] ? new Date(b[sortBy.value as keyof typeof b] as string).getTime() : 0;
+        } else if (sortBy.value === 'dueDate') {
+            aValue = getUrgencyWeight(a.dueDate);
+            bValue = getUrgencyWeight(b.dueDate);
         } else if (sortBy.value === 'player') {
             aValue = a.player ? `${a.player.lastName} ${a.player.name}` : '';
             bValue = b.player ? `${b.player.lastName} ${b.player.name}` : '';
@@ -311,6 +417,7 @@ const headers = [
     { title: 'Strings', key: 'mainString', sortable: true },
     { title: 'Tension', key: 'mainTension', sortable: true },
     { title: 'Status', key: 'status', sortable: true },
+    { title: 'Due Date', key: 'dueDate', sortable: true },
     { title: 'Stringer', key: 'stringer', sortable: true },
     { title: 'Priority', key: 'priority', sortable: true },
     { title: 'Created', key: 'createdAt', sortable: true },
@@ -385,7 +492,7 @@ watch(() => stringJobStore.error, (newError) => {
                         <div v-if="showFilters">
                             <v-divider class="my-3"></v-divider>
                             <v-row>
-                                <v-col cols="12" sm="6" md="3">
+                                <v-col cols="12" sm="6" md="2">
                                     <v-select v-model="statusFilter" label="Status" :items="[
                                         { title: 'All', value: null },
                                         { title: 'Pending', value: 'Pending' },
@@ -396,7 +503,7 @@ watch(() => stringJobStore.error, (newError) => {
                                         clearable hide-details></v-select>
                                 </v-col>
 
-                                <v-col cols="12" sm="6" md="3">
+                                <v-col cols="12" sm="6" md="2">
                                     <v-autocomplete v-model="playerFilter" label="Player"
                                         :items="playerStore.playerOptions" item-title="text" item-value="value"
                                         variant="outlined" density="comfortable" clearable hide-details
@@ -412,24 +519,35 @@ watch(() => stringJobStore.error, (newError) => {
                                     </v-autocomplete>
                                 </v-col>
 
-                                <v-col cols="12" sm="6" md="3">
+                                <v-col cols="12" sm="6" md="2">
                                     <v-select v-model="stringerFilter" label="Stringer"
                                         :items="stringerStore.stringerOptions" item-title="text" item-value="value"
                                         variant="outlined" density="comfortable" clearable hide-details></v-select>
                                 </v-col>
 
-                                <v-col cols="12" sm="6" md="3">
+                                <v-col cols="12" sm="6" md="2">
                                     <v-select v-model="tournamentFilter" label="Tournament"
                                         :items="tournamentStore.tournamentOptions" item-title="text" item-value="value"
                                         variant="outlined" density="comfortable" clearable hide-details></v-select>
                                 </v-col>
 
-                                <v-col cols="12" sm="6" md="3">
+                                <v-col cols="12" sm="6" md="2">
                                     <v-select v-model="priorityFilter" label="Priority" :items="[
                                         { title: 'All', value: null },
                                         { title: 'High', value: 1 },
                                         { title: 'Medium', value: 2 },
                                         { title: 'Low', value: 3 }
+                                    ]" item-title="title" item-value="value" variant="outlined" density="comfortable"
+                                        clearable hide-details></v-select>
+                                </v-col>
+
+                                <v-col cols="12" sm="6" md="2">
+                                    <v-select v-model="urgencyFilter" label="Due Date Status" :items="[
+                                        { title: 'All', value: null },
+                                        { title: 'Overdue/Urgent', value: 'overdue' },
+                                        { title: 'Due Soon', value: 'soon' },
+                                        { title: 'On Schedule', value: 'normal' },
+                                        { title: 'No Deadline', value: 'none' }
                                     ]" item-title="title" item-value="value" variant="outlined" density="comfortable"
                                         clearable hide-details></v-select>
                                 </v-col>
@@ -504,6 +622,19 @@ watch(() => stringJobStore.error, (newError) => {
                         <v-chip :color="getStatusColor(item.status)" size="small" text-color="white">
                             {{ item.status }}
                         </v-chip>
+                    </template>
+
+                    <template v-slot:item.dueDate="{ item }">
+                        <div class="d-flex align-center">
+                            <v-chip v-if="item.dueDate" :color="getDueDateStatus(item.dueDate, item.status).color"
+                                size="small" class="due-date-chip"
+                                :class="{ 'overdue': getDueDateStatus(item.dueDate, item.status).status === 'overdue' }">
+                                {{ getDueDateStatus(item.dueDate, item.status).text }}
+                            </v-chip>
+                            <div class="text-caption ml-2">
+                                {{ formatDueDate(item.dueDate, item.status) }}
+                            </div>
+                        </div>
                     </template>
 
                     <template v-slot:item.priority="{ item }">
@@ -631,6 +762,26 @@ watch(() => stringJobStore.error, (newError) => {
         :deep(tr:hover) {
             background-color: rgba($primary, 0.05) !important;
         }
+    }
+}
+
+.due-date-chip {
+    &.overdue {
+        animation: pulse 2s infinite;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+
+    100% {
+        opacity: 1;
     }
 }
 

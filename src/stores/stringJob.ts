@@ -18,6 +18,7 @@ interface StringJob {
   tournament?: Tournament
   createdAt: string
   completedAt?: string
+  dueDate?: string
   mainTension: number
   crossTension?: number
   isTensionInKg: boolean
@@ -83,6 +84,7 @@ interface CreateStringJobDTO {
   crossTension?: number
   isTensionInKg: boolean
   logo?: string
+  dueDate?: string
   notes?: string
   price?: number
   priority?: number
@@ -96,6 +98,7 @@ interface UpdateStringJobDTO {
   crossTension?: number
   isTensionInKg: boolean
   logo?: string
+  dueDate?: string
   status: string
   notes?: string
   priority?: number
@@ -115,10 +118,10 @@ export const useStringJobStore = defineStore('stringJob', () => {
   const lastFetchType = ref<'all' | 'status' | 'tournament' | 'player' | 'stringer' | 'player-unpaid' | null>(null)
   const lastFetchValue = ref<string | number | null>(null)
 
-  const pendingJobs = computed(() => stringJobs.value.filter(job => job.status === 'Pending'))
-  const inProgressJobs = computed(() => stringJobs.value.filter(job => job.status === 'InProgress'))
-  const completedJobs = computed(() => stringJobs.value.filter(job => job.status === 'Completed'))
-  const cancelledJobs = computed(() => stringJobs.value.filter(job => job.status === 'Cancelled'))
+  const pendingJobs = computed(() => stringJobs.value.filter(job => job.status === 'Pending') || [])
+  const inProgressJobs = computed(() => stringJobs.value.filter(job => job.status === 'InProgress') || [])
+  const completedJobs = computed(() => stringJobs.value.filter(job => job.status === 'Completed') || [])
+  const cancelledJobs = computed(() => stringJobs.value.filter(job => job.status === 'Cancelled') || [])
 
   const highPriorityJobs = computed(() =>
     stringJobs.value.filter(job =>
@@ -219,12 +222,14 @@ export const useStringJobStore = defineStore('stringJob', () => {
     error.value = null
 
     try {
-      stringJobs.value = await api.stringJobs.getByStringer(stringerId)
+      const jobs = await api.stringJobs.getByStringer(stringerId)
+      stringJobs.value = jobs || []
       lastFetchType.value = 'stringer'
       lastFetchValue.value = stringerId
       return stringJobs.value
     } catch (e) {
       console.error(`Error fetching string jobs for stringer ${stringerId}:`, e)
+      stringJobs.value = []
       error.value = e instanceof Error ? e.message : 'Failed to fetch stringer string jobs'
       return []
     } finally {
