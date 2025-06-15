@@ -357,16 +357,19 @@ const deleteUser = async () => {
 
                         <v-divider class="my-4"></v-divider>
 
-                        <div class="d-flex justify-end" v-if="canManageUsers">
-                            <v-btn color="primary" variant="text" prepend-icon="mdi-pencil" class="mr-2"
-                                @click="openEditUserDialog">
+                        <div class="d-flex flex-column flex-sm-row justify-end ga-2" v-if="canManageUsers">
+                            <v-btn color="primary" variant="text" prepend-icon="mdi-pencil" @click="openEditUserDialog"
+                                :block="$vuetify.display.xs">
                                 Edit User
                             </v-btn>
-                            <v-btn color="warning" variant="text" prepend-icon="mdi-lock-reset" class="mr-2"
-                                @click="openChangePasswordDialog">
+
+                            <v-btn color="warning" variant="text" prepend-icon="mdi-lock-reset"
+                                @click="openChangePasswordDialog" :block="$vuetify.display.xs">
                                 Change Password
                             </v-btn>
-                            <v-btn color="error" variant="text" prepend-icon="mdi-delete" @click="openDeleteDialog">
+
+                            <v-btn color="error" variant="text" prepend-icon="mdi-delete" @click="openDeleteDialog"
+                                :block="$vuetify.display.xs">
                                 Delete User
                             </v-btn>
                         </div>
