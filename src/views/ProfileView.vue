@@ -313,12 +313,14 @@ const changePassword = async () => {
                 </div>
 
                 <!-- Action buttons -->
-                <div class="d-flex justify-space-between mt-6">
-                  <v-btn color="secondary" variant="text" prepend-icon="mdi-lock" @click="openChangePasswordDialog">
+                <div class="d-flex flex-column flex-md-row justify-space-between align-center mt-6 ga-4">
+                  <v-btn color="secondary" variant="text" prepend-icon="mdi-lock" @click="openChangePasswordDialog"
+                    :block="$vuetify.display.xs" :size="$vuetify.display.xs ? 'large' : 'default'">
                     Change Password
                   </v-btn>
 
-                  <v-btn color="primary" type="submit" :loading="loading" :disabled="!formValid">
+                  <v-btn color="primary" type="submit" :loading="loading" :disabled="!formValid"
+                    :block="$vuetify.display.xs" :size="$vuetify.display.xs ? 'large' : 'default'">
                     Update Profile
                   </v-btn>
                 </div>
@@ -359,7 +361,7 @@ const changePassword = async () => {
           </v-alert>
 
           <v-form @submit.prevent="changePassword">
-            
+
             <!-- Current password -->
             <v-text-field v-model="passwordForm.currentPassword" label="Current Password"
               prepend-inner-icon="mdi-lock-outline" :type="showCurrentPassword ? 'text' : 'password'" variant="outlined"
